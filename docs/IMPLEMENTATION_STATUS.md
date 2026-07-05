@@ -1,0 +1,238 @@
+# StageCalc Flutter Implementation Status
+
+## Status
+
+Ostatnia aktualizacja: 2026-07-05
+
+## Wykonane
+
+- Utworzono katalog `flutter/` poleceniem `flutter create`.
+- Projekt Flutter ma nazwe pakietu Dart `stagecalc`.
+- Wygenerowano platformy:
+  - Android,
+  - Windows,
+  - Web.
+- Zweryfikowano dostepnosc Flutter SDK `3.44.3`.
+- Dodano Flutter SDK do `PATH` uzytkownika Windows.
+- Zastapiono starterowy counter app szkieletem StageCalc.
+- Dodano motyw GreenCrew Tools:
+  - dark mode,
+  - zielony akcent,
+  - neutralne powierzchnie,
+  - Material Design.
+- Dodano responsywny shell:
+  - bottom navigation dla telefonu,
+  - navigation rail dla desktopu.
+- Dodano podstawowe ekrany:
+  - Projekty,
+  - Katalog,
+  - Lokacje,
+  - Klienci,
+  - Info / O aplikacji.
+- Dodano pierwsze wspolne komponenty GreenCrew.
+- Dodano pierwsze modele i serwisy domenowe:
+  - `Project`,
+  - `ProjectGroup`,
+  - `ProjectItem`,
+  - `ProjectTotalsService`,
+  - `PowerCalculationService`.
+- Dodano testy domenowe i widgetowe.
+- Dodano docelowa lokalna baze Drift/SQLite.
+- Dodano schemat Drift dla:
+  - projektow,
+  - grup projektu,
+  - pozycji projektu,
+  - katalogu urzadzen,
+  - klientow,
+  - lokacji.
+- Schemat Drift zawiera pola przygotowane pod przyszly sync:
+  - `workspaceId`,
+  - `remoteId`,
+  - `deletedAt`,
+  - `revision`,
+  - `syncState`,
+  - `lastSyncedAt`.
+- Dodano serializacje JSON dla pierwszych modeli projektu.
+- Ekran projektow wczytuje dane lokalne, seeduje projekt demo i pozwala dodac prosty projekt lokalny.
+- Dodano formularz tworzenia projektu z nazwa.
+- Dodano prosty edytor projektu.
+- Dodano dodawanie grup projektu.
+- Dodano dodawanie recznych pozycji do grup z polami:
+  - ilosc,
+  - moc W,
+  - prad A,
+  - masa kg.
+- Dodano edycje i usuwanie grup projektu.
+- Dodano edycje i usuwanie recznych pozycji w grupach.
+- Dodano pierwszy lokalny katalog urzadzen.
+- Dodano model `CatalogDevice` z miejscem na:
+  - producenta,
+  - kategorie,
+  - moc W,
+  - prad A,
+  - mase kg,
+  - typ zlacza,
+  - jednostke ilosci.
+- Dodano lokalne repozytorium katalogu na Drift/SQLite.
+- Dodano seed przykladowych urzadzen katalogowych.
+- Ekran katalogu pozwala:
+  - wyszukiwac urzadzenia,
+  - dodawac urzadzenia,
+  - edytowac urzadzenia,
+  - usuwac urzadzenia.
+- Edytor projektu pozwala dodac pozycje z katalogu do grupy.
+- Pozycja dodana z katalogu zapisuje snapshot danych urzadzenia w projekcie.
+- Edytor projektu zapisuje zmiany lokalnie przez repozytorium.
+- Dodano test widgetowy tworzenia projektu.
+- Dodano test widgetowy dodawania i edycji recznej pozycji w edytorze projektu.
+- Dodano test repozytorium katalogu.
+- Przeniesiono projekty i katalog ze `shared_preferences` do Drift/SQLite.
+- Usunieto repozytoria i testy oparte o `shared_preferences`.
+- Usunieto zaleznosc `shared_preferences` z projektu Flutter.
+- Dodano testy repozytoriow Drift/SQLite w bazie pamieciowej.
+- `flutter analyze` przechodzi bez problemow.
+- `flutter test` przechodzi.
+
+## Nie wykonano jeszcze
+
+- Nie dodano jeszcze pelnego modelu domenowego ani lokalnej bazy.
+- Nie dodano jeszcze pelnej lokalnej bazy relacyjnej.
+- Dodano podstawowy lokalny CRUD klientow.
+- Dodano podstawowy lokalny CRUD lokacji.
+- Ekran klientow pozwala:
+  - wyszukiwac klientow,
+  - dodawac klientow,
+  - edytowac klientow,
+  - usuwac klientow.
+- Ekran lokacji pozwala:
+  - wyszukiwac lokacje,
+  - dodawac lokacje,
+  - edytowac lokacje,
+  - usuwac lokacje.
+- Podniesiono wersje schematu Drift do `2`.
+- Dodano migracje schematu tworzaca tabele klientow i lokacji.
+- Dodano testy repozytoriow klientow i lokacji na Drift/SQLite.
+- Powiazano projekt z klientem i lokacja przez `clientId` oraz `locationId`.
+- Podniesiono wersje schematu Drift do `3`.
+- Dodano migracje schematu dodajaca `clientId` i `locationId` do tabeli projektow.
+- Formularz tworzenia projektu pozwala wybrac klienta i lokacje.
+- Edytor projektu pokazuje karte danych projektu z klientem i lokacja.
+- Edytor projektu pozwala zmienic nazwe projektu, klienta i lokacje.
+- Lista projektow pokazuje przypisanego klienta i lokacje.
+- Dodano test repozytorium projektu dla relacji klient/lokacja.
+- Dodano model presetow rozdzielnic:
+  - `PowerPreset`,
+  - `PowerOutletTemplate`.
+- Dodano tabele Drift/SQLite dla presetow rozdzielnic i szablonow gniazd.
+- Podniesiono wersje schematu Drift do `4`.
+- Dodano migracje schematu tworzaca tabele presetow i gniazd.
+- Dodano lokalne repozytorium presetow rozdzielnic na Drift/SQLite.
+- Dodano seed presetu `Rozdzielnia 32 A / 6x Schuko`.
+- Katalog ma teraz przelacznik:
+  - Urzadzenia,
+  - Presety.
+- Dodano podstawowy widok presetow rozdzielnic.
+- Widok presetow pozwala:
+  - zobaczyc gniazda presetu,
+  - dodac prosty preset z automatycznie rozlozonymi fazami,
+  - usunac preset.
+- Dodano test repozytorium presetow rozdzielnic.
+- Dodano model runtime rozdzielnic w projekcie:
+  - `ProjectDistro`,
+  - `ProjectOutlet`.
+- Dodano tabele Drift/SQLite dla rozdzielnic projektu i runtime gniazd.
+- Podniesiono wersje schematu Drift do `5`.
+- Dodano migracje schematu tworzaca tabele `project_distros` i `project_outlets`.
+- Repozytorium projektow zapisuje i odczytuje rozdzielnice razem z projektem.
+- Edytor projektu pozwala utworzyc rozdzielnice z presetu.
+- Edytor projektu pokazuje runtime gniazda rozdzielnicy z faza i limitem pradu.
+- Edytor projektu pozwala usunac rozdzielnice z projektu.
+- Dodano test repozytorium projektu dla runtime rozdzielnic i gniazd.
+- Dodano model `PowerConnection` dla polaczen patchera.
+- Dodano tabele Drift/SQLite `power_connections`.
+- Podniesiono wersje schematu Drift do `6`.
+- Repozytorium projektow zapisuje i odczytuje polaczenia razem z projektem.
+- Edytor projektu ma sekcje `Polaczenia`.
+- Edytor projektu pozwala polaczyc grupe z gniazdem rozdzielnicy.
+- Edytor projektu pozwala polaczyc rozdzielnice nadrzedna z rozdzielnica podrzedna.
+- Edytor projektu pokazuje polaczenia grupa -> rozdzielnica / gniazdo.
+- Edytor projektu pozwala usunac polaczenie.
+- Dodano test repozytorium projektu dla polaczen.
+- `PowerCalculationService` liczy obciazenia gniazd i sumaryczne obciazenia faz rozdzielnicy.
+- `PowerCalculationService` dzieli obciazenie grupy rowno miedzy wiele polaczen tej samej grupy.
+- `PowerCalculationService` propaguje obciazenie rozdzielnicy podrzednej do gniazda rozdzielnicy nadrzednej.
+- Rozdzielnica sprawdza przeciazenie wejscia na podstawie typu zlacza wejsciowego.
+- Karta rozdzielnicy pokazuje ostrzezenie, gdy obciazenie fazy przekracza limit wejscia.
+- Chipy faz `L1`, `L2`, `L3` pokazuja teraz `aktualne/limit A` i osobno oznaczaja przeciazona faze.
+- Gniazda, fazy i wejscie rozdzielnicy maja zolty stan ostrzegawczy, gdy zostaje 10% lub mniej zapasu do limitu.
+- Formularze urzadzen i pozycji recznych automatycznie przeliczaja `W <-> A` przy zalozeniu `230 V`.
+- Edytor projektu pokazuje przy rozdzielnicy obciazenia `L1`, `L2`, `L3`.
+- Edytor projektu pokazuje przy gniazdach wartosc `aktualne A / limit A`.
+- Gniazda z obciazeniem i przeciazeniem maja osobny status wizualny.
+- Dodano testy obciazenia gniazda i wykrywania przeciazenia.
+- Dodano testy podzialu obciazenia grupy miedzy wiele gniazd, wykrywania przeciazenia wejscia rozdzielnicy i wskazania przeciazonej fazy.
+- Dodano testy zoltego progu ostrzegawczego dla gniazda, wejscia i fazy rozdzielnicy.
+- Dodano test propagacji obciazenia rozdzielnicy podrzednej do rozdzielnicy nadrzednej.
+- Dodano `PatchValidationService`.
+- Walidacja patchera wykrywa wielokrotne uzycie tego samego gniazda.
+- Edytor projektu pokazuje konflikt wielokrotnego uzycia gniazda przy gniezdzie i przy polaczeniu.
+- Dodano test walidacji duplikatu gniazda.
+- Edytor projektu ma teraz przelacznik widoku:
+  - `Sprzet`,
+  - `Patcher`.
+- Widok `Sprzet` zawiera grupy i pozycje projektu.
+- Widok `Patcher` zawiera rozdzielnice, obciazenia, polaczenia i ostrzezenia patchera.
+- Dodano test widgetowy przejscia do widoku patchera.
+- Patcher pozwala utworzyc rozdzielnice na szybko bez zapisywania presetu:
+  - `Gniazdo 16 A`,
+  - `Listwa 4x16 A`,
+  - `Rozdzielnia 32 A / 6x Schuko`,
+  - `Przedluzka 32 A CEE`.
+- Dialog dodawania rozdzielnicy ma tryby:
+  - `Szybka`,
+  - `Preset`.
+- Dialog tworzenia polaczenia preferuje pierwsze wolne gniazdo.
+- Zajete gniazda sa oznaczone w wyborze gniazda.
+- Ponowne uzycie zajetego gniazda wymaga wlaczenia przelacznika `Uzyc zajetego gniazda`.
+- Dialog tworzenia polaczenia pozwala wybrac cel:
+  - `Grupa`,
+  - `Rozdzielnica`.
+- Przy laczeniu rozdzielnic lista gniazd jest filtrowana po typie wejscia rozdzielnicy podrzednej.
+- Dialog `Dodaj z katalogu` w edytorze projektu ma:
+  - wyszukiwanie po nazwie i producencie,
+  - filtrowanie po kategorii,
+  - liste wynikow z wyborem urzadzenia,
+  - szybkie chipy ilosci `1`, `2`, `4`, `6`, `8`, `12`.
+- Dodano test widgetowy dodawania pozycji z katalogu przez wyszukiwanie i szybka ilosc.
+- Dodano pierwszy model danych kratownic w projekcie:
+  - `ProjectTruss`,
+  - nazwa,
+  - system kratownicy,
+  - dlugosc,
+  - limit calkowity,
+  - limit rozlozony kg/m,
+  - reczne obciazenie,
+  - przypisane grupy,
+  - notatki.
+- Dodano tabele Drift/SQLite `project_trusses`.
+- Podniesiono wersje schematu Drift do `7`.
+- Repozytorium projektow zapisuje i odczytuje kratownice razem z projektem.
+- Dodano test repozytorium projektu dla kratownic.
+- Nie dodano jeszcze pelnego wizualnego patchera ani modulu kratownic.
+- Nie dodano jeszcze backupu JSON.
+
+## Nastepny krok
+
+1. Dodac pierwszy serwis obliczen kratownic.
+2. Dodac pierwszy backup JSON.
+3. Przygotowac bardziej wizualny uklad patchera.
+4. Rozbudowac lokacje o infrastrukture przylaczy.
+5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows.
+
+## Zalozenia obowiazujace
+
+- Legacy StageCalc jest zrodlem wymagan, ale nie kontraktem kompatybilnosci.
+- Import legacy nie jest czescia MVP.
+- Podstawowa praca lokalna nie wymaga logowania.
+- Telefon/Android jest platforma referencyjna UI.
+- Aplikacja ma dzialac offline-first.
