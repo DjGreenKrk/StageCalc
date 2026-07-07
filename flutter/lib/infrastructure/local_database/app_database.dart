@@ -232,6 +232,45 @@ class Locations extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+class LocationPowerConnectors extends Table {
+  TextColumn get id => text()();
+  TextColumn get locationId => text().references(Locations, #id)();
+  TextColumn get name => text()();
+  TextColumn get connectorTypeId => text()();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+  TextColumn get notes => text().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncState => text().withDefault(const Constant('localOnly'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class LocationContacts extends Table {
+  TextColumn get id => text()();
+  TextColumn get locationId => text().references(Locations, #id)();
+  TextColumn get role => text()();
+  TextColumn get name => text()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get email => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncState => text().withDefault(const Constant('localOnly'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class PowerPresets extends Table {
   TextColumn get id => text()();
   TextColumn get workspaceId => text().withDefault(const Constant('local'))();
@@ -280,6 +319,8 @@ class PowerOutletTemplates extends Table {
     CatalogDevices,
     Clients,
     Locations,
+    LocationPowerConnectors,
+    LocationContacts,
     PowerPresets,
     PowerOutletTemplates,
   ],
@@ -290,7 +331,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -319,6 +360,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         await migrator.createTable(projectTrusses);
+      }
+      if (from < 8) {
+        await migrator.createTable(locationPowerConnectors);
+      }
+      if (from < 9) {
+        await migrator.createTable(locationContacts);
       }
     },
   );

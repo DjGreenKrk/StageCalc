@@ -136,24 +136,12 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
     }
 
     final now = DateTime.now();
-    final outlets = <PowerOutletTemplate>[];
-    for (var index = 0; index < result.outletCount; index++) {
-      outlets.add(
-        PowerOutletTemplate(
-          id: 'outlet_${now.microsecondsSinceEpoch}_$index',
-          name: 'Gniazdo ${index + 1}',
-          connectorTypeId: result.outletConnectorTypeId,
-          phase: _phaseForIndex(index),
-        ),
-      );
-    }
-
     await repository.savePreset(
       PowerPreset(
         id: 'preset_${now.microsecondsSinceEpoch}',
         name: result.name,
         inputConnectorTypeId: result.inputConnectorTypeId,
-        outlets: outlets,
+        outlets: result.outlets,
         createdAt: now,
         updatedAt: now,
         syncStatus: OfflineSyncStatus.localOnly,
@@ -210,14 +198,6 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Preset usuniety lokalnie')));
-  }
-
-  PowerPhase _phaseForIndex(int index) {
-    return switch (index % 3) {
-      0 => PowerPhase.l1,
-      1 => PowerPhase.l2,
-      _ => PowerPhase.l3,
-    };
   }
 }
 
@@ -310,14 +290,20 @@ class _PresetDialog extends StatefulWidget {
 
 class _PresetDialogState extends State<_PresetDialog> {
   final _nameController = TextEditingController(text: 'Nowy preset');
-  final _outletCountController = TextEditingController(text: '6');
   String? _inputConnectorTypeId = 'cee_32a_5p';
-  String _outletConnectorTypeId = 'schuko_16a';
+  List<_PresetOutletGroup> _outletGroups = const [
+    _PresetOutletGroup(
+      id: 'default_schuko',
+      label: 'Schuko',
+      connectorTypeId: 'schuko_16a',
+      count: 6,
+      phaseMode: _PresetPhaseMode.balanced,
+    ),
+  ];
 
   @override
   void dispose() {
     _nameController.dispose();
-    _outletCountController.dispose();
     super.dispose();
   }
 
@@ -349,32 +335,28 @@ class _PresetDialogState extends State<_PresetDialog> {
                     child: Text(connector.label),
                   ),
               ],
-              onChanged: (value) =>
-                  setState(() => _inputConnectorTypeId = value),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _outletConnectorTypeId,
-              decoration: const InputDecoration(labelText: 'Typ gniazd'),
-              items: ConnectorTypes.all
-                  .map(
-                    (connector) => DropdownMenuItem(
-                      value: connector.id,
-                      child: Text(connector.label),
-                    ),
-                  )
-                  .toList(),
               onChanged: (value) {
-                if (value != null) {
-                  setState(() => _outletConnectorTypeId = value);
-                }
+                setState(() {
+                  _inputConnectorTypeId = value;
+                  _outletGroups = _normalizePresetOutletGroups(
+                    _outletGroups,
+                    value,
+                  );
+                });
               },
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _outletCountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Liczba gniazd'),
+            _PresetOutletGroupsEditor(
+              groups: _outletGroups,
+              inputConnectorTypeId: _inputConnectorTypeId,
+              onChanged: (groups) {
+                setState(() {
+                  _outletGroups = _normalizePresetOutletGroups(
+                    groups,
+                    _inputConnectorTypeId,
+                  );
+                });
+              },
             ),
           ],
         ),
@@ -391,8 +373,8 @@ class _PresetDialogState extends State<_PresetDialog> {
 
   void _submit() {
     final name = _nameController.text.trim();
-    final outletCount = int.tryParse(_outletCountController.text.trim()) ?? 0;
-    if (name.isEmpty || outletCount <= 0) {
+    final outlets = _buildOutlets();
+    if (name.isEmpty || outlets.isEmpty) {
       return;
     }
 
@@ -400,23 +382,471 @@ class _PresetDialogState extends State<_PresetDialog> {
       _PresetFormResult(
         name: name,
         inputConnectorTypeId: _inputConnectorTypeId,
-        outletConnectorTypeId: _outletConnectorTypeId,
-        outletCount: outletCount,
+        outlets: outlets,
       ),
     );
   }
+
+  List<PowerOutletTemplate> _buildOutlets() {
+    var globalIndex = 0;
+    return [
+      for (final group in _normalizePresetOutletGroups(
+        _outletGroups,
+        _inputConnectorTypeId,
+      ))
+        for (var index = 0; index < group.count.clamp(0, 48).toInt(); index++)
+          PowerOutletTemplate(
+            id: 'outlet_${globalIndex++}',
+            name: _defaultOutletName(
+              label: group.label,
+              connectorTypeId: group.connectorTypeId,
+              phase: group.phaseMode.phaseForIndex(
+                index,
+                count: group.count.clamp(0, 48).toInt(),
+              ),
+              index: index,
+            ),
+            connectorTypeId: group.connectorTypeId,
+            phase: group.phaseMode.phaseForIndex(
+              index,
+              count: group.count.clamp(0, 48).toInt(),
+            ),
+          ),
+    ];
+  }
+}
+
+class _PresetOutletGroup {
+  const _PresetOutletGroup({
+    required this.id,
+    required this.label,
+    required this.connectorTypeId,
+    required this.count,
+    required this.phaseMode,
+  });
+
+  final String id;
+  final String label;
+  final String connectorTypeId;
+  final int count;
+  final _PresetPhaseMode phaseMode;
+}
+
+enum _PresetPhaseMode { l1Only, balanced, all }
+
+extension _PresetPhaseModeData on _PresetPhaseMode {
+  String get label {
+    return switch (this) {
+      _PresetPhaseMode.l1Only => 'Wszystkie L1',
+      _PresetPhaseMode.balanced => 'L1/L2/L3 grupami',
+      _PresetPhaseMode.all => 'Wszystkie 3F / All',
+    };
+  }
+
+  PowerPhase phaseForIndex(int index, {required int count}) {
+    return switch (this) {
+      _PresetPhaseMode.l1Only => PowerPhase.l1,
+      _PresetPhaseMode.balanced => _phaseByGroupedIndex(index, count),
+      _PresetPhaseMode.all => PowerPhase.all,
+    };
+  }
+}
+
+class _PresetOutletGroupsEditor extends StatelessWidget {
+  const _PresetOutletGroupsEditor({
+    required this.groups,
+    required this.inputConnectorTypeId,
+    required this.onChanged,
+  });
+
+  final List<_PresetOutletGroup> groups;
+  final String? inputConnectorTypeId;
+  final ValueChanged<List<_PresetOutletGroup>> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Sekcje wyjsc',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _addGroup(context),
+              icon: const Icon(Icons.add),
+              label: const Text('Dodaj'),
+            ),
+          ],
+        ),
+        if (groups.isEmpty)
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Brak sekcji wyjsc.'),
+          )
+        else
+          for (final group in groups)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(group.label),
+              subtitle: Text(
+                '${group.count}x ${_connectorLabel(group.connectorTypeId)} / ${group.phaseMode.label}',
+              ),
+              trailing: Wrap(
+                spacing: 4,
+                children: [
+                  IconButton(
+                    tooltip: 'Edytuj sekcje',
+                    onPressed: () => _editGroup(context, group),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
+                    tooltip: 'Usun sekcje',
+                    onPressed: () {
+                      onChanged(
+                        groups
+                            .where((candidate) => candidate.id != group.id)
+                            .toList(),
+                      );
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+
+  Future<void> _addGroup(BuildContext context) async {
+    final result = await showDialog<_PresetOutletGroup>(
+      context: context,
+      builder: (context) => _PresetOutletGroupDialog(
+        inputConnectorTypeId: inputConnectorTypeId,
+        group: _PresetOutletGroup(
+          id: 'group_${DateTime.now().microsecondsSinceEpoch}',
+          label: 'Schuko',
+          connectorTypeId: 'schuko_16a',
+          count: 1,
+          phaseMode: _PresetPhaseMode.l1Only,
+        ),
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    onChanged([...groups, result]);
+  }
+
+  Future<void> _editGroup(
+    BuildContext context,
+    _PresetOutletGroup group,
+  ) async {
+    final result = await showDialog<_PresetOutletGroup>(
+      context: context,
+      builder: (context) => _PresetOutletGroupDialog(
+        group: group,
+        inputConnectorTypeId: inputConnectorTypeId,
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    onChanged(
+      groups
+          .map((candidate) => candidate.id == result.id ? result : candidate)
+          .toList(),
+    );
+  }
+}
+
+class _PresetOutletGroupDialog extends StatefulWidget {
+  const _PresetOutletGroupDialog({
+    required this.group,
+    required this.inputConnectorTypeId,
+  });
+
+  final _PresetOutletGroup group;
+  final String? inputConnectorTypeId;
+
+  @override
+  State<_PresetOutletGroupDialog> createState() =>
+      _PresetOutletGroupDialogState();
+}
+
+class _PresetOutletGroupDialogState extends State<_PresetOutletGroupDialog> {
+  late final TextEditingController _labelController;
+  late final TextEditingController _countController;
+  late String _connectorTypeId;
+  late _PresetPhaseMode _phaseMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(text: widget.group.label);
+    _countController = TextEditingController(text: '${widget.group.count}');
+    _connectorTypeId = widget.group.connectorTypeId;
+    _phaseMode = widget.group.phaseMode;
+    _normalizePhaseMode();
+    _labelWasEdited =
+        widget.group.label.trim() != _defaultConnectorName(_connectorTypeId);
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _countController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Sekcja wyjsc'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _labelController,
+              onChanged: (_) => _labelWasEdited = true,
+              decoration: const InputDecoration(labelText: 'Opis'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _connectorTypeId,
+              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              items: ConnectorTypes.all
+                  .map(
+                    (connector) => DropdownMenuItem(
+                      value: connector.id,
+                      child: Text(connector.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _connectorTypeId = value;
+                    if (_isThreePhaseConnector(value)) {
+                      _phaseMode = _PresetPhaseMode.all;
+                    } else if (_inputIsSinglePhase) {
+                      _phaseMode = _PresetPhaseMode.l1Only;
+                    } else if (_phaseMode == _PresetPhaseMode.all) {
+                      _phaseMode = _PresetPhaseMode.balanced;
+                    }
+                    _refreshAutoLabel();
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _countController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Ilosc'),
+            ),
+            const SizedBox(height: 12),
+            if (_isThreePhaseConnector(_connectorTypeId))
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+              )
+            else if (_inputIsSinglePhase)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+              )
+            else
+              DropdownButtonFormField<_PresetPhaseMode>(
+                initialValue: _phaseMode,
+                decoration: const InputDecoration(labelText: 'Rozklad faz'),
+                items: _PresetPhaseMode.values
+                    .where((mode) => mode != _PresetPhaseMode.all)
+                    .map(
+                      (mode) => DropdownMenuItem(
+                        value: mode,
+                        child: Text(mode.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _phaseMode = value);
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Zapisz')),
+      ],
+    );
+  }
+
+  void _submit() {
+    final label = _labelController.text.trim();
+    final count = int.tryParse(_countController.text.trim()) ?? 0;
+    if (label.isEmpty || count <= 0) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _PresetOutletGroup(
+        id: widget.group.id,
+        label: label,
+        connectorTypeId: _connectorTypeId,
+        count: count,
+        phaseMode: _normalizedPhaseMode,
+      ),
+    );
+  }
+
+  bool get _inputIsSinglePhase =>
+      _isSinglePhaseConnector(widget.inputConnectorTypeId);
+
+  _PresetPhaseMode get _normalizedPhaseMode {
+    if (_isThreePhaseConnector(_connectorTypeId)) {
+      return _PresetPhaseMode.all;
+    }
+    if (_inputIsSinglePhase) {
+      return _PresetPhaseMode.l1Only;
+    }
+    return _phaseMode == _PresetPhaseMode.all
+        ? _PresetPhaseMode.balanced
+        : _phaseMode;
+  }
+
+  void _normalizePhaseMode() {
+    _phaseMode = _normalizedPhaseMode;
+  }
+
+  var _labelWasEdited = false;
+
+  void _refreshAutoLabel() {
+    if (_labelWasEdited) {
+      return;
+    }
+    _labelController.text = _defaultConnectorName(_connectorTypeId);
+  }
+}
+
+String _defaultConnectorName(String connectorTypeId) {
+  final connector = ConnectorTypes.findById(connectorTypeId);
+  return switch (connector?.id) {
+    'schuko_16a' => 'Schuko',
+    'cee_16a_3p' => 'CEE 16A',
+    'cee_16a_5p' => 'CEE 16A',
+    'cee_32a_5p' => 'CEE 32A',
+    'cee_63a_5p' => 'CEE 63A',
+    'cee_125a_5p' => 'CEE 125A',
+    'powerlock_200a' => 'Powerlock 200A',
+    'powerlock_400a' => 'Powerlock 400A',
+    _ => connector?.label ?? connectorTypeId,
+  };
+}
+
+String _defaultOutletName({
+  required String label,
+  required String connectorTypeId,
+  required PowerPhase phase,
+  required int index,
+}) {
+  final base = label.trim().isEmpty
+      ? _defaultConnectorName(connectorTypeId)
+      : label;
+
+  if (phase == PowerPhase.all) {
+    return '$base ${index + 1}';
+  }
+
+  return '$base ${_phaseLabel(phase)}.${index + 1}';
+}
+
+String _connectorLabel(String connectorTypeId) {
+  return ConnectorTypes.findById(connectorTypeId)?.label ?? connectorTypeId;
+}
+
+bool _isThreePhaseConnector(String connectorTypeId) {
+  return ConnectorTypes.findById(connectorTypeId)?.phaseCount == 3;
+}
+
+PowerPhase _phaseByGroupedIndex(int index, int count) {
+  final normalizedCount = count <= 0 ? 1 : count;
+  final phaseBlockSize = (normalizedCount / 3).ceil();
+  final phaseSlot = index ~/ phaseBlockSize;
+  if (phaseSlot <= 0) {
+    return PowerPhase.l1;
+  }
+  if (phaseSlot == 1) {
+    return PowerPhase.l2;
+  }
+  return PowerPhase.l3;
+}
+
+bool _isSinglePhaseConnector(String? connectorTypeId) {
+  if (connectorTypeId == null) {
+    return false;
+  }
+  return ConnectorTypes.findById(connectorTypeId)?.phaseCount == 1;
+}
+
+List<_PresetOutletGroup> _normalizePresetOutletGroups(
+  List<_PresetOutletGroup> groups,
+  String? inputConnectorTypeId,
+) {
+  final inputIsSinglePhase = _isSinglePhaseConnector(inputConnectorTypeId);
+  return groups.map((group) {
+    final phaseMode = _isThreePhaseConnector(group.connectorTypeId)
+        ? _PresetPhaseMode.all
+        : inputIsSinglePhase
+        ? _PresetPhaseMode.l1Only
+        : group.phaseMode == _PresetPhaseMode.all
+        ? _PresetPhaseMode.balanced
+        : group.phaseMode;
+    if (phaseMode == group.phaseMode) {
+      return group;
+    }
+    return _PresetOutletGroup(
+      id: group.id,
+      label: group.label,
+      connectorTypeId: group.connectorTypeId,
+      count: group.count,
+      phaseMode: phaseMode,
+    );
+  }).toList();
+}
+
+String _phaseLabel(PowerPhase phase) {
+  return switch (phase) {
+    PowerPhase.l1 => 'L1',
+    PowerPhase.l2 => 'L2',
+    PowerPhase.l3 => 'L3',
+    PowerPhase.all => 'All',
+  };
 }
 
 class _PresetFormResult {
   const _PresetFormResult({
     required this.name,
-    required this.outletConnectorTypeId,
-    required this.outletCount,
+    required this.outlets,
     this.inputConnectorTypeId,
   });
 
   final String name;
   final String? inputConnectorTypeId;
-  final String outletConnectorTypeId;
-  final int outletCount;
+  final List<PowerOutletTemplate> outlets;
 }

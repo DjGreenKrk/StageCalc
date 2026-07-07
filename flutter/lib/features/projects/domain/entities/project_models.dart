@@ -342,6 +342,24 @@ class ProjectOutlet {
   final PowerPhase phase;
   final double maxCurrentA;
 
+  ProjectOutlet copyWith({
+    String? id,
+    String? templateOutletId,
+    String? name,
+    String? connectorTypeId,
+    PowerPhase? phase,
+    double? maxCurrentA,
+  }) {
+    return ProjectOutlet(
+      id: id ?? this.id,
+      templateOutletId: templateOutletId ?? this.templateOutletId,
+      name: name ?? this.name,
+      connectorTypeId: connectorTypeId ?? this.connectorTypeId,
+      phase: phase ?? this.phase,
+      maxCurrentA: maxCurrentA ?? this.maxCurrentA,
+    );
+  }
+
   Map<String, Object?> toJson() {
     return {
       'id': id,

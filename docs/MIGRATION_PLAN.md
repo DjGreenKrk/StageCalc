@@ -342,6 +342,8 @@ Prace:
 
 - Dodawanie rozdzielnic z presetu/katalogu/lokacji.
 - Obecny stan: mozna dodac szybka rozdzielnice bez tworzenia presetu.
+- Obecny stan: mozna utworzyc rozdzielnice custom i edytowac wejscie oraz gniazda istniejacej rozdzielnicy.
+- Obecny stan: customowe rozdzielnice i presety moga miec mieszane sekcje wyjsc, np. kilka wyjsc CEE i kilka wyjsc Schuko w jednej rozdzielnicy.
 - Tworzenie runtime outletow.
 - UI gniazd.
 - Polaczenia grupa/rozdzielnica.
@@ -354,6 +356,18 @@ Prace:
 - Obecny stan: wejscie rozdzielnicy jest sprawdzane wzgledem limitu typu zlacza, np. `3F32A`.
 - Obecny stan: przeciazenie wejscia jest widoczne rowniez na konkretnej fazie `L1/L2/L3`, nie tylko na gniezdzie lub ogolnym chipie wejscia.
 - Obecny stan: obciazenie od 90% limitu pokazuje zolte ostrzezenie dla gniazda, fazy i wejscia rozdzielnicy.
+
+### Etap 6A: Lokacje i przylacza
+
+Wynik:
+
+- Lokacja moze opisac dostepna infrastrukture zasilania obiektu.
+
+Prace:
+
+- Obecny stan: lokacje maja lokalne przylacza energetyczne.
+- Obecny stan: dostepna moc obiektu jest liczona z przylaczy.
+- Kolejny krok: uzycie przylaczy lokacji jako zrodel w patcherze projektu.
 
 ### Etap 7: Kratownice
 

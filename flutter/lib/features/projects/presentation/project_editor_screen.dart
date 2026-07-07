@@ -164,10 +164,17 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                 for (final distro in _project.distros) ...[
                   _DistroCard(
                     distro: distro,
+                    isPowerSource: !_project.connections.any(
+                      (connection) =>
+                          connection.targetType ==
+                              PowerConnectionTargetType.distro &&
+                          connection.targetDistroId == distro.id,
+                    ),
                     phaseLoad: powerLoads.distroPhaseLoads[distro.id],
                     distroLoad: powerLoads.distroLoads[distro.id],
                     outletLoads: powerLoads.outletLoads,
                     patchValidation: patchValidation,
+                    onEdit: () => _openEditDistroDialog(distro),
                     onDelete: () => _deleteDistro(distro),
                   ),
                   const SizedBox(height: 12),
@@ -257,9 +264,15 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   }
 
   Future<void> _openAddDistroMenu() async {
+    final projectLocation = _locations
+        .where((location) => location.id == _project.locationId)
+        .firstOrNull;
     final result = await showDialog<_DistroCreateResult>(
       context: context,
-      builder: (context) => _DistroCreateDialog(presets: _powerPresets),
+      builder: (context) => _DistroCreateDialog(
+        presets: _powerPresets,
+        location: projectLocation,
+      ),
     );
 
     if (result == null) {
@@ -270,6 +283,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       name: result.name,
       sourceType: result.sourceType,
       presetId: result.preset?.id,
+      locationConnectorGroupId: result.locationConnectorGroupId,
       inputConnectorTypeId: result.inputConnectorTypeId,
       outletTemplates: result.outlets,
     );
@@ -281,6 +295,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     required String? inputConnectorTypeId,
     required List<PowerOutletTemplate> outletTemplates,
     String? presetId,
+    String? locationConnectorGroupId,
   }) async {
     final now = DateTime.now();
     final distroId = 'distro_${now.microsecondsSinceEpoch}';
@@ -306,6 +321,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       name: name,
       sourceType: sourceType,
       presetId: presetId,
+      locationConnectorGroupId: locationConnectorGroupId,
       inputConnectorTypeId: inputConnectorTypeId,
       isRootPowerSource: _project.distros.isEmpty,
       outlets: outlets,
@@ -313,6 +329,52 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
 
     await _saveProject(
       _project.copyWith(distros: [..._project.distros, distro], updatedAt: now),
+    );
+  }
+
+  Future<void> _openEditDistroDialog(ProjectDistro distro) async {
+    final result = await showDialog<_DistroLayoutResult>(
+      context: context,
+      builder: (context) => _DistroLayoutDialog(distro: distro),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final distros = _project.distros.map((candidate) {
+      if (candidate.id != distro.id) {
+        return candidate;
+      }
+
+      return ProjectDistro(
+        id: candidate.id,
+        phaseId: candidate.phaseId,
+        name: result.name,
+        sourceType: ProjectDistroSourceType.manual,
+        catalogDeviceId: candidate.catalogDeviceId,
+        locationConnectorGroupId: candidate.locationConnectorGroupId,
+        presetId: candidate.presetId,
+        inputConnectorTypeId: result.inputConnectorTypeId,
+        isRootPowerSource: candidate.isRootPowerSource,
+        outlets: result.outlets,
+      );
+    }).toList();
+    final outletIds = result.outlets.map((outlet) => outlet.id).toSet();
+
+    await _saveProject(
+      _project.copyWith(
+        distros: distros,
+        connections: _project.connections
+            .where(
+              (connection) =>
+                  connection.sourceDistroId != distro.id ||
+                  outletIds.contains(connection.sourceOutletId),
+            )
+            .toList(),
+        updatedAt: now,
+      ),
     );
   }
 
@@ -368,20 +430,32 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     }
 
     final now = DateTime.now();
-    final connection = PowerConnection(
-      id: 'connection_${now.microsecondsSinceEpoch}',
-      phaseId: _project.phaseId,
-      sourceDistroId: result.sourceDistroId,
-      sourceOutletId: result.sourceOutletId,
-      targetType: result.targetType,
-      targetGroupId: result.targetGroupId,
-      targetDistroId: result.targetDistroId,
-      selectedPhases: result.selectedPhases,
-    );
+    final connections = [
+      for (final source in result.sources.indexed)
+        PowerConnection(
+          id: 'connection_${now.microsecondsSinceEpoch}_${source.$1}',
+          phaseId: _project.phaseId,
+          sourceDistroId: source.$2.sourceDistroId,
+          sourceOutletId: source.$2.sourceOutletId,
+          targetType: result.targetType,
+          targetGroupId: result.targetGroupId,
+          targetDistroId: result.targetDistroId,
+          selectedPhases: result.selectedPhases,
+        ),
+    ];
 
     await _saveProject(
       _project.copyWith(
-        connections: [..._project.connections, connection],
+        distros: result.targetType == PowerConnectionTargetType.distro
+            ? _project.distros
+                  .map(
+                    (distro) => distro.id == result.targetDistroId
+                        ? _copyDistro(distro, isRootPowerSource: false)
+                        : distro,
+                  )
+                  .toList()
+            : _project.distros,
+        connections: [..._project.connections, ...connections],
         updatedAt: now,
       ),
     );
@@ -684,10 +758,16 @@ class _ProjectMetadataCard extends StatelessWidget {
         .where((client) => client.id == project.clientId)
         .firstOrNull
         ?.name;
+    final client = clients
+        .where((client) => client.id == project.clientId)
+        .firstOrNull;
     final locationName = locations
         .where((location) => location.id == project.locationId)
         .firstOrNull
         ?.name;
+    final location = locations
+        .where((location) => location.id == project.locationId)
+        .firstOrNull;
 
     return GreenCrewCard(
       child: Column(
@@ -715,13 +795,19 @@ class _ProjectMetadataCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              Chip(
+              ActionChip(
                 avatar: const Icon(Icons.badge_outlined, size: 16),
                 label: Text(clientName ?? 'Bez klienta'),
+                onPressed: client == null
+                    ? null
+                    : () => _showClientSummary(context, client),
               ),
-              Chip(
+              ActionChip(
                 avatar: const Icon(Icons.location_city_outlined, size: 16),
                 label: Text(locationName ?? 'Bez lokacji'),
+                onPressed: location == null
+                    ? null
+                    : () => _showLocationSummary(context, location),
               ),
             ],
           ),
@@ -729,6 +815,103 @@ class _ProjectMetadataCard extends StatelessWidget {
       ),
     );
   }
+
+  void _showClientSummary(BuildContext context, Client client) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => _InfoSummaryDialog(
+        title: client.name,
+        icon: Icons.badge_outlined,
+        rows: [
+          _InfoRow('Kontakt', client.contactPerson),
+          _InfoRow('Telefon', client.phone),
+          _InfoRow('Email', client.email),
+          _InfoRow('NIP', client.nip),
+          _InfoRow('Adres', client.address),
+          _InfoRow('Notatki', client.notes),
+        ],
+      ),
+    );
+  }
+
+  void _showLocationSummary(BuildContext context, Location location) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => _InfoSummaryDialog(
+        title: location.name,
+        icon: Icons.location_city_outlined,
+        rows: [
+          _InfoRow('Adres', location.address),
+          _InfoRow(
+            'Pojemnosc',
+            location.capacity == null ? null : '${location.capacity}',
+          ),
+          _InfoRow('Kontakt', location.contactName),
+          _InfoRow('Telefon', location.contactPhone),
+          _InfoRow('Email', location.contactEmail),
+          _InfoRow('Notatki', location.notes),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoSummaryDialog extends StatelessWidget {
+  const _InfoSummaryDialog({
+    required this.title,
+    required this.icon,
+    required this.rows,
+  });
+
+  final String title;
+  final IconData icon;
+  final List<_InfoRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleRows = rows
+        .where((row) => row.value != null && row.value!.trim().isNotEmpty)
+        .toList();
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(icon),
+          const SizedBox(width: 8),
+          Expanded(child: Text(title)),
+        ],
+      ),
+      content: visibleRows.isEmpty
+          ? const Text('Brak dodatkowych danych.')
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final row in visibleRows) ...[
+                  Text(
+                    row.label,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  Text(row.value!),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Zamknij'),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoRow {
+  const _InfoRow(this.label, this.value);
+
+  final String label;
+  final String? value;
 }
 
 class _ProjectMetadataDialog extends StatefulWidget {
@@ -856,18 +1039,22 @@ class _ProjectMetadataResult {
 class _DistroCard extends StatelessWidget {
   const _DistroCard({
     required this.distro,
+    required this.isPowerSource,
     required this.outletLoads,
     required this.patchValidation,
+    required this.onEdit,
     required this.onDelete,
     this.phaseLoad,
     this.distroLoad,
   });
 
   final ProjectDistro distro;
+  final bool isPowerSource;
   final PowerPhaseLoad? phaseLoad;
   final DistroPowerLoad? distroLoad;
   final Map<String, OutletPowerLoad> outletLoads;
   final PatchValidationResult patchValidation;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   @override
@@ -884,11 +1071,16 @@ class _DistroCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              if (distro.isRootPowerSource)
+              if (isPowerSource)
                 const Chip(
                   avatar: Icon(Icons.power, size: 16),
                   label: Text('Zrodlo'),
                 ),
+              IconButton(
+                tooltip: 'Edytuj rozdzielnice',
+                onPressed: onEdit,
+                icon: const Icon(Icons.tune),
+              ),
               IconButton(
                 tooltip: 'Usun rozdzielnice',
                 onPressed: onDelete,
@@ -905,6 +1097,11 @@ class _DistroCard extends StatelessWidget {
                 avatar: const Icon(Icons.input, size: 16),
                 label: Text(_connectorLabel(distro.inputConnectorTypeId)),
               ),
+              if (distro.sourceType == ProjectDistroSourceType.location)
+                const Chip(
+                  avatar: Icon(Icons.location_city_outlined, size: 16),
+                  label: Text('Lokacja'),
+                ),
               if ((distroLoad?.isInputOverloaded ?? false) ||
                   (distroLoad?.isInputNearLimit ?? false))
                 _StatusChip(
@@ -1084,9 +1281,10 @@ class _OutletLoadChip extends StatelessWidget {
 }
 
 class _DistroCreateDialog extends StatefulWidget {
-  const _DistroCreateDialog({required this.presets});
+  const _DistroCreateDialog({required this.presets, required this.location});
 
   final List<PowerPreset> presets;
+  final Location? location;
 
   @override
   State<_DistroCreateDialog> createState() => _DistroCreateDialogState();
@@ -1096,12 +1294,24 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
   late final TextEditingController _nameController;
   _DistroCreateMode _mode = _DistroCreateMode.quick;
   _QuickDistroTemplate _quickTemplate = _QuickDistroTemplate.schukoSingle;
+  String? _customInputConnectorTypeId = 'cee_32a_5p';
+  List<_CustomOutletGroup> _customOutletGroups = const [
+    _CustomOutletGroup(
+      id: 'default_schuko',
+      label: 'Schuko',
+      connectorTypeId: 'schuko_16a',
+      count: 6,
+      phaseMode: _CustomDistroPhaseMode.balanced,
+    ),
+  ];
   PowerPreset? _selectedPreset;
+  LocationPowerConnector? _selectedLocationConnector;
 
   @override
   void initState() {
     super.initState();
     _selectedPreset = widget.presets.firstOrNull;
+    _selectedLocationConnector = widget.location?.powerConnectors.firstOrNull;
     _nameController = TextEditingController(text: _quickTemplate.label);
   }
 
@@ -1114,12 +1324,8 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final selectedPreset = _selectedPreset;
-    final selectedOutlets = _mode == _DistroCreateMode.quick
-        ? _quickTemplate.outlets
-        : selectedPreset?.outlets ?? const <PowerOutletTemplate>[];
-    final inputConnectorTypeId = _mode == _DistroCreateMode.quick
-        ? _quickTemplate.inputConnectorTypeId
-        : selectedPreset?.inputConnectorTypeId;
+    final selectedOutlets = _selectedOutlets;
+    final inputConnectorTypeId = _inputConnectorTypeId;
 
     return AlertDialog(
       title: const Text('Dodaj rozdzielnice'),
@@ -1139,14 +1345,31 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
                   icon: Icon(Icons.inventory_2_outlined),
                   label: Text('Preset'),
                 ),
+                ButtonSegment(
+                  value: _DistroCreateMode.custom,
+                  icon: Icon(Icons.tune),
+                  label: Text('Custom'),
+                ),
+                ButtonSegment(
+                  value: _DistroCreateMode.location,
+                  icon: Icon(Icons.location_city_outlined),
+                  label: Text('Lokacja'),
+                ),
               ],
               selected: {_mode},
               onSelectionChanged: (selection) {
                 setState(() {
                   _mode = selection.single;
-                  _nameController.text = _mode == _DistroCreateMode.quick
-                      ? _quickTemplate.label
-                      : _selectedPreset?.name ?? 'Nowa rozdzielnica';
+                  _nameController.text = switch (_mode) {
+                    _DistroCreateMode.quick => _quickTemplate.label,
+                    _DistroCreateMode.custom => 'Rozdzielnica custom',
+                    _DistroCreateMode.location =>
+                      _selectedLocationConnector == null
+                          ? 'Zasilanie z lokacji'
+                          : '${widget.location?.name ?? 'Lokacja'} / ${_selectedLocationConnector!.name}',
+                    _DistroCreateMode.preset =>
+                      _selectedPreset?.name ?? 'Nowa rozdzielnica',
+                  };
                 });
               },
             ),
@@ -1172,7 +1395,65 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
                   }
                 },
               )
-            else if (widget.presets.isEmpty)
+            else if (_mode == _DistroCreateMode.custom) ...[
+              _connectorDropdown(
+                label: 'Wejscie',
+                value: _customInputConnectorTypeId,
+                allowEmpty: true,
+                onChanged: (value) {
+                  setState(() {
+                    _customInputConnectorTypeId = value;
+                    _customOutletGroups = _normalizeCustomOutletGroups(
+                      _customOutletGroups,
+                      value,
+                    );
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+              _OutletGroupsEditor(
+                groups: _customOutletGroups,
+                inputConnectorTypeId: _customInputConnectorTypeId,
+                onChanged: (groups) {
+                  setState(() {
+                    _customOutletGroups = _normalizeCustomOutletGroups(
+                      groups,
+                      _customInputConnectorTypeId,
+                    );
+                  });
+                },
+              ),
+            ] else if (_mode == _DistroCreateMode.location) ...[
+              if (widget.location == null)
+                const Text('Projekt nie ma przypisanej lokacji.')
+              else if (widget.location!.powerConnectors.isEmpty)
+                const Text('Lokacja nie ma zapisanych grup zlaczy.')
+              else
+                DropdownButtonFormField<LocationPowerConnector>(
+                  initialValue: _selectedLocationConnector,
+                  decoration: const InputDecoration(labelText: 'Grupa zlaczy'),
+                  items: widget.location!.powerConnectors
+                      .map(
+                        (connector) => DropdownMenuItem(
+                          value: connector,
+                          child: Text(
+                            '${connector.name} / ${connector.quantity}x '
+                            '${_connectorLabel(connector.connectorTypeId)}',
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (connector) {
+                    if (connector != null) {
+                      setState(() {
+                        _selectedLocationConnector = connector;
+                        _nameController.text =
+                            '${widget.location!.name} / ${connector.name}';
+                      });
+                    }
+                  },
+                ),
+            ] else if (widget.presets.isEmpty)
               const Text('Brak presetow rozdzielnic.')
             else
               DropdownButtonFormField<PowerPreset>(
@@ -1247,7 +1528,108 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
     if (_mode == _DistroCreateMode.preset) {
       return _selectedPreset != null;
     }
+    if (_mode == _DistroCreateMode.custom) {
+      return _customOutletGroups.any((group) => group.count > 0);
+    }
+    if (_mode == _DistroCreateMode.location) {
+      return _selectedLocationConnector != null;
+    }
     return true;
+  }
+
+  String? get _inputConnectorTypeId {
+    return switch (_mode) {
+      _DistroCreateMode.quick => _quickTemplate.inputConnectorTypeId,
+      _DistroCreateMode.preset => _selectedPreset?.inputConnectorTypeId,
+      _DistroCreateMode.custom => _customInputConnectorTypeId,
+      _DistroCreateMode.location => null,
+    };
+  }
+
+  List<PowerOutletTemplate> get _selectedOutlets {
+    return switch (_mode) {
+      _DistroCreateMode.quick => _quickTemplate.outlets,
+      _DistroCreateMode.preset =>
+        _selectedPreset?.outlets ?? const <PowerOutletTemplate>[],
+      _DistroCreateMode.custom => _customOutlets,
+      _DistroCreateMode.location => _locationOutlets,
+    };
+  }
+
+  List<PowerOutletTemplate> get _locationOutlets {
+    final connector = _selectedLocationConnector;
+    if (connector == null) {
+      return const [];
+    }
+
+    final count = connector.quantity.clamp(0, 96).toInt();
+    return [
+      for (var index = 0; index < count; index++)
+        PowerOutletTemplate(
+          id: 'location_${connector.id}_$index',
+          name: _defaultOutletName(
+            label: connector.name,
+            connectorTypeId: connector.connectorTypeId,
+            phase: _phaseForLocationConnector(connector, index, count),
+            index: index,
+          ),
+          connectorTypeId: connector.connectorTypeId,
+          phase: _phaseForLocationConnector(connector, index, count),
+        ),
+    ];
+  }
+
+  List<PowerOutletTemplate> get _customOutlets {
+    var globalIndex = 0;
+    return [
+      for (final group in _normalizeCustomOutletGroups(
+        _customOutletGroups,
+        _customInputConnectorTypeId,
+      ))
+        for (var index = 0; index < group.count.clamp(0, 48).toInt(); index++)
+          PowerOutletTemplate(
+            id: 'custom_${globalIndex++}',
+            name: _defaultOutletName(
+              label: group.label,
+              connectorTypeId: group.connectorTypeId,
+              phase: group.phaseMode.phaseForIndex(
+                index,
+                count: group.count.clamp(0, 48).toInt(),
+              ),
+              index: index,
+            ),
+            connectorTypeId: group.connectorTypeId,
+            phase: group.phaseMode.phaseForIndex(
+              index,
+              count: group.count.clamp(0, 48).toInt(),
+            ),
+          ),
+    ];
+  }
+
+  Widget _connectorDropdown({
+    required String label,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+    bool allowEmpty = false,
+  }) {
+    return DropdownButtonFormField<String?>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: label),
+      items: [
+        if (allowEmpty)
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Brak / nieznane'),
+          ),
+        for (final connector in ConnectorTypes.all)
+          DropdownMenuItem<String?>(
+            value: connector.id,
+            child: Text(connector.label),
+          ),
+      ],
+      onChanged: onChanged,
+    );
   }
 
   void _submit() {
@@ -1273,6 +1655,35 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
       return;
     }
 
+    if (_mode == _DistroCreateMode.custom) {
+      Navigator.of(context).pop(
+        _DistroCreateResult(
+          name: name,
+          sourceType: ProjectDistroSourceType.manual,
+          inputConnectorTypeId: _customInputConnectorTypeId,
+          outlets: _customOutlets,
+        ),
+      );
+      return;
+    }
+
+    if (_mode == _DistroCreateMode.location) {
+      final connector = _selectedLocationConnector;
+      if (connector == null) {
+        return;
+      }
+      Navigator.of(context).pop(
+        _DistroCreateResult(
+          name: name,
+          sourceType: ProjectDistroSourceType.location,
+          inputConnectorTypeId: null,
+          outlets: _locationOutlets,
+          locationConnectorGroupId: connector.id,
+        ),
+      );
+      return;
+    }
+
     Navigator.of(context).pop(
       _DistroCreateResult(
         name: name,
@@ -1284,7 +1695,27 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
   }
 }
 
-enum _DistroCreateMode { quick, preset }
+enum _DistroCreateMode { quick, preset, custom, location }
+
+enum _CustomDistroPhaseMode { l1Only, balanced, all }
+
+extension _CustomDistroPhaseModeData on _CustomDistroPhaseMode {
+  String get label {
+    return switch (this) {
+      _CustomDistroPhaseMode.l1Only => 'Wszystkie L1',
+      _CustomDistroPhaseMode.balanced => 'L1/L2/L3 grupami',
+      _CustomDistroPhaseMode.all => 'Wszystkie 3F / All',
+    };
+  }
+
+  PowerPhase phaseForIndex(int index, {required int count}) {
+    return switch (this) {
+      _CustomDistroPhaseMode.l1Only => PowerPhase.l1,
+      _CustomDistroPhaseMode.balanced => _phaseByGroupedIndex(index, count),
+      _CustomDistroPhaseMode.all => PowerPhase.all,
+    };
+  }
+}
 
 enum _QuickDistroTemplate {
   schukoSingle,
@@ -1317,7 +1748,7 @@ extension _QuickDistroTemplateData on _QuickDistroTemplate {
       _QuickDistroTemplate.schukoSingle => const [
         PowerOutletTemplate(
           id: 'quick_schuko_single',
-          name: '16 A',
+          name: 'Schuko L1.1',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
@@ -1325,25 +1756,25 @@ extension _QuickDistroTemplateData on _QuickDistroTemplate {
       _QuickDistroTemplate.schukoQuad => const [
         PowerOutletTemplate(
           id: 'quick_schuko_quad_1',
-          name: '1',
+          name: 'Schuko L1.1',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
         PowerOutletTemplate(
           id: 'quick_schuko_quad_2',
-          name: '2',
+          name: 'Schuko L1.2',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
         PowerOutletTemplate(
           id: 'quick_schuko_quad_3',
-          name: '3',
+          name: 'Schuko L1.3',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
         PowerOutletTemplate(
           id: 'quick_schuko_quad_4',
-          name: '4',
+          name: 'Schuko L1.4',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
@@ -1351,37 +1782,37 @@ extension _QuickDistroTemplateData on _QuickDistroTemplate {
       _QuickDistroTemplate.cee32SixSchuko => const [
         PowerOutletTemplate(
           id: 'quick_32a_l1_a',
-          name: 'L1 A',
+          name: 'Schuko L1.1',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
         PowerOutletTemplate(
           id: 'quick_32a_l1_b',
-          name: 'L1 B',
+          name: 'Schuko L1.2',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l1,
         ),
         PowerOutletTemplate(
           id: 'quick_32a_l2_a',
-          name: 'L2 A',
+          name: 'Schuko L2.1',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l2,
         ),
         PowerOutletTemplate(
           id: 'quick_32a_l2_b',
-          name: 'L2 B',
+          name: 'Schuko L2.2',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l2,
         ),
         PowerOutletTemplate(
           id: 'quick_32a_l3_a',
-          name: 'L3 A',
+          name: 'Schuko L3.1',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l3,
         ),
         PowerOutletTemplate(
           id: 'quick_32a_l3_b',
-          name: 'L3 B',
+          name: 'Schuko L3.2',
           connectorTypeId: 'schuko_16a',
           phase: PowerPhase.l3,
         ),
@@ -1389,13 +1820,352 @@ extension _QuickDistroTemplateData on _QuickDistroTemplate {
       _QuickDistroTemplate.cee32Thru => const [
         PowerOutletTemplate(
           id: 'quick_32a_thru',
-          name: '32 A OUT',
+          name: 'CEE 32A OUT',
           connectorTypeId: 'cee_32a_5p',
           phase: PowerPhase.all,
         ),
       ],
     };
   }
+}
+
+class _CustomOutletGroup {
+  const _CustomOutletGroup({
+    required this.id,
+    required this.label,
+    required this.connectorTypeId,
+    required this.count,
+    required this.phaseMode,
+  });
+
+  final String id;
+  final String label;
+  final String connectorTypeId;
+  final int count;
+  final _CustomDistroPhaseMode phaseMode;
+}
+
+class _OutletGroupsEditor extends StatelessWidget {
+  const _OutletGroupsEditor({
+    required this.groups,
+    required this.inputConnectorTypeId,
+    required this.onChanged,
+  });
+
+  final List<_CustomOutletGroup> groups;
+  final String? inputConnectorTypeId;
+  final ValueChanged<List<_CustomOutletGroup>> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Sekcje wyjsc',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _addGroup(context),
+              icon: const Icon(Icons.add),
+              label: const Text('Dodaj'),
+            ),
+          ],
+        ),
+        if (groups.isEmpty)
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Brak sekcji wyjsc.'),
+          )
+        else
+          for (final group in groups)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(group.label),
+              subtitle: Text(
+                '${group.count}x ${_connectorLabel(group.connectorTypeId)} / ${group.phaseMode.label}',
+              ),
+              trailing: Wrap(
+                spacing: 4,
+                children: [
+                  IconButton(
+                    tooltip: 'Edytuj sekcje',
+                    onPressed: () => _editGroup(context, group),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
+                    tooltip: 'Usun sekcje',
+                    onPressed: () {
+                      onChanged(
+                        groups
+                            .where((candidate) => candidate.id != group.id)
+                            .toList(),
+                      );
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
+      ],
+    );
+  }
+
+  Future<void> _addGroup(BuildContext context) async {
+    final result = await showDialog<_CustomOutletGroup>(
+      context: context,
+      builder: (context) => _OutletGroupDialog(
+        inputConnectorTypeId: inputConnectorTypeId,
+        group: _CustomOutletGroup(
+          id: 'group_${DateTime.now().microsecondsSinceEpoch}',
+          label: 'Schuko',
+          connectorTypeId: 'schuko_16a',
+          count: 1,
+          phaseMode: _CustomDistroPhaseMode.l1Only,
+        ),
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    onChanged([...groups, result]);
+  }
+
+  Future<void> _editGroup(
+    BuildContext context,
+    _CustomOutletGroup group,
+  ) async {
+    final result = await showDialog<_CustomOutletGroup>(
+      context: context,
+      builder: (context) => _OutletGroupDialog(
+        group: group,
+        inputConnectorTypeId: inputConnectorTypeId,
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    onChanged(
+      groups
+          .map((candidate) => candidate.id == result.id ? result : candidate)
+          .toList(),
+    );
+  }
+}
+
+class _OutletGroupDialog extends StatefulWidget {
+  const _OutletGroupDialog({
+    required this.group,
+    required this.inputConnectorTypeId,
+  });
+
+  final _CustomOutletGroup group;
+  final String? inputConnectorTypeId;
+
+  @override
+  State<_OutletGroupDialog> createState() => _OutletGroupDialogState();
+}
+
+class _OutletGroupDialogState extends State<_OutletGroupDialog> {
+  late final TextEditingController _labelController;
+  late final TextEditingController _countController;
+  late String _connectorTypeId;
+  late _CustomDistroPhaseMode _phaseMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _labelController = TextEditingController(text: widget.group.label);
+    _countController = TextEditingController(text: '${widget.group.count}');
+    _connectorTypeId = widget.group.connectorTypeId;
+    _phaseMode = widget.group.phaseMode;
+    _normalizePhaseMode();
+    _labelWasEdited =
+        widget.group.label.trim() != _defaultConnectorName(_connectorTypeId);
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _countController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Sekcja wyjsc'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _labelController,
+              onChanged: (_) => _labelWasEdited = true,
+              decoration: const InputDecoration(labelText: 'Opis'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _connectorTypeId,
+              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              items: ConnectorTypes.all
+                  .map(
+                    (connector) => DropdownMenuItem(
+                      value: connector.id,
+                      child: Text(connector.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _connectorTypeId = value;
+                    if (_isThreePhaseConnector(value)) {
+                      _phaseMode = _CustomDistroPhaseMode.all;
+                    } else if (_inputIsSinglePhase) {
+                      _phaseMode = _CustomDistroPhaseMode.l1Only;
+                    } else if (_phaseMode == _CustomDistroPhaseMode.all) {
+                      _phaseMode = _CustomDistroPhaseMode.balanced;
+                    }
+                    _refreshAutoLabel();
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _countController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Ilosc'),
+            ),
+            const SizedBox(height: 12),
+            if (_isThreePhaseConnector(_connectorTypeId))
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+              )
+            else if (_inputIsSinglePhase)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+              )
+            else
+              DropdownButtonFormField<_CustomDistroPhaseMode>(
+                initialValue: _phaseMode,
+                decoration: const InputDecoration(labelText: 'Rozklad faz'),
+                items: _CustomDistroPhaseMode.values
+                    .where((mode) => mode != _CustomDistroPhaseMode.all)
+                    .map(
+                      (mode) => DropdownMenuItem(
+                        value: mode,
+                        child: Text(mode.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _phaseMode = value);
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Zapisz')),
+      ],
+    );
+  }
+
+  void _submit() {
+    final label = _labelController.text.trim();
+    final count = int.tryParse(_countController.text.trim()) ?? 0;
+    if (label.isEmpty || count <= 0) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _CustomOutletGroup(
+        id: widget.group.id,
+        label: label,
+        connectorTypeId: _connectorTypeId,
+        count: count,
+        phaseMode: _normalizedPhaseMode,
+      ),
+    );
+  }
+
+  bool get _inputIsSinglePhase =>
+      _isSinglePhaseConnector(widget.inputConnectorTypeId);
+
+  _CustomDistroPhaseMode get _normalizedPhaseMode {
+    if (_isThreePhaseConnector(_connectorTypeId)) {
+      return _CustomDistroPhaseMode.all;
+    }
+    if (_inputIsSinglePhase) {
+      return _CustomDistroPhaseMode.l1Only;
+    }
+    return _phaseMode == _CustomDistroPhaseMode.all
+        ? _CustomDistroPhaseMode.balanced
+        : _phaseMode;
+  }
+
+  void _normalizePhaseMode() {
+    _phaseMode = _normalizedPhaseMode;
+  }
+
+  var _labelWasEdited = false;
+
+  void _refreshAutoLabel() {
+    if (_labelWasEdited) {
+      return;
+    }
+    _labelController.text = _defaultConnectorName(_connectorTypeId);
+  }
+}
+
+String _defaultConnectorName(String connectorTypeId) {
+  final connector = ConnectorTypes.findById(connectorTypeId);
+  return switch (connector?.id) {
+    'schuko_16a' => 'Schuko',
+    'cee_16a_3p' => 'CEE 16A',
+    'cee_16a_5p' => 'CEE 16A',
+    'cee_32a_5p' => 'CEE 32A',
+    'cee_63a_5p' => 'CEE 63A',
+    'cee_125a_5p' => 'CEE 125A',
+    'powerlock_200a' => 'Powerlock 200A',
+    'powerlock_400a' => 'Powerlock 400A',
+    _ => connector?.label ?? connectorTypeId,
+  };
+}
+
+String _defaultOutletName({
+  String? label,
+  required String connectorTypeId,
+  required PowerPhase phase,
+  required int index,
+}) {
+  final base = label == null || label.trim().isEmpty
+      ? _defaultConnectorName(connectorTypeId)
+      : label.trim();
+
+  if (phase == PowerPhase.all) {
+    return '$base ${index + 1}';
+  }
+
+  return '$base ${_phaseLabel(phase)}.${index + 1}';
 }
 
 class _DistroCreateResult {
@@ -1405,6 +2175,7 @@ class _DistroCreateResult {
     required this.inputConnectorTypeId,
     required this.outlets,
     this.preset,
+    this.locationConnectorGroupId,
   });
 
   final String name;
@@ -1412,6 +2183,457 @@ class _DistroCreateResult {
   final String? inputConnectorTypeId;
   final List<PowerOutletTemplate> outlets;
   final PowerPreset? preset;
+  final String? locationConnectorGroupId;
+}
+
+PowerPhase _phaseForLocationConnector(
+  LocationPowerConnector connector,
+  int index,
+  int count,
+) {
+  final type = ConnectorTypes.findById(connector.connectorTypeId);
+  if (type?.phaseCount == 3) {
+    return PowerPhase.all;
+  }
+  return _phaseByGroupedIndex(index, count);
+}
+
+ProjectDistro _copyDistro(
+  ProjectDistro distro, {
+  String? name,
+  ProjectDistroSourceType? sourceType,
+  String? inputConnectorTypeId,
+  bool? isRootPowerSource,
+  List<ProjectOutlet>? outlets,
+}) {
+  return ProjectDistro(
+    id: distro.id,
+    phaseId: distro.phaseId,
+    name: name ?? distro.name,
+    sourceType: sourceType ?? distro.sourceType,
+    catalogDeviceId: distro.catalogDeviceId,
+    locationConnectorGroupId: distro.locationConnectorGroupId,
+    presetId: distro.presetId,
+    inputConnectorTypeId: inputConnectorTypeId ?? distro.inputConnectorTypeId,
+    isRootPowerSource: isRootPowerSource ?? distro.isRootPowerSource,
+    outlets: outlets ?? distro.outlets,
+  );
+}
+
+class _DistroLayoutDialog extends StatefulWidget {
+  const _DistroLayoutDialog({required this.distro});
+
+  final ProjectDistro distro;
+
+  @override
+  State<_DistroLayoutDialog> createState() => _DistroLayoutDialogState();
+}
+
+class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
+  late final TextEditingController _nameController;
+  late String? _inputConnectorTypeId;
+  late List<ProjectOutlet> _outlets;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.distro.name);
+    _inputConnectorTypeId = widget.distro.inputConnectorTypeId;
+    _outlets = [...widget.distro.outlets];
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edytuj rozdzielnice'),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Nazwa'),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: _inputConnectorTypeId,
+                decoration: const InputDecoration(labelText: 'Wejscie'),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Brak / nieznane'),
+                  ),
+                  for (final connector in ConnectorTypes.all)
+                    DropdownMenuItem<String?>(
+                      value: connector.id,
+                      child: Text(connector.label),
+                    ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _inputConnectorTypeId = value;
+                    _outlets = _normalizeOutletPhases(_outlets);
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Gniazda',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _outlets.isEmpty ? null : _autoAssignPhases,
+                    icon: const Icon(Icons.auto_fix_high),
+                    label: const Text('Auto fazy'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _addOutlet,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Dodaj'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_outlets.isEmpty)
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Brak gniazd.'),
+                )
+              else
+                for (final outlet in _outlets) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(outlet.name),
+                    subtitle: Text(
+                      '${_connectorLabel(outlet.connectorTypeId)} / ${_phaseLabel(outlet.phase)} / '
+                      '${outlet.maxCurrentA.toStringAsFixed(0)} A',
+                    ),
+                    trailing: Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          tooltip: 'Edytuj gniazdo',
+                          onPressed: () => _editOutlet(outlet),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                        IconButton(
+                          tooltip: 'Usun gniazdo',
+                          onPressed: () {
+                            setState(() {
+                              _outlets = _outlets
+                                  .where(
+                                    (candidate) => candidate.id != outlet.id,
+                                  )
+                                  .toList();
+                            });
+                          },
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Zapisz')),
+      ],
+    );
+  }
+
+  Future<void> _addOutlet() async {
+    final connector = ConnectorTypes.findById('schuko_16a');
+    final result = await showDialog<ProjectOutlet>(
+      context: context,
+      builder: (context) => _OutletEditDialog(
+        inputConnectorTypeId: _inputConnectorTypeId,
+        outletIndex: _outlets.length,
+        outlet: ProjectOutlet(
+          id: 'outlet_${DateTime.now().microsecondsSinceEpoch}',
+          name: _defaultOutletName(
+            connectorTypeId: 'schuko_16a',
+            phase: PowerPhase.l1,
+            index: _outlets.length,
+          ),
+          connectorTypeId: 'schuko_16a',
+          phase: PowerPhase.l1,
+          maxCurrentA: connector?.maxCurrentA ?? 16,
+        ),
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() => _outlets = [..._outlets, result]);
+  }
+
+  Future<void> _editOutlet(ProjectOutlet outlet) async {
+    final result = await showDialog<ProjectOutlet>(
+      context: context,
+      builder: (context) => _OutletEditDialog(
+        outlet: outlet,
+        inputConnectorTypeId: _inputConnectorTypeId,
+        outletIndex: _outlets.indexWhere(
+          (candidate) => candidate.id == outlet.id,
+        ),
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _outlets = _outlets
+          .map((candidate) => candidate.id == result.id ? result : candidate)
+          .toList();
+    });
+  }
+
+  void _autoAssignPhases() {
+    setState(() {
+      _outlets = _autoAssignOutletPhases(
+        _outlets,
+        inputConnectorTypeId: _inputConnectorTypeId,
+      );
+    });
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _DistroLayoutResult(
+        name: name,
+        inputConnectorTypeId: _inputConnectorTypeId,
+        outlets: _normalizeOutletPhases(_outlets),
+      ),
+    );
+  }
+
+  List<ProjectOutlet> _normalizeOutletPhases(List<ProjectOutlet> outlets) {
+    return outlets.map((outlet) {
+      final phase = _normalizedOutletPhase(
+        connectorTypeId: outlet.connectorTypeId,
+        phase: outlet.phase,
+        inputConnectorTypeId: _inputConnectorTypeId,
+      );
+      if (phase == outlet.phase) {
+        return outlet;
+      }
+      return outlet.copyWith(phase: phase);
+    }).toList();
+  }
+}
+
+class _OutletEditDialog extends StatefulWidget {
+  const _OutletEditDialog({
+    required this.outlet,
+    required this.inputConnectorTypeId,
+    required this.outletIndex,
+  });
+
+  final ProjectOutlet outlet;
+  final String? inputConnectorTypeId;
+  final int outletIndex;
+
+  @override
+  State<_OutletEditDialog> createState() => _OutletEditDialogState();
+}
+
+class _OutletEditDialogState extends State<_OutletEditDialog> {
+  late final TextEditingController _nameController;
+  late String _connectorTypeId;
+  late PowerPhase _phase;
+  var _nameWasEdited = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.outlet.name);
+    _connectorTypeId = widget.outlet.connectorTypeId;
+    _phase = widget.outlet.phase;
+    _normalizePhase();
+    _nameWasEdited =
+        widget.outlet.name.trim() !=
+        _defaultOutletName(
+          connectorTypeId: _connectorTypeId,
+          phase: _normalizedPhase,
+          index: widget.outletIndex < 0 ? 0 : widget.outletIndex,
+        );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edytuj gniazdo'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              onChanged: (_) => _nameWasEdited = true,
+              decoration: const InputDecoration(labelText: 'Nazwa'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _connectorTypeId,
+              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              items: ConnectorTypes.all
+                  .map(
+                    (connector) => DropdownMenuItem(
+                      value: connector.id,
+                      child: Text(connector.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _connectorTypeId = value;
+                    if (_isThreePhaseConnector(value)) {
+                      _phase = PowerPhase.all;
+                    } else if (_inputIsSinglePhase) {
+                      _phase = PowerPhase.l1;
+                    } else if (_phase == PowerPhase.all) {
+                      _phase = PowerPhase.l1;
+                    }
+                    _refreshAutoName();
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            if (_isThreePhaseConnector(_connectorTypeId))
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+              )
+            else if (_inputIsSinglePhase)
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+              )
+            else
+              DropdownButtonFormField<PowerPhase>(
+                initialValue: _phase == PowerPhase.all ? PowerPhase.l1 : _phase,
+                decoration: const InputDecoration(labelText: 'Faza'),
+                items: const [PowerPhase.l1, PowerPhase.l2, PowerPhase.l3]
+                    .map(
+                      (phase) => DropdownMenuItem(
+                        value: phase,
+                        child: Text(_phaseLabel(phase)),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _phase = value;
+                      _refreshAutoName();
+                    });
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Zapisz')),
+      ],
+    );
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      return;
+    }
+
+    final connector = ConnectorTypes.findById(_connectorTypeId);
+    Navigator.of(context).pop(
+      ProjectOutlet(
+        id: widget.outlet.id,
+        templateOutletId: widget.outlet.templateOutletId,
+        name: name,
+        connectorTypeId: _connectorTypeId,
+        phase: _normalizedPhase,
+        maxCurrentA: connector?.maxCurrentA ?? widget.outlet.maxCurrentA,
+      ),
+    );
+  }
+
+  bool get _inputIsSinglePhase =>
+      _isSinglePhaseConnector(widget.inputConnectorTypeId);
+
+  PowerPhase get _normalizedPhase => _normalizedOutletPhase(
+    connectorTypeId: _connectorTypeId,
+    phase: _phase,
+    inputConnectorTypeId: widget.inputConnectorTypeId,
+  );
+
+  void _normalizePhase() {
+    _phase = _normalizedPhase;
+  }
+
+  void _refreshAutoName() {
+    if (_nameWasEdited) {
+      return;
+    }
+    _nameController.text = _defaultOutletName(
+      connectorTypeId: _connectorTypeId,
+      phase: _normalizedPhase,
+      index: widget.outletIndex < 0 ? 0 : widget.outletIndex,
+    );
+  }
+}
+
+class _DistroLayoutResult {
+  const _DistroLayoutResult({
+    required this.name,
+    required this.inputConnectorTypeId,
+    required this.outlets,
+  });
+
+  final String name;
+  final String? inputConnectorTypeId;
+  final List<ProjectOutlet> outlets;
 }
 
 class _ConnectionCard extends StatelessWidget {
@@ -1508,6 +2730,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
   String? _groupId;
   String? _targetDistroId;
   String? _outletKey;
+  final Set<String> _selectedOutletKeys = {};
   final Set<PowerPhase> _selectedPhases = {PowerPhase.l1};
   var _allowOccupiedOutlet = false;
 
@@ -1524,15 +2747,17 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedOutlet = _selectedOutlet;
     final outletOptions = _outletOptions;
-    final showPhaseSelector = selectedOutlet?.phase == PowerPhase.all;
-    final selectedOutletOccupied =
-        selectedOutlet != null && _isOutletOccupied(selectedOutlet.id);
-    final canSubmit =
-        _hasValidTarget &&
-        selectedOutlet != null &&
-        (!selectedOutletOccupied || _allowOccupiedOutlet);
+    final selectedOutletOptions = _selectedOutletOptions;
+    final hasOccupiedOutlet = _matchingOutletOptions.any(
+      (option) => _isOutletOccupied(option.outlet.id),
+    );
+    final showPhaseSelector =
+        _targetType == PowerConnectionTargetType.group &&
+        selectedOutletOptions.any(
+          (option) => option.outlet.phase == PowerPhase.all,
+        );
+    final canSubmit = _hasValidTarget && selectedOutletOptions.isNotEmpty;
 
     return AlertDialog(
       title: const Text('Polacz'),
@@ -1609,12 +2834,75 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                 },
               ),
             const SizedBox(height: 12),
+            if (hasOccupiedOutlet) ...[
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _allowOccupiedOutlet,
+                title: const Text('Pokaz uzyte zlacza'),
+                subtitle: const Text('Pozwala nadpisac istniejace polaczenie.'),
+                onChanged: (value) {
+                  setState(() {
+                    _allowOccupiedOutlet = value;
+                    _selectFirstAvailableOutlet();
+                  });
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
             if (outletOptions.isEmpty)
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text('Brak pasujacych wolnych gniazd.'),
               )
-            else
+            else if (_targetType == PowerConnectionTargetType.group) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Gniazda',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedOutletKeys
+                          ..clear()
+                          ..addAll(outletOptions.map((option) => option.key));
+                      });
+                    },
+                    child: const Text('Wybierz wszystkie'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _selectedOutletKeys.clear());
+                    },
+                    child: const Text('Wyczysc'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              for (final option in outletOptions)
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  value: _selectedOutletKeys.contains(option.key),
+                  title: Text(
+                    '${option.distro.name} / ${option.outlet.name} '
+                    '${_phaseLabel(option.outlet.phase)}'
+                    '${_isOutletOccupied(option.outlet.id) ? ' zajete' : ''}',
+                  ),
+                  onChanged: (selected) {
+                    setState(() {
+                      if (selected ?? false) {
+                        _selectedOutletKeys.add(option.key);
+                      } else {
+                        _selectedOutletKeys.remove(option.key);
+                      }
+                    });
+                  },
+                ),
+            ] else
               DropdownButtonFormField<String>(
                 initialValue: _outletKey,
                 decoration: const InputDecoration(labelText: 'Gniazdo'),
@@ -1622,9 +2910,6 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                   for (final option in outletOptions)
                     DropdownMenuItem(
                       value: option.key,
-                      enabled:
-                          _allowOccupiedOutlet ||
-                          !_isOutletOccupied(option.outlet.id),
                       child: Text(
                         '${option.distro.name} / ${option.outlet.name} '
                         '${_phaseLabel(option.outlet.phase)}'
@@ -1638,17 +2923,6 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                   }
                 },
               ),
-            if (selectedOutletOccupied) ...[
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _allowOccupiedOutlet,
-                title: const Text('Uzyc zajetego gniazda'),
-                onChanged: (value) {
-                  setState(() => _allowOccupiedOutlet = value);
-                },
-              ),
-            ],
             if (showPhaseSelector) ...[
               const SizedBox(height: 12),
               Align(
@@ -1708,6 +2982,16 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
   }
 
   List<_OutletOption> get _outletOptions {
+    final options = _matchingOutletOptions;
+    if (_allowOccupiedOutlet) {
+      return options;
+    }
+    return options
+        .where((option) => !_isOutletOccupied(option.outlet.id))
+        .toList();
+  }
+
+  List<_OutletOption> get _matchingOutletOptions {
     final targetDistroId = _targetDistroId;
     final targetDistro = targetDistroId == null
         ? null
@@ -1741,14 +3025,27 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
     final options = _outletOptions;
     if (options.isEmpty) {
       _outletKey = null;
+      _selectedOutletKeys.clear();
       return;
     }
 
-    final firstAvailable = options
-        .where((option) => !_isOutletOccupied(option.outlet.id))
-        .firstOrNull;
-    final selected = firstAvailable ?? options.first;
-    _outletKey = selected.key;
+    if (_targetType == PowerConnectionTargetType.group) {
+      final validKeys = options.map((option) => option.key).toSet();
+      _selectedOutletKeys.removeWhere((key) => !validKeys.contains(key));
+      if (_selectedOutletKeys.isEmpty) {
+        _selectedOutletKeys.add(options.first.key);
+      }
+      _outletKey = null;
+      return;
+    }
+
+    _selectedOutletKeys.clear();
+    if (_outletKey != null &&
+        options.any((option) => option.key == _outletKey)) {
+      return;
+    }
+
+    _outletKey = options.first.key;
   }
 
   bool _isOutletOccupied(String outletId) {
@@ -1757,36 +3054,29 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
     );
   }
 
-  ProjectOutlet? get _selectedOutlet {
-    final outletKey = _outletKey;
-    if (outletKey == null) {
-      return null;
-    }
-    final parts = outletKey.split('|');
-    if (parts.length != 2) {
-      return null;
+  List<_OutletOption> get _selectedOutletOptions {
+    if (_targetType == PowerConnectionTargetType.group) {
+      return _outletOptions
+          .where((option) => _selectedOutletKeys.contains(option.key))
+          .toList();
     }
 
-    final distro = widget.project.distros
-        .where((candidate) => candidate.id == parts[0])
+    final outletKey = _outletKey;
+    if (outletKey == null) {
+      return const [];
+    }
+    final option = _outletOptions
+        .where((candidate) => candidate.key == outletKey)
         .firstOrNull;
-    return distro?.outlets
-        .where((candidate) => candidate.id == parts[1])
-        .firstOrNull;
+    return option == null ? const [] : [option];
   }
 
   void _submit() {
-    final outletKey = _outletKey;
-    if (outletKey == null) {
+    final selectedOptions = _selectedOutletOptions;
+    if (selectedOptions.isEmpty) {
       return;
     }
 
-    final parts = outletKey.split('|');
-    if (parts.length != 2) {
-      return;
-    }
-
-    final outlet = _selectedOutlet;
     Navigator.of(context).pop(
       _ConnectionResult(
         targetType: _targetType,
@@ -1796,9 +3086,18 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
         targetDistroId: _targetType == PowerConnectionTargetType.distro
             ? _targetDistroId
             : null,
-        sourceDistroId: parts[0],
-        sourceOutletId: parts[1],
-        selectedPhases: outlet?.phase == PowerPhase.all
+        sources: [
+          for (final option in selectedOptions)
+            _ConnectionSourceResult(
+              sourceDistroId: option.distro.id,
+              sourceOutletId: option.outlet.id,
+            ),
+        ],
+        selectedPhases:
+            _targetType == PowerConnectionTargetType.group &&
+                selectedOptions.any(
+                  (option) => option.outlet.phase == PowerPhase.all,
+                )
             ? _selectedPhases.toList()
             : const [],
       ),
@@ -1818,8 +3117,7 @@ class _OutletOption {
 class _ConnectionResult {
   const _ConnectionResult({
     required this.targetType,
-    required this.sourceDistroId,
-    required this.sourceOutletId,
+    required this.sources,
     required this.selectedPhases,
     this.targetGroupId,
     this.targetDistroId,
@@ -1828,9 +3126,18 @@ class _ConnectionResult {
   final PowerConnectionTargetType targetType;
   final String? targetGroupId;
   final String? targetDistroId;
+  final List<_ConnectionSourceResult> sources;
+  final List<PowerPhase> selectedPhases;
+}
+
+class _ConnectionSourceResult {
+  const _ConnectionSourceResult({
+    required this.sourceDistroId,
+    required this.sourceOutletId,
+  });
+
   final String sourceDistroId;
   final String sourceOutletId;
-  final List<PowerPhase> selectedPhases;
 }
 
 class _GroupCard extends StatelessWidget {
@@ -2478,6 +3785,92 @@ String _connectorLabel(String? connectorTypeId) {
           .firstOrNull
           ?.label ??
       connectorTypeId;
+}
+
+bool _isThreePhaseConnector(String connectorTypeId) {
+  return ConnectorTypes.findById(connectorTypeId)?.phaseCount == 3;
+}
+
+PowerPhase _phaseByGroupedIndex(int index, int count) {
+  final normalizedCount = count <= 0 ? 1 : count;
+  final phaseBlockSize = (normalizedCount / 3).ceil();
+  final phaseSlot = index ~/ phaseBlockSize;
+  if (phaseSlot <= 0) {
+    return PowerPhase.l1;
+  }
+  if (phaseSlot == 1) {
+    return PowerPhase.l2;
+  }
+  return PowerPhase.l3;
+}
+
+bool _isSinglePhaseConnector(String? connectorTypeId) {
+  if (connectorTypeId == null) {
+    return false;
+  }
+  return ConnectorTypes.findById(connectorTypeId)?.phaseCount == 1;
+}
+
+PowerPhase _normalizedOutletPhase({
+  required String connectorTypeId,
+  required PowerPhase phase,
+  required String? inputConnectorTypeId,
+}) {
+  if (_isThreePhaseConnector(connectorTypeId)) {
+    return PowerPhase.all;
+  }
+  if (_isSinglePhaseConnector(inputConnectorTypeId) ||
+      phase == PowerPhase.all) {
+    return PowerPhase.l1;
+  }
+  return phase;
+}
+
+List<ProjectOutlet> _autoAssignOutletPhases(
+  List<ProjectOutlet> outlets, {
+  required String? inputConnectorTypeId,
+}) {
+  final inputIsSinglePhase = _isSinglePhaseConnector(inputConnectorTypeId);
+  final assignableOutletIds = outlets
+      .where((outlet) => !_isThreePhaseConnector(outlet.connectorTypeId))
+      .map((outlet) => outlet.id)
+      .toList();
+
+  var assignableIndex = 0;
+  return outlets.map((outlet) {
+    final phase = _isThreePhaseConnector(outlet.connectorTypeId)
+        ? PowerPhase.all
+        : inputIsSinglePhase
+        ? PowerPhase.l1
+        : _phaseByGroupedIndex(assignableIndex++, assignableOutletIds.length);
+    return outlet.copyWith(phase: phase);
+  }).toList();
+}
+
+List<_CustomOutletGroup> _normalizeCustomOutletGroups(
+  List<_CustomOutletGroup> groups,
+  String? inputConnectorTypeId,
+) {
+  final inputIsSinglePhase = _isSinglePhaseConnector(inputConnectorTypeId);
+  return groups.map((group) {
+    final phaseMode = _isThreePhaseConnector(group.connectorTypeId)
+        ? _CustomDistroPhaseMode.all
+        : inputIsSinglePhase
+        ? _CustomDistroPhaseMode.l1Only
+        : group.phaseMode == _CustomDistroPhaseMode.all
+        ? _CustomDistroPhaseMode.balanced
+        : group.phaseMode;
+    if (phaseMode == group.phaseMode) {
+      return group;
+    }
+    return _CustomOutletGroup(
+      id: group.id,
+      label: group.label,
+      connectorTypeId: group.connectorTypeId,
+      count: group.count,
+      phaseMode: phaseMode,
+    );
+  }).toList();
 }
 
 String _phaseLabel(PowerPhase phase) {

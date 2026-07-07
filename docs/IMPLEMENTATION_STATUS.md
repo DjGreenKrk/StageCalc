@@ -190,7 +190,21 @@ Ostatnia aktualizacja: 2026-07-05
   - `Przedluzka 32 A CEE`.
 - Dialog dodawania rozdzielnicy ma tryby:
   - `Szybka`,
-  - `Preset`.
+  - `Preset`,
+  - `Custom`.
+- Rozdzielnica `Custom` moze miec wiele sekcji wyjsc z roznymi typami zlacz, iloscia i rozkladem faz.
+- Presety rozdzielnic w katalogu moga miec wiele sekcji wyjsc z roznymi typami zlacz.
+- Edytory rozdzielnic respektuja fazowosc zlacz:
+  - zlacza 3F wymuszaja faze `All`,
+  - wejscie 1F wymusza jedna faze dla wyjsc 1F,
+  - obslugiwane sa rozdzielnice typu `WE 1F16A CEE / WY 6x Schuko`.
+- Istniejaca rozdzielnice mozna edytowac:
+  - nazwe,
+  - typ wejscia,
+  - liste gniazd,
+  - typ zlacza gniazda,
+  - faze gniazda.
+- Automatyczne nazwy szybkich gniazd sa bardziej techniczne, np. `Schuko L1.1`.
 - Dialog tworzenia polaczenia preferuje pierwsze wolne gniazdo.
 - Zajete gniazda sa oznaczone w wyborze gniazda.
 - Ponowne uzycie zajetego gniazda wymaga wlaczenia przelacznika `Uzyc zajetego gniazda`.
@@ -204,6 +218,12 @@ Ostatnia aktualizacja: 2026-07-05
   - liste wynikow z wyborem urzadzenia,
   - szybkie chipy ilosci `1`, `2`, `4`, `6`, `8`, `12`.
 - Dodano test widgetowy dodawania pozycji z katalogu przez wyszukiwanie i szybka ilosc.
+- Klient i lokacja w karcie projektu sa klikalne i otwieraja podsumowanie danych.
+- Lokacje maja model przylaczy energetycznych.
+- Ekran lokacji pozwala dodac, edytowac i usunac przylacza.
+- Ekran lokacji pozwala dodac wiele kontaktow do jednej lokacji.
+- Lokacja pokazuje maksymalna dostepna moc obiektu wyliczona z przylaczy.
+- Grupy zlaczy z lokacji mozna dodac do patchera jako zrodla zasilania projektu.
 - Dodano pierwszy model danych kratownic w projekcie:
   - `ProjectTruss`,
   - nazwa,
@@ -223,10 +243,10 @@ Ostatnia aktualizacja: 2026-07-05
 
 ## Nastepny krok
 
-1. Dodac pierwszy serwis obliczen kratownic.
-2. Dodac pierwszy backup JSON.
-3. Przygotowac bardziej wizualny uklad patchera.
-4. Rozbudowac lokacje o infrastrukture przylaczy.
+1. Zablokowac cykle rozdzielnic w patcherze.
+2. Przygotowac bardziej wizualny uklad patchera.
+3. Dodac szybkie podpinanie grupy do wielu gniazd.
+4. Dodac pierwszy backup JSON.
 5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows.
 
 ## Zalozenia obowiazujace

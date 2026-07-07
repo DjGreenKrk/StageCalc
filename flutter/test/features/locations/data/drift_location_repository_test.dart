@@ -30,6 +30,35 @@ void main() {
         capacity: 1200,
         contactName: 'Technik obiektu',
         contactPhone: '+48 111 111 111',
+        contacts: [
+          LocationContact(
+            id: 'contact_manager',
+            role: 'Manager',
+            name: 'Anna Manager',
+            phone: '+48 222 222 222',
+            email: 'manager@example.com',
+            createdAt: now,
+            updatedAt: now,
+          ),
+          LocationContact(
+            id: 'contact_tech',
+            role: 'Techniczny',
+            name: 'Technik obiektu',
+            phone: '+48 111 111 111',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+        powerConnectors: [
+          LocationPowerConnector(
+            id: 'connector_sqlite',
+            name: 'Scena',
+            connectorTypeId: 'cee_32a_5p',
+            quantity: 2,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
         createdAt: now,
         updatedAt: now,
       ),
@@ -40,6 +69,11 @@ void main() {
 
     expect(location.name, 'Hala Testowa');
     expect(location.capacity, 1200);
+    expect(location.contacts, hasLength(2));
+    expect(location.contacts.first.role, 'Manager');
+    expect(location.contacts.last.name, 'Technik obiektu');
+    expect(location.powerConnectors.single.name, 'Scena');
+    expect(location.totalAvailablePowerKw, closeTo(44.3, 0.1));
 
     await repository.deleteLocation(locationId);
     final locationsAfterDelete = await repository.getLocations();

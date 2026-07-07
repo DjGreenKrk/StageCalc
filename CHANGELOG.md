@@ -4,6 +4,39 @@ Wszystkie istotne zmiany w projekcie StageCalc Flutter będą opisywane w tym pl
 
 Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać schematu `MAJOR.MINOR.PATCH+BUILD`.
 
+## v0.2.0+1 - 2026-07-08
+
+### Dodano
+
+- Dodano tryb `Custom` przy tworzeniu rozdzielnicy w patcherze.
+- Dodano obsługę wielu sekcji wyjść w rozdzielnicy custom, np. `2x CEE 32A`, `6x Schuko`, dodatkowe wyjścia mieszane.
+- Dodano obsługę wielu sekcji wyjść w presetach rozdzielnic w bibliotece.
+- Doprecyzowano fazowanie rozdzielnic: złącza 3F zawsze używają wszystkich faz, a wejście 1F wymusza jedną fazę dla wyjść 1F.
+- Poprawiono oznaczenie `Zrodlo` w patcherze: rozdzielnica podpięta do innej rozdzielnicy nie jest już pokazywana jako źródło.
+- Etykieta `Zrodlo` jest teraz pokazywana na rozdzielnicy początkowej w drzewie zasilania.
+- Dialog połączeń ukrywa użyte złącza, dopóki nie zostanie włączony tryb pokazywania/nadpisywania użytych złączy.
+- Dodano szybkie podpinanie jednej grupy do wielu gniazd naraz w dialogu połączeń.
+- Zmieniono automatyczny rozkład faz sekcji gniazd na układ blokowy, np. `L1, L1, L2, L2, L3, L3` dla 6 gniazd.
+- Dodano przycisk `Auto fazy` w edycji rozdzielnicy, z zachowaniem możliwości ręcznej korekty faz pojedynczych gniazd.
+- Nazwa/opis złącza aktualizuje się automatycznie po zmianie typu, dopóki użytkownik nie wpisze własnej nazwy.
+- Poprawiono wykrywanie ręcznej edycji nazwy złącza: samo kliknięcie pola nazwy nie blokuje już automatycznej aktualizacji po zmianie typu.
+- Przyłącza lokacji są teraz dostępne w patcherze jako źródłowe grupy złączy.
+- W lokacjach doprecyzowano nazewnictwo przyłączy jako `Grupy złączy`, zgodnie z pracą na obiektach.
+- Katalog lokacji otwiera teraz ekran szczegółów po kliknięciu karty lokacji.
+- Formularz dodawania/edycji lokacji ma pogrupowane sekcje danych obiektu, kontaktu, grup złączy i notatek.
+- Szczegóły lokacji pokazują pogrupowane informacje oraz akcje otwarcia mapy, telefonu i emaila.
+- Lokacje obsługują wiele kontaktów, np. managera obiektu i kontakt techniczny.
+- Dodano edycję istniejącej rozdzielnicy:
+  - nazwa,
+  - typ wejścia,
+  - dodawanie gniazd,
+  - edycja gniazd,
+  - usuwanie gniazd.
+- Zmieniono automatyczne nazwy szybkich gniazd na bardziej techniczne, np. `Schuko L1.1`.
+- Dodano klikalne podsumowanie klienta i lokalizacji w karcie projektu.
+- Dodano przyłącza energetyczne lokacji.
+- Dodano obliczanie maksymalnej dostępnej mocy obiektu na podstawie przyłączy.
+
 ## v0.1.0+1
 
 ### Dodano
