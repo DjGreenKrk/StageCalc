@@ -62,4 +62,56 @@ void main() {
       );
     },
   );
+
+  test(
+    'saves, loads, and soft deletes a truss load chart with its device',
+    () async {
+      final now = DateTime(2026, 7, 5);
+      const deviceId = 'prolyte_h30v';
+      final device = CatalogDevice(
+        id: deviceId,
+        name: 'Prolyte H30V',
+        category: CatalogDeviceCategory.rigging,
+        quantityUnit: CatalogQuantityUnit.pcs,
+        createdAt: now,
+        updatedAt: now,
+        loadChart: const [
+          TrussLoadChartEntry(
+            id: 'chart_1',
+            lengthM: 4,
+            pointLoadKg: 800,
+            distributedLoadKgPerM: 200,
+          ),
+          TrussLoadChartEntry(
+            id: 'chart_2',
+            lengthM: 8,
+            pointLoadKg: 400,
+            distributedLoadKgPerM: 100,
+          ),
+        ],
+      );
+
+      await repository.saveDevice(device);
+      final loaded = await repository.getDevices();
+      final loadedDevice = loaded.singleWhere((d) => d.id == deviceId);
+
+      expect(loadedDevice.loadChart, hasLength(2));
+      expect(loadedDevice.loadChart.first.lengthM, 4);
+      expect(loadedDevice.loadChart.first.pointLoadKg, 800);
+      expect(loadedDevice.loadChart.last.distributedLoadKgPerM, 100);
+
+      await repository.saveDevice(
+        device.copyWith(loadChart: [device.loadChart.first]),
+      );
+      final afterRemoval = await repository.getDevices();
+      expect(
+        afterRemoval.singleWhere((d) => d.id == deviceId).loadChart,
+        hasLength(1),
+      );
+
+      await repository.deleteDevice(deviceId);
+      final afterDelete = await repository.getDevices();
+      expect(afterDelete.any((d) => d.id == deviceId), isFalse);
+    },
+  );
 }

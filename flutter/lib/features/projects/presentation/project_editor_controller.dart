@@ -64,6 +64,9 @@ class ProjectEditorController extends ChangeNotifier {
   List<PowerPreset> _powerPresets = const [];
   List<PowerPreset> get powerPresets => _powerPresets;
 
+  List<CatalogDevice> _catalogDevices = const [];
+  List<CatalogDevice> get catalogDevices => _catalogDevices;
+
   bool hasChanges = false;
 
   ProjectEditorView view = ProjectEditorView.equipment;
@@ -84,8 +87,11 @@ class ProjectEditorController extends ChangeNotifier {
   PatchValidationResult get patchValidation =>
       _validationService.validate(_project, powerLoads);
 
-  TrussLoad trussLoad(ProjectTruss truss) =>
-      _trussLoadService.calculateLoad(truss, _project);
+  TrussLoad trussLoad(ProjectTruss truss) => _trussLoadService.calculateLoad(
+    truss,
+    _project,
+    catalogDevices: _catalogDevices,
+  );
 
   GroupHookRequirement hookRequirement(ProjectGroup group) =>
       _trussLoadService.hookRequirement(group);
@@ -102,10 +108,12 @@ class ProjectEditorController extends ChangeNotifier {
     final powerPresetRepository = DriftPowerPresetRepository(database);
     await powerPresetRepository.ensureSeedData();
     final powerPresets = await powerPresetRepository.getPresets();
+    final catalogDevices = await loadCatalogDevices();
 
     _clients = clients;
     _locations = locations;
     _powerPresets = powerPresets;
+    _catalogDevices = catalogDevices;
     notifyListeners();
   }
 
@@ -357,6 +365,7 @@ class ProjectEditorController extends ChangeNotifier {
       phaseId: truss.phaseId,
       name: truss.name,
       trussSystemId: truss.trussSystemId,
+      trussCatalogDeviceId: truss.trussCatalogDeviceId,
       lengthM: truss.lengthM,
       maxTotalLoadKg: truss.maxTotalLoadKg,
       maxDistributedLoadKgPerM: truss.maxDistributedLoadKgPerM,
@@ -482,6 +491,7 @@ class ProjectEditorController extends ChangeNotifier {
   Future<void> addTruss({
     required String name,
     required double lengthM,
+    String? trussCatalogDeviceId,
     double manualLoadKg = 0,
     double? maxTotalLoadKg,
     double? maxDistributedLoadKgPerM,
@@ -493,6 +503,7 @@ class ProjectEditorController extends ChangeNotifier {
       id: 'truss_${now.microsecondsSinceEpoch}',
       phaseId: _project.phaseId,
       name: name,
+      trussCatalogDeviceId: trussCatalogDeviceId,
       lengthM: lengthM,
       manualLoadKg: manualLoadKg,
       maxTotalLoadKg: maxTotalLoadKg,
@@ -510,6 +521,7 @@ class ProjectEditorController extends ChangeNotifier {
     ProjectTruss truss, {
     required String name,
     required double lengthM,
+    String? trussCatalogDeviceId,
     required double manualLoadKg,
     double? maxTotalLoadKg,
     double? maxDistributedLoadKgPerM,
@@ -527,6 +539,7 @@ class ProjectEditorController extends ChangeNotifier {
         phaseId: candidate.phaseId,
         name: name,
         trussSystemId: candidate.trussSystemId,
+        trussCatalogDeviceId: trussCatalogDeviceId,
         lengthM: lengthM,
         manualLoadKg: manualLoadKg,
         maxTotalLoadKg: maxTotalLoadKg,

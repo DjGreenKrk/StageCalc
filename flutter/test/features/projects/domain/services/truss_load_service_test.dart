@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
 import 'package:stagecalc/features/projects/domain/entities/project_models.dart';
 import 'package:stagecalc/features/projects/domain/services/truss_load_service.dart';
 
@@ -226,5 +227,136 @@ void main() {
 
     // 2*10kg items + 4*0.5kg hooks = 22kg.
     expect(load.groupsMassKg, 22);
+  });
+
+  group('interpolated limits from a linked catalog device', () {
+    final trussDevice = CatalogDevice(
+      id: 'prolyte_h30v',
+      name: 'Prolyte H30V',
+      category: CatalogDeviceCategory.rigging,
+      quantityUnit: CatalogQuantityUnit.pcs,
+      createdAt: DateTime(2026, 7, 5),
+      updatedAt: DateTime(2026, 7, 5),
+      loadChart: const [
+        TrussLoadChartEntry(
+          id: 'c1',
+          lengthM: 4,
+          pointLoadKg: 800,
+          distributedLoadKgPerM: 200,
+        ),
+        TrussLoadChartEntry(
+          id: 'c2',
+          lengthM: 8,
+          pointLoadKg: 400,
+          distributedLoadKgPerM: 100,
+        ),
+      ],
+    );
+
+    Project buildProjectWithDevice(ProjectTruss truss) {
+      final date = DateTime(2026, 7, 5);
+      return Project(
+        id: 'project',
+        name: 'Project',
+        createdAt: date,
+        updatedAt: date,
+        groups: const [],
+        trusses: [truss],
+      );
+    }
+
+    test('uses the exact chart entry when the length matches exactly', () {
+      const truss = ProjectTruss(
+        id: 'truss',
+        name: 'Truss',
+        lengthM: 4,
+        trussCatalogDeviceId: 'prolyte_h30v',
+      );
+
+      final load = service.calculateLoad(
+        truss,
+        buildProjectWithDevice(truss),
+        catalogDevices: [trussDevice],
+      );
+
+      expect(load.maxTotalLoadKg, 800);
+      expect(load.maxDistributedLoadKgPerM, 200);
+      expect(load.totalLimitFromChart, isTrue);
+      expect(load.isChartExtrapolated, isFalse);
+    });
+
+    test('interpolates linearly between two chart entries', () {
+      const truss = ProjectTruss(
+        id: 'truss',
+        name: 'Truss',
+        lengthM: 6, // Halfway between 4m and 8m.
+        trussCatalogDeviceId: 'prolyte_h30v',
+      );
+
+      final load = service.calculateLoad(
+        truss,
+        buildProjectWithDevice(truss),
+        catalogDevices: [trussDevice],
+      );
+
+      expect(load.maxTotalLoadKg, 600);
+      expect(load.maxDistributedLoadKgPerM, 150);
+      expect(load.isChartExtrapolated, isFalse);
+    });
+
+    test('extrapolates and flags it when the length is outside the table', () {
+      const truss = ProjectTruss(
+        id: 'truss',
+        name: 'Truss',
+        lengthM: 12,
+        trussCatalogDeviceId: 'prolyte_h30v',
+      );
+
+      final load = service.calculateLoad(
+        truss,
+        buildProjectWithDevice(truss),
+        catalogDevices: [trussDevice],
+      );
+
+      // Same slope as 4m->8m, extended to 12m: 400 - 4/4*400 = 0.
+      expect(load.maxTotalLoadKg, 0);
+      expect(load.isChartExtrapolated, isTrue);
+    });
+
+    test('a manually entered limit wins over the interpolated one', () {
+      const truss = ProjectTruss(
+        id: 'truss',
+        name: 'Truss',
+        lengthM: 4,
+        trussCatalogDeviceId: 'prolyte_h30v',
+        maxTotalLoadKg: 500,
+      );
+
+      final load = service.calculateLoad(
+        truss,
+        buildProjectWithDevice(truss),
+        catalogDevices: [trussDevice],
+      );
+
+      expect(load.maxTotalLoadKg, 500);
+      expect(load.totalLimitFromChart, isFalse);
+      // The distributed limit is still untouched, so it still comes from
+      // the chart - the manual override only applies per-field.
+      expect(load.maxDistributedLoadKgPerM, 200);
+      expect(load.distributedLimitFromChart, isTrue);
+    });
+
+    test('reports no interpolated limits without a linked device', () {
+      const truss = ProjectTruss(id: 'truss', name: 'Truss', lengthM: 4);
+
+      final load = service.calculateLoad(
+        truss,
+        buildProjectWithDevice(truss),
+        catalogDevices: [trussDevice],
+      );
+
+      expect(load.hasInterpolatedLimits, isFalse);
+      expect(load.maxTotalLoadKg, isNull);
+    });
   });
 }

@@ -166,6 +166,7 @@ class ProjectTrusses extends Table {
   TextColumn get phaseId => text().withDefault(const Constant('default'))();
   TextColumn get name => text()();
   TextColumn get trussSystemId => text().nullable()();
+  TextColumn get trussCatalogDeviceId => text().nullable()();
   RealColumn get lengthM => real().withDefault(const Constant(0))();
   RealColumn get maxTotalLoadKg => real().nullable()();
   RealColumn get maxDistributedLoadKgPerM => real().nullable()();
@@ -198,6 +199,24 @@ class CatalogDevices extends Table {
   TextColumn get connectorTypeId => text().nullable()();
   IntColumn get riggingPoints => integer().nullable()();
   TextColumn get quantityUnit => text().withDefault(const Constant('pcs'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncState => text().withDefault(const Constant('localOnly'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class TrussLoadChartEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get catalogDeviceId => text().references(CatalogDevices, #id)();
+  RealColumn get lengthM => real()();
+  RealColumn get pointLoadKg => real()();
+  RealColumn get distributedLoadKgPerM => real()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -339,6 +358,7 @@ class PowerOutletTemplates extends Table {
     PowerConnections,
     ProjectTrusses,
     CatalogDevices,
+    TrussLoadChartEntries,
     Clients,
     Locations,
     LocationPowerConnectors,
@@ -353,7 +373,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -402,6 +422,13 @@ class AppDatabase extends _$AppDatabase {
           projectItems.riggingPointsSnapshot,
         );
         await migrator.createTable(projectGroupHookAssignments);
+      }
+      if (from < 12) {
+        await migrator.addColumn(
+          projectTrusses,
+          projectTrusses.trussCatalogDeviceId,
+        );
+        await migrator.createTable(trussLoadChartEntries);
       }
     },
   );

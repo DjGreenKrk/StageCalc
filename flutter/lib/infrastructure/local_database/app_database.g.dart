@@ -6458,6 +6458,17 @@ class $ProjectTrussesTable extends ProjectTrusses
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _trussCatalogDeviceIdMeta =
+      const VerificationMeta('trussCatalogDeviceId');
+  @override
+  late final GeneratedColumn<String> trussCatalogDeviceId =
+      GeneratedColumn<String>(
+        'truss_catalog_device_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _lengthMMeta = const VerificationMeta(
     'lengthM',
   );
@@ -6612,6 +6623,7 @@ class $ProjectTrussesTable extends ProjectTrusses
     phaseId,
     name,
     trussSystemId,
+    trussCatalogDeviceId,
     lengthM,
     maxTotalLoadKg,
     maxDistributedLoadKgPerM,
@@ -6671,6 +6683,15 @@ class $ProjectTrussesTable extends ProjectTrusses
         trussSystemId.isAcceptableOrUnknown(
           data['truss_system_id']!,
           _trussSystemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('truss_catalog_device_id')) {
+      context.handle(
+        _trussCatalogDeviceIdMeta,
+        trussCatalogDeviceId.isAcceptableOrUnknown(
+          data['truss_catalog_device_id']!,
+          _trussCatalogDeviceIdMeta,
         ),
       );
     }
@@ -6800,6 +6821,10 @@ class $ProjectTrussesTable extends ProjectTrusses
         DriftSqlType.string,
         data['${effectivePrefix}truss_system_id'],
       ),
+      trussCatalogDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}truss_catalog_device_id'],
+      ),
       lengthM: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}length_m'],
@@ -6868,6 +6893,7 @@ class ProjectTrussesData extends DataClass
   final String phaseId;
   final String name;
   final String? trussSystemId;
+  final String? trussCatalogDeviceId;
   final double lengthM;
   final double? maxTotalLoadKg;
   final double? maxDistributedLoadKgPerM;
@@ -6887,6 +6913,7 @@ class ProjectTrussesData extends DataClass
     required this.phaseId,
     required this.name,
     this.trussSystemId,
+    this.trussCatalogDeviceId,
     required this.lengthM,
     this.maxTotalLoadKg,
     this.maxDistributedLoadKgPerM,
@@ -6910,6 +6937,9 @@ class ProjectTrussesData extends DataClass
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || trussSystemId != null) {
       map['truss_system_id'] = Variable<String>(trussSystemId);
+    }
+    if (!nullToAbsent || trussCatalogDeviceId != null) {
+      map['truss_catalog_device_id'] = Variable<String>(trussCatalogDeviceId);
     }
     map['length_m'] = Variable<double>(lengthM);
     if (!nullToAbsent || maxTotalLoadKg != null) {
@@ -6948,6 +6978,9 @@ class ProjectTrussesData extends DataClass
       trussSystemId: trussSystemId == null && nullToAbsent
           ? const Value.absent()
           : Value(trussSystemId),
+      trussCatalogDeviceId: trussCatalogDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trussCatalogDeviceId),
       lengthM: Value(lengthM),
       maxTotalLoadKg: maxTotalLoadKg == null && nullToAbsent
           ? const Value.absent()
@@ -6985,6 +7018,9 @@ class ProjectTrussesData extends DataClass
       phaseId: serializer.fromJson<String>(json['phaseId']),
       name: serializer.fromJson<String>(json['name']),
       trussSystemId: serializer.fromJson<String?>(json['trussSystemId']),
+      trussCatalogDeviceId: serializer.fromJson<String?>(
+        json['trussCatalogDeviceId'],
+      ),
       lengthM: serializer.fromJson<double>(json['lengthM']),
       maxTotalLoadKg: serializer.fromJson<double?>(json['maxTotalLoadKg']),
       maxDistributedLoadKgPerM: serializer.fromJson<double?>(
@@ -7013,6 +7049,7 @@ class ProjectTrussesData extends DataClass
       'phaseId': serializer.toJson<String>(phaseId),
       'name': serializer.toJson<String>(name),
       'trussSystemId': serializer.toJson<String?>(trussSystemId),
+      'trussCatalogDeviceId': serializer.toJson<String?>(trussCatalogDeviceId),
       'lengthM': serializer.toJson<double>(lengthM),
       'maxTotalLoadKg': serializer.toJson<double?>(maxTotalLoadKg),
       'maxDistributedLoadKgPerM': serializer.toJson<double?>(
@@ -7037,6 +7074,7 @@ class ProjectTrussesData extends DataClass
     String? phaseId,
     String? name,
     Value<String?> trussSystemId = const Value.absent(),
+    Value<String?> trussCatalogDeviceId = const Value.absent(),
     double? lengthM,
     Value<double?> maxTotalLoadKg = const Value.absent(),
     Value<double?> maxDistributedLoadKgPerM = const Value.absent(),
@@ -7058,6 +7096,9 @@ class ProjectTrussesData extends DataClass
     trussSystemId: trussSystemId.present
         ? trussSystemId.value
         : this.trussSystemId,
+    trussCatalogDeviceId: trussCatalogDeviceId.present
+        ? trussCatalogDeviceId.value
+        : this.trussCatalogDeviceId,
     lengthM: lengthM ?? this.lengthM,
     maxTotalLoadKg: maxTotalLoadKg.present
         ? maxTotalLoadKg.value
@@ -7085,6 +7126,9 @@ class ProjectTrussesData extends DataClass
       trussSystemId: data.trussSystemId.present
           ? data.trussSystemId.value
           : this.trussSystemId,
+      trussCatalogDeviceId: data.trussCatalogDeviceId.present
+          ? data.trussCatalogDeviceId.value
+          : this.trussCatalogDeviceId,
       lengthM: data.lengthM.present ? data.lengthM.value : this.lengthM,
       maxTotalLoadKg: data.maxTotalLoadKg.present
           ? data.maxTotalLoadKg.value
@@ -7119,6 +7163,7 @@ class ProjectTrussesData extends DataClass
           ..write('phaseId: $phaseId, ')
           ..write('name: $name, ')
           ..write('trussSystemId: $trussSystemId, ')
+          ..write('trussCatalogDeviceId: $trussCatalogDeviceId, ')
           ..write('lengthM: $lengthM, ')
           ..write('maxTotalLoadKg: $maxTotalLoadKg, ')
           ..write('maxDistributedLoadKgPerM: $maxDistributedLoadKgPerM, ')
@@ -7143,6 +7188,7 @@ class ProjectTrussesData extends DataClass
     phaseId,
     name,
     trussSystemId,
+    trussCatalogDeviceId,
     lengthM,
     maxTotalLoadKg,
     maxDistributedLoadKgPerM,
@@ -7166,6 +7212,7 @@ class ProjectTrussesData extends DataClass
           other.phaseId == this.phaseId &&
           other.name == this.name &&
           other.trussSystemId == this.trussSystemId &&
+          other.trussCatalogDeviceId == this.trussCatalogDeviceId &&
           other.lengthM == this.lengthM &&
           other.maxTotalLoadKg == this.maxTotalLoadKg &&
           other.maxDistributedLoadKgPerM == this.maxDistributedLoadKgPerM &&
@@ -7187,6 +7234,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
   final Value<String> phaseId;
   final Value<String> name;
   final Value<String?> trussSystemId;
+  final Value<String?> trussCatalogDeviceId;
   final Value<double> lengthM;
   final Value<double?> maxTotalLoadKg;
   final Value<double?> maxDistributedLoadKgPerM;
@@ -7207,6 +7255,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
     this.phaseId = const Value.absent(),
     this.name = const Value.absent(),
     this.trussSystemId = const Value.absent(),
+    this.trussCatalogDeviceId = const Value.absent(),
     this.lengthM = const Value.absent(),
     this.maxTotalLoadKg = const Value.absent(),
     this.maxDistributedLoadKgPerM = const Value.absent(),
@@ -7228,6 +7277,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
     this.phaseId = const Value.absent(),
     required String name,
     this.trussSystemId = const Value.absent(),
+    this.trussCatalogDeviceId = const Value.absent(),
     this.lengthM = const Value.absent(),
     this.maxTotalLoadKg = const Value.absent(),
     this.maxDistributedLoadKgPerM = const Value.absent(),
@@ -7253,6 +7303,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
     Expression<String>? phaseId,
     Expression<String>? name,
     Expression<String>? trussSystemId,
+    Expression<String>? trussCatalogDeviceId,
     Expression<double>? lengthM,
     Expression<double>? maxTotalLoadKg,
     Expression<double>? maxDistributedLoadKgPerM,
@@ -7274,6 +7325,8 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
       if (phaseId != null) 'phase_id': phaseId,
       if (name != null) 'name': name,
       if (trussSystemId != null) 'truss_system_id': trussSystemId,
+      if (trussCatalogDeviceId != null)
+        'truss_catalog_device_id': trussCatalogDeviceId,
       if (lengthM != null) 'length_m': lengthM,
       if (maxTotalLoadKg != null) 'max_total_load_kg': maxTotalLoadKg,
       if (maxDistributedLoadKgPerM != null)
@@ -7299,6 +7352,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
     Value<String>? phaseId,
     Value<String>? name,
     Value<String?>? trussSystemId,
+    Value<String?>? trussCatalogDeviceId,
     Value<double>? lengthM,
     Value<double?>? maxTotalLoadKg,
     Value<double?>? maxDistributedLoadKgPerM,
@@ -7320,6 +7374,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
       phaseId: phaseId ?? this.phaseId,
       name: name ?? this.name,
       trussSystemId: trussSystemId ?? this.trussSystemId,
+      trussCatalogDeviceId: trussCatalogDeviceId ?? this.trussCatalogDeviceId,
       lengthM: lengthM ?? this.lengthM,
       maxTotalLoadKg: maxTotalLoadKg ?? this.maxTotalLoadKg,
       maxDistributedLoadKgPerM:
@@ -7355,6 +7410,11 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
     }
     if (trussSystemId.present) {
       map['truss_system_id'] = Variable<String>(trussSystemId.value);
+    }
+    if (trussCatalogDeviceId.present) {
+      map['truss_catalog_device_id'] = Variable<String>(
+        trussCatalogDeviceId.value,
+      );
     }
     if (lengthM.present) {
       map['length_m'] = Variable<double>(lengthM.value);
@@ -7413,6 +7473,7 @@ class ProjectTrussesCompanion extends UpdateCompanion<ProjectTrussesData> {
           ..write('phaseId: $phaseId, ')
           ..write('name: $name, ')
           ..write('trussSystemId: $trussSystemId, ')
+          ..write('trussCatalogDeviceId: $trussCatalogDeviceId, ')
           ..write('lengthM: $lengthM, ')
           ..write('maxTotalLoadKg: $maxTotalLoadKg, ')
           ..write('maxDistributedLoadKgPerM: $maxDistributedLoadKgPerM, ')
@@ -8432,6 +8493,737 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('connectorTypeId: $connectorTypeId, ')
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncState: $syncState, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TrussLoadChartEntriesTable extends TrussLoadChartEntries
+    with TableInfo<$TrussLoadChartEntriesTable, TrussLoadChartEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TrussLoadChartEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _catalogDeviceIdMeta = const VerificationMeta(
+    'catalogDeviceId',
+  );
+  @override
+  late final GeneratedColumn<String> catalogDeviceId = GeneratedColumn<String>(
+    'catalog_device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES catalog_devices (id)',
+    ),
+  );
+  static const VerificationMeta _lengthMMeta = const VerificationMeta(
+    'lengthM',
+  );
+  @override
+  late final GeneratedColumn<double> lengthM = GeneratedColumn<double>(
+    'length_m',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pointLoadKgMeta = const VerificationMeta(
+    'pointLoadKg',
+  );
+  @override
+  late final GeneratedColumn<double> pointLoadKg = GeneratedColumn<double>(
+    'point_load_kg',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _distributedLoadKgPerMMeta =
+      const VerificationMeta('distributedLoadKgPerM');
+  @override
+  late final GeneratedColumn<double> distributedLoadKgPerM =
+      GeneratedColumn<double>(
+        'distributed_load_kg_per_m',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta(
+    'syncState',
+  );
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+    'sync_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('localOnly'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    catalogDeviceId,
+    lengthM,
+    pointLoadKg,
+    distributedLoadKgPerM,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    revision,
+    syncState,
+    lastSyncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'truss_load_chart_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TrussLoadChartEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('catalog_device_id')) {
+      context.handle(
+        _catalogDeviceIdMeta,
+        catalogDeviceId.isAcceptableOrUnknown(
+          data['catalog_device_id']!,
+          _catalogDeviceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_catalogDeviceIdMeta);
+    }
+    if (data.containsKey('length_m')) {
+      context.handle(
+        _lengthMMeta,
+        lengthM.isAcceptableOrUnknown(data['length_m']!, _lengthMMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lengthMMeta);
+    }
+    if (data.containsKey('point_load_kg')) {
+      context.handle(
+        _pointLoadKgMeta,
+        pointLoadKg.isAcceptableOrUnknown(
+          data['point_load_kg']!,
+          _pointLoadKgMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pointLoadKgMeta);
+    }
+    if (data.containsKey('distributed_load_kg_per_m')) {
+      context.handle(
+        _distributedLoadKgPerMMeta,
+        distributedLoadKgPerM.isAcceptableOrUnknown(
+          data['distributed_load_kg_per_m']!,
+          _distributedLoadKgPerMMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_distributedLoadKgPerMMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(
+        _syncStateMeta,
+        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TrussLoadChartEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TrussLoadChartEntry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      catalogDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}catalog_device_id'],
+      )!,
+      lengthM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}length_m'],
+      )!,
+      pointLoadKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}point_load_kg'],
+      )!,
+      distributedLoadKgPerM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}distributed_load_kg_per_m'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      syncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_state'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+    );
+  }
+
+  @override
+  $TrussLoadChartEntriesTable createAlias(String alias) {
+    return $TrussLoadChartEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class TrussLoadChartEntry extends DataClass
+    implements Insertable<TrussLoadChartEntry> {
+  final String id;
+  final String catalogDeviceId;
+  final double lengthM;
+  final double pointLoadKg;
+  final double distributedLoadKgPerM;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final int revision;
+  final String syncState;
+  final DateTime? lastSyncedAt;
+  const TrussLoadChartEntry({
+    required this.id,
+    required this.catalogDeviceId,
+    required this.lengthM,
+    required this.pointLoadKg,
+    required this.distributedLoadKgPerM,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.revision,
+    required this.syncState,
+    this.lastSyncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['catalog_device_id'] = Variable<String>(catalogDeviceId);
+    map['length_m'] = Variable<double>(lengthM);
+    map['point_load_kg'] = Variable<double>(pointLoadKg);
+    map['distributed_load_kg_per_m'] = Variable<double>(distributedLoadKgPerM);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['revision'] = Variable<int>(revision);
+    map['sync_state'] = Variable<String>(syncState);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    return map;
+  }
+
+  TrussLoadChartEntriesCompanion toCompanion(bool nullToAbsent) {
+    return TrussLoadChartEntriesCompanion(
+      id: Value(id),
+      catalogDeviceId: Value(catalogDeviceId),
+      lengthM: Value(lengthM),
+      pointLoadKg: Value(pointLoadKg),
+      distributedLoadKgPerM: Value(distributedLoadKgPerM),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      revision: Value(revision),
+      syncState: Value(syncState),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+    );
+  }
+
+  factory TrussLoadChartEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TrussLoadChartEntry(
+      id: serializer.fromJson<String>(json['id']),
+      catalogDeviceId: serializer.fromJson<String>(json['catalogDeviceId']),
+      lengthM: serializer.fromJson<double>(json['lengthM']),
+      pointLoadKg: serializer.fromJson<double>(json['pointLoadKg']),
+      distributedLoadKgPerM: serializer.fromJson<double>(
+        json['distributedLoadKgPerM'],
+      ),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      revision: serializer.fromJson<int>(json['revision']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'catalogDeviceId': serializer.toJson<String>(catalogDeviceId),
+      'lengthM': serializer.toJson<double>(lengthM),
+      'pointLoadKg': serializer.toJson<double>(pointLoadKg),
+      'distributedLoadKgPerM': serializer.toJson<double>(distributedLoadKgPerM),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'revision': serializer.toJson<int>(revision),
+      'syncState': serializer.toJson<String>(syncState),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+    };
+  }
+
+  TrussLoadChartEntry copyWith({
+    String? id,
+    String? catalogDeviceId,
+    double? lengthM,
+    double? pointLoadKg,
+    double? distributedLoadKgPerM,
+    int? sortOrder,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    int? revision,
+    String? syncState,
+    Value<DateTime?> lastSyncedAt = const Value.absent(),
+  }) => TrussLoadChartEntry(
+    id: id ?? this.id,
+    catalogDeviceId: catalogDeviceId ?? this.catalogDeviceId,
+    lengthM: lengthM ?? this.lengthM,
+    pointLoadKg: pointLoadKg ?? this.pointLoadKg,
+    distributedLoadKgPerM: distributedLoadKgPerM ?? this.distributedLoadKgPerM,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    revision: revision ?? this.revision,
+    syncState: syncState ?? this.syncState,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+  );
+  TrussLoadChartEntry copyWithCompanion(TrussLoadChartEntriesCompanion data) {
+    return TrussLoadChartEntry(
+      id: data.id.present ? data.id.value : this.id,
+      catalogDeviceId: data.catalogDeviceId.present
+          ? data.catalogDeviceId.value
+          : this.catalogDeviceId,
+      lengthM: data.lengthM.present ? data.lengthM.value : this.lengthM,
+      pointLoadKg: data.pointLoadKg.present
+          ? data.pointLoadKg.value
+          : this.pointLoadKg,
+      distributedLoadKgPerM: data.distributedLoadKgPerM.present
+          ? data.distributedLoadKgPerM.value
+          : this.distributedLoadKgPerM,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrussLoadChartEntry(')
+          ..write('id: $id, ')
+          ..write('catalogDeviceId: $catalogDeviceId, ')
+          ..write('lengthM: $lengthM, ')
+          ..write('pointLoadKg: $pointLoadKg, ')
+          ..write('distributedLoadKgPerM: $distributedLoadKgPerM, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncState: $syncState, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    catalogDeviceId,
+    lengthM,
+    pointLoadKg,
+    distributedLoadKgPerM,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    revision,
+    syncState,
+    lastSyncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TrussLoadChartEntry &&
+          other.id == this.id &&
+          other.catalogDeviceId == this.catalogDeviceId &&
+          other.lengthM == this.lengthM &&
+          other.pointLoadKg == this.pointLoadKg &&
+          other.distributedLoadKgPerM == this.distributedLoadKgPerM &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.revision == this.revision &&
+          other.syncState == this.syncState &&
+          other.lastSyncedAt == this.lastSyncedAt);
+}
+
+class TrussLoadChartEntriesCompanion
+    extends UpdateCompanion<TrussLoadChartEntry> {
+  final Value<String> id;
+  final Value<String> catalogDeviceId;
+  final Value<double> lengthM;
+  final Value<double> pointLoadKg;
+  final Value<double> distributedLoadKgPerM;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> revision;
+  final Value<String> syncState;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> rowid;
+  const TrussLoadChartEntriesCompanion({
+    this.id = const Value.absent(),
+    this.catalogDeviceId = const Value.absent(),
+    this.lengthM = const Value.absent(),
+    this.pointLoadKg = const Value.absent(),
+    this.distributedLoadKgPerM = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TrussLoadChartEntriesCompanion.insert({
+    required String id,
+    required String catalogDeviceId,
+    required double lengthM,
+    required double pointLoadKg,
+    required double distributedLoadKgPerM,
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       catalogDeviceId = Value(catalogDeviceId),
+       lengthM = Value(lengthM),
+       pointLoadKg = Value(pointLoadKg),
+       distributedLoadKgPerM = Value(distributedLoadKgPerM),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TrussLoadChartEntry> custom({
+    Expression<String>? id,
+    Expression<String>? catalogDeviceId,
+    Expression<double>? lengthM,
+    Expression<double>? pointLoadKg,
+    Expression<double>? distributedLoadKgPerM,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? revision,
+    Expression<String>? syncState,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (catalogDeviceId != null) 'catalog_device_id': catalogDeviceId,
+      if (lengthM != null) 'length_m': lengthM,
+      if (pointLoadKg != null) 'point_load_kg': pointLoadKg,
+      if (distributedLoadKgPerM != null)
+        'distributed_load_kg_per_m': distributedLoadKgPerM,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (revision != null) 'revision': revision,
+      if (syncState != null) 'sync_state': syncState,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TrussLoadChartEntriesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? catalogDeviceId,
+    Value<double>? lengthM,
+    Value<double>? pointLoadKg,
+    Value<double>? distributedLoadKgPerM,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? revision,
+    Value<String>? syncState,
+    Value<DateTime?>? lastSyncedAt,
+    Value<int>? rowid,
+  }) {
+    return TrussLoadChartEntriesCompanion(
+      id: id ?? this.id,
+      catalogDeviceId: catalogDeviceId ?? this.catalogDeviceId,
+      lengthM: lengthM ?? this.lengthM,
+      pointLoadKg: pointLoadKg ?? this.pointLoadKg,
+      distributedLoadKgPerM:
+          distributedLoadKgPerM ?? this.distributedLoadKgPerM,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      revision: revision ?? this.revision,
+      syncState: syncState ?? this.syncState,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (catalogDeviceId.present) {
+      map['catalog_device_id'] = Variable<String>(catalogDeviceId.value);
+    }
+    if (lengthM.present) {
+      map['length_m'] = Variable<double>(lengthM.value);
+    }
+    if (pointLoadKg.present) {
+      map['point_load_kg'] = Variable<double>(pointLoadKg.value);
+    }
+    if (distributedLoadKgPerM.present) {
+      map['distributed_load_kg_per_m'] = Variable<double>(
+        distributedLoadKgPerM.value,
+      );
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TrussLoadChartEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('catalogDeviceId: $catalogDeviceId, ')
+          ..write('lengthM: $lengthM, ')
+          ..write('pointLoadKg: $pointLoadKg, ')
+          ..write('distributedLoadKgPerM: $distributedLoadKgPerM, ')
+          ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -13273,6 +14065,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ProjectTrussesTable projectTrusses = $ProjectTrussesTable(this);
   late final $CatalogDevicesTable catalogDevices = $CatalogDevicesTable(this);
+  late final $TrussLoadChartEntriesTable trussLoadChartEntries =
+      $TrussLoadChartEntriesTable(this);
   late final $ClientsTable clients = $ClientsTable(this);
   late final $LocationsTable locations = $LocationsTable(this);
   late final $LocationPowerConnectorsTable locationPowerConnectors =
@@ -13297,6 +14091,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     powerConnections,
     projectTrusses,
     catalogDevices,
+    trussLoadChartEntries,
     clients,
     locations,
     locationPowerConnectors,
@@ -18628,6 +19423,7 @@ typedef $$ProjectTrussesTableCreateCompanionBuilder =
       Value<String> phaseId,
       required String name,
       Value<String?> trussSystemId,
+      Value<String?> trussCatalogDeviceId,
       Value<double> lengthM,
       Value<double?> maxTotalLoadKg,
       Value<double?> maxDistributedLoadKgPerM,
@@ -18650,6 +19446,7 @@ typedef $$ProjectTrussesTableUpdateCompanionBuilder =
       Value<String> phaseId,
       Value<String> name,
       Value<String?> trussSystemId,
+      Value<String?> trussCatalogDeviceId,
       Value<double> lengthM,
       Value<double?> maxTotalLoadKg,
       Value<double?> maxDistributedLoadKgPerM,
@@ -18723,6 +19520,11 @@ class $$ProjectTrussesTableFilterComposer
 
   ColumnFilters<String> get trussSystemId => $composableBuilder(
     column: $table.trussSystemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trussCatalogDeviceId => $composableBuilder(
+    column: $table.trussCatalogDeviceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18844,6 +19646,11 @@ class $$ProjectTrussesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get trussCatalogDeviceId => $composableBuilder(
+    column: $table.trussCatalogDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get lengthM => $composableBuilder(
     column: $table.lengthM,
     builder: (column) => ColumnOrderings(column),
@@ -18956,6 +19763,11 @@ class $$ProjectTrussesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get trussCatalogDeviceId => $composableBuilder(
+    column: $table.trussCatalogDeviceId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<double> get lengthM =>
       $composableBuilder(column: $table.lengthM, builder: (column) => column);
 
@@ -19064,6 +19876,7 @@ class $$ProjectTrussesTableTableManager
                 Value<String> phaseId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> trussSystemId = const Value.absent(),
+                Value<String?> trussCatalogDeviceId = const Value.absent(),
                 Value<double> lengthM = const Value.absent(),
                 Value<double?> maxTotalLoadKg = const Value.absent(),
                 Value<double?> maxDistributedLoadKgPerM = const Value.absent(),
@@ -19084,6 +19897,7 @@ class $$ProjectTrussesTableTableManager
                 phaseId: phaseId,
                 name: name,
                 trussSystemId: trussSystemId,
+                trussCatalogDeviceId: trussCatalogDeviceId,
                 lengthM: lengthM,
                 maxTotalLoadKg: maxTotalLoadKg,
                 maxDistributedLoadKgPerM: maxDistributedLoadKgPerM,
@@ -19106,6 +19920,7 @@ class $$ProjectTrussesTableTableManager
                 Value<String> phaseId = const Value.absent(),
                 required String name,
                 Value<String?> trussSystemId = const Value.absent(),
+                Value<String?> trussCatalogDeviceId = const Value.absent(),
                 Value<double> lengthM = const Value.absent(),
                 Value<double?> maxTotalLoadKg = const Value.absent(),
                 Value<double?> maxDistributedLoadKgPerM = const Value.absent(),
@@ -19126,6 +19941,7 @@ class $$ProjectTrussesTableTableManager
                 phaseId: phaseId,
                 name: name,
                 trussSystemId: trussSystemId,
+                trussCatalogDeviceId: trussCatalogDeviceId,
                 lengthM: lengthM,
                 maxTotalLoadKg: maxTotalLoadKg,
                 maxDistributedLoadKgPerM: maxDistributedLoadKgPerM,
@@ -19254,6 +20070,44 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
+final class $$CatalogDevicesTableReferences
+    extends BaseReferences<_$AppDatabase, $CatalogDevicesTable, CatalogDevice> {
+  $$CatalogDevicesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $TrussLoadChartEntriesTable,
+    List<TrussLoadChartEntry>
+  >
+  _trussLoadChartEntriesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.trussLoadChartEntries,
+        aliasName:
+            'catalog_devices__id__truss_load_chart_entries__catalog_device_id',
+      );
+
+  $$TrussLoadChartEntriesTableProcessedTableManager
+  get trussLoadChartEntriesRefs {
+    final manager =
+        $$TrussLoadChartEntriesTableTableManager(
+          $_db,
+          $_db.trussLoadChartEntries,
+        ).filter(
+          (f) => f.catalogDeviceId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _trussLoadChartEntriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$CatalogDevicesTableFilterComposer
     extends Composer<_$AppDatabase, $CatalogDevicesTable> {
   $$CatalogDevicesTableFilterComposer({
@@ -19352,6 +20206,32 @@ class $$CatalogDevicesTableFilterComposer
     column: $table.lastSyncedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> trussLoadChartEntriesRefs(
+    Expression<bool> Function($$TrussLoadChartEntriesTableFilterComposer f) f,
+  ) {
+    final $$TrussLoadChartEntriesTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.trussLoadChartEntries,
+          getReferencedColumn: (t) => t.catalogDeviceId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TrussLoadChartEntriesTableFilterComposer(
+                $db: $db,
+                $table: $db.trussLoadChartEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CatalogDevicesTableOrderingComposer
@@ -19528,6 +20408,32 @@ class $$CatalogDevicesTableAnnotationComposer
     column: $table.lastSyncedAt,
     builder: (column) => column,
   );
+
+  Expression<T> trussLoadChartEntriesRefs<T extends Object>(
+    Expression<T> Function($$TrussLoadChartEntriesTableAnnotationComposer a) f,
+  ) {
+    final $$TrussLoadChartEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.trussLoadChartEntries,
+          getReferencedColumn: (t) => t.catalogDeviceId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TrussLoadChartEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.trussLoadChartEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$CatalogDevicesTableTableManager
@@ -19541,12 +20447,9 @@ class $$CatalogDevicesTableTableManager
           $$CatalogDevicesTableAnnotationComposer,
           $$CatalogDevicesTableCreateCompanionBuilder,
           $$CatalogDevicesTableUpdateCompanionBuilder,
-          (
-            CatalogDevice,
-            BaseReferences<_$AppDatabase, $CatalogDevicesTable, CatalogDevice>,
-          ),
+          (CatalogDevice, $$CatalogDevicesTableReferences),
           CatalogDevice,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool trussLoadChartEntriesRefs})
         > {
   $$CatalogDevicesTableTableManager(
     _$AppDatabase db,
@@ -19649,15 +20552,44 @@ class $$CatalogDevicesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$CatalogDevicesTable, CatalogDevice>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $CatalogDevicesTable,
-                    CatalogDevice
-                  >(db, table, e),
+                  $$CatalogDevicesTableReferences(db, table, e),
                 ),
               )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({trussLoadChartEntriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (trussLoadChartEntriesRefs) db.trussLoadChartEntries,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (trussLoadChartEntriesRefs)
+                    await $_getPrefetchedData<
+                      CatalogDevice,
+                      $CatalogDevicesTable,
+                      TrussLoadChartEntry
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CatalogDevicesTableReferences
+                          ._trussLoadChartEntriesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CatalogDevicesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).trussLoadChartEntriesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.catalogDeviceId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -19672,12 +20604,491 @@ typedef $$CatalogDevicesTableProcessedTableManager =
       $$CatalogDevicesTableAnnotationComposer,
       $$CatalogDevicesTableCreateCompanionBuilder,
       $$CatalogDevicesTableUpdateCompanionBuilder,
-      (
-        CatalogDevice,
-        BaseReferences<_$AppDatabase, $CatalogDevicesTable, CatalogDevice>,
-      ),
+      (CatalogDevice, $$CatalogDevicesTableReferences),
       CatalogDevice,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool trussLoadChartEntriesRefs})
+    >;
+typedef $$TrussLoadChartEntriesTableCreateCompanionBuilder =
+    TrussLoadChartEntriesCompanion Function({
+      required String id,
+      required String catalogDeviceId,
+      required double lengthM,
+      required double pointLoadKg,
+      required double distributedLoadKgPerM,
+      Value<int> sortOrder,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> revision,
+      Value<String> syncState,
+      Value<DateTime?> lastSyncedAt,
+      Value<int> rowid,
+    });
+typedef $$TrussLoadChartEntriesTableUpdateCompanionBuilder =
+    TrussLoadChartEntriesCompanion Function({
+      Value<String> id,
+      Value<String> catalogDeviceId,
+      Value<double> lengthM,
+      Value<double> pointLoadKg,
+      Value<double> distributedLoadKgPerM,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> revision,
+      Value<String> syncState,
+      Value<DateTime?> lastSyncedAt,
+      Value<int> rowid,
+    });
+
+final class $$TrussLoadChartEntriesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $TrussLoadChartEntriesTable,
+          TrussLoadChartEntry
+        > {
+  $$TrussLoadChartEntriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CatalogDevicesTable _catalogDeviceIdTable(_$AppDatabase db) =>
+      db.catalogDevices.createAlias(
+        'truss_load_chart_entries__catalog_device_id__catalog_devices__id',
+      );
+
+  $$CatalogDevicesTableProcessedTableManager get catalogDeviceId {
+    final $_column = $_itemColumn<String>('catalog_device_id')!;
+
+    final manager = $$CatalogDevicesTableTableManager(
+      $_db,
+      $_db.catalogDevices,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogDeviceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TrussLoadChartEntriesTableFilterComposer
+    extends Composer<_$AppDatabase, $TrussLoadChartEntriesTable> {
+  $$TrussLoadChartEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lengthM => $composableBuilder(
+    column: $table.lengthM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get pointLoadKg => $composableBuilder(
+    column: $table.pointLoadKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get distributedLoadKgPerM => $composableBuilder(
+    column: $table.distributedLoadKgPerM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CatalogDevicesTableFilterComposer get catalogDeviceId {
+    final $$CatalogDevicesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catalogDeviceId,
+      referencedTable: $db.catalogDevices,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatalogDevicesTableFilterComposer(
+            $db: $db,
+            $table: $db.catalogDevices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrussLoadChartEntriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $TrussLoadChartEntriesTable> {
+  $$TrussLoadChartEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lengthM => $composableBuilder(
+    column: $table.lengthM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get pointLoadKg => $composableBuilder(
+    column: $table.pointLoadKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get distributedLoadKgPerM => $composableBuilder(
+    column: $table.distributedLoadKgPerM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CatalogDevicesTableOrderingComposer get catalogDeviceId {
+    final $$CatalogDevicesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catalogDeviceId,
+      referencedTable: $db.catalogDevices,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatalogDevicesTableOrderingComposer(
+            $db: $db,
+            $table: $db.catalogDevices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrussLoadChartEntriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TrussLoadChartEntriesTable> {
+  $$TrussLoadChartEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get lengthM =>
+      $composableBuilder(column: $table.lengthM, builder: (column) => column);
+
+  GeneratedColumn<double> get pointLoadKg => $composableBuilder(
+    column: $table.pointLoadKg,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get distributedLoadKgPerM => $composableBuilder(
+    column: $table.distributedLoadKgPerM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  $$CatalogDevicesTableAnnotationComposer get catalogDeviceId {
+    final $$CatalogDevicesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catalogDeviceId,
+      referencedTable: $db.catalogDevices,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatalogDevicesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.catalogDevices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TrussLoadChartEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TrussLoadChartEntriesTable,
+          TrussLoadChartEntry,
+          $$TrussLoadChartEntriesTableFilterComposer,
+          $$TrussLoadChartEntriesTableOrderingComposer,
+          $$TrussLoadChartEntriesTableAnnotationComposer,
+          $$TrussLoadChartEntriesTableCreateCompanionBuilder,
+          $$TrussLoadChartEntriesTableUpdateCompanionBuilder,
+          (TrussLoadChartEntry, $$TrussLoadChartEntriesTableReferences),
+          TrussLoadChartEntry,
+          PrefetchHooks Function({bool catalogDeviceId})
+        > {
+  $$TrussLoadChartEntriesTableTableManager(
+    _$AppDatabase db,
+    $TrussLoadChartEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TrussLoadChartEntriesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$TrussLoadChartEntriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TrussLoadChartEntriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> catalogDeviceId = const Value.absent(),
+                Value<double> lengthM = const Value.absent(),
+                Value<double> pointLoadKg = const Value.absent(),
+                Value<double> distributedLoadKgPerM = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TrussLoadChartEntriesCompanion(
+                id: id,
+                catalogDeviceId: catalogDeviceId,
+                lengthM: lengthM,
+                pointLoadKg: pointLoadKg,
+                distributedLoadKgPerM: distributedLoadKgPerM,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                revision: revision,
+                syncState: syncState,
+                lastSyncedAt: lastSyncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String catalogDeviceId,
+                required double lengthM,
+                required double pointLoadKg,
+                required double distributedLoadKgPerM,
+                Value<int> sortOrder = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TrussLoadChartEntriesCompanion.insert(
+                id: id,
+                catalogDeviceId: catalogDeviceId,
+                lengthM: lengthM,
+                pointLoadKg: pointLoadKg,
+                distributedLoadKgPerM: distributedLoadKgPerM,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                revision: revision,
+                syncState: syncState,
+                lastSyncedAt: lastSyncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$TrussLoadChartEntriesTable, TrussLoadChartEntry>(
+                    table,
+                  ),
+                  $$TrussLoadChartEntriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({catalogDeviceId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (catalogDeviceId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.catalogDeviceId,
+                                referencedTable:
+                                    $$TrussLoadChartEntriesTableReferences
+                                        ._catalogDeviceIdTable(db),
+                                referencedColumn:
+                                    $$TrussLoadChartEntriesTableReferences
+                                        ._catalogDeviceIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TrussLoadChartEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TrussLoadChartEntriesTable,
+      TrussLoadChartEntry,
+      $$TrussLoadChartEntriesTableFilterComposer,
+      $$TrussLoadChartEntriesTableOrderingComposer,
+      $$TrussLoadChartEntriesTableAnnotationComposer,
+      $$TrussLoadChartEntriesTableCreateCompanionBuilder,
+      $$TrussLoadChartEntriesTableUpdateCompanionBuilder,
+      (TrussLoadChartEntry, $$TrussLoadChartEntriesTableReferences),
+      TrussLoadChartEntry,
+      PrefetchHooks Function({bool catalogDeviceId})
     >;
 typedef $$ClientsTableCreateCompanionBuilder =
     ClientsCompanion Function({
@@ -22681,6 +24092,8 @@ class $AppDatabaseManager {
       $$ProjectTrussesTableTableManager(_db, _db.projectTrusses);
   $$CatalogDevicesTableTableManager get catalogDevices =>
       $$CatalogDevicesTableTableManager(_db, _db.catalogDevices);
+  $$TrussLoadChartEntriesTableTableManager get trussLoadChartEntries =>
+      $$TrussLoadChartEntriesTableTableManager(_db, _db.trussLoadChartEntries);
   $$ClientsTableTableManager get clients =>
       $$ClientsTableTableManager(_db, _db.clients);
   $$LocationsTableTableManager get locations =>

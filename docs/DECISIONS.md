@@ -390,6 +390,36 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-025: Interpolacja tabel nosnosci kratownic
+
+Status: accepted
+
+Kontekst:
+
+- Druga (i ostatnia) rzecz odlozona przez ADR-020 przy pierwszej wersji modulu kratownic. `ProjectTruss` mial dotychczas tylko rekznie wpisywane `maxTotalLoadKg`/`maxDistributedLoadKgPerM` - bez zadnego powiazania z konkretnym modelem kratownicy i jego rzeczywista tabela nosnosci od producenta.
+- Legacy (`legacy/firebase/src/components/truss/truss-calculator.tsx`, `getInterpolatedLimits`/`interpolate`) trzyma tabele nosnosci (`loadChart`) na urzadzeniu-kratownicy w katalogu i interpoluje liniowo limit punktowy/rozlozony po dlugosci; poza zakresem tabeli ekstrapoluje z dwoch najblizszych punktow i oznacza wynik jako ekstrapolacje. Logika przeniesiona 1:1 (`docs/MIGRATION_PLAN.md`: "Co przepisac 1:1 - Interpolacje kratownic").
+
+Decyzja:
+
+- `ProjectTruss.trussCatalogDeviceId` (`String?`) - opcjonalny link do `CatalogDevice` reprezentujacego model kratownicy. Wybierany z listy urzadzen kategorii "Rigging" w dialogu kratownicy (`_TrussDialog`), niezalezny od istniejacego, wciaz nieuzywanego w UI pola `trussSystemId`.
+- `CatalogDevice.loadChart` (`List<TrussLoadChartEntry>`, nowa tabela `truss_load_chart_entries`) - punkty `{lengthM, pointLoadKg, distributedLoadKgPerM}` wpisywane w formularzu katalogu, widoczne tylko dla kategorii "Rigging". Bez pol ugiecia (`deflection*`) z legacy - nieuzywane przez zadna kalkulacje ani tam, ani tutaj; jesli okaza sie potrzebne, to osobny, later dodany krok.
+- `TrussLoadService._interpolateLimits` - port `getInterpolatedLimits`/`interpolate` z legacy: dokladne trafienie, interpolacja miedzy dwoma najblizszymi punktami, ekstrapolacja z dwoch skrajnych gdy dlugosc jest poza tabela, `no-data` gdy urzadzenie nie ma tabeli.
+- Reguła override: `maxTotalLoadKg`/`maxDistributedLoadKgPerM` na `ProjectTruss` pozostaja recznym nadpisaniem, dokladnie jak `manualInputMaxCurrentA` dla limitu wejscia rozdzielnicy (ta sama zasada "domyslnie wyliczone + mozliwosc ustalenia" z wczesniejszej decyzji uzytkownika w tej sesji) - kazde z obu pol dziala niezaleznie: gdy puste, brany jest wynik interpolacji; gdy wypelnione, wygrywa wartosc reczna.
+- `TrussLoad` ma teraz `totalLimitFromChart`/`distributedLimitFromChart` (czy dany limit pochodzi z tabeli) i `hasInterpolatedLimits`/`isChartExtrapolated` do pokazania w UI. `_TrussCard` pokazuje chip "Limity z tabeli producenta" albo ostrzegawczy "Dlugosc poza tabela producenta (ekstrapolacja)".
+- Schemat bazy podniesiony do wersji `12`.
+
+Uzasadnienie:
+
+- Zgodnosc z `docs/MIGRATION_PLAN.md` ("Co przepisac 1:1") - sama matematyka interpolacji nie ma powodu roznic sie od sprawdzonej w legacy.
+- Reuzycie wzorca "wyliczone + reczny override" (zamiast np. blokowania recznego pola, gdy jest tabela) jest spojne z ADR z Etapu 6 i nie wymaga nowej decyzji produktowej.
+- `trussCatalogDeviceId` jako osobne pole (zamiast przeciazania `trussSystemId`) unika nadania nowego znaczenia polu, ktore juz istnieje w schemacie i bazie danych uzytkownikow.
+
+Konsekwencje:
+
+- Etap 7 (`docs/MIGRATION_PLAN.md`) jest zrealizowany w calosci dla zakresu MVP - haki (ADR-024) i interpolacja (ta ADR).
+- `ProjectEditorController` cache'uje teraz `catalogDevices` (ladowane w `loadReferences()`, jak `clients`/`locations`/`powerPresets`) - potrzebne do synchronicznego liczenia `trussLoad()` w `build()`. Ten cache ma te sama, juz zaakceptowana wczesniej niedoskonalosc co pozostale trzy: moze sie zdezaktualizowac, jesli katalog zmieni sie w tle podczas edycji projektu.
+- Ewentualne dodanie ugiecia (`deflectionPointLoadMm`/`deflectionDistributedLoadMm`) z `docs/DATA_MODEL.md` zostaje przyszlym, osobnym krokiem, gdy pojawi sie realna potrzeba go pokazac.
+
 ## ADR-024: Haki kratownic (riggingPoints)
 
 Status: accepted

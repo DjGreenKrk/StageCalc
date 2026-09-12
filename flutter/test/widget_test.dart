@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/app/app.dart';
+import 'package:stagecalc/features/catalog/data/drift_catalog_repository.dart';
+import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
 import 'package:stagecalc/features/clients/data/drift_client_repository.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
 import 'package:stagecalc/features/settings/presentation/about_screen.dart';
@@ -459,6 +461,69 @@ void main() {
     expect(find.text('Kratownica'), findsOneWidget);
     expect(find.textContaining('192.0 kg'), findsOneWidget);
   });
+
+  testWidgets(
+    'linking a truss to a catalog device interpolates its limits from the load chart',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime(2026, 7, 5);
+      await DriftCatalogRepository(database).saveDevice(
+        CatalogDevice(
+          id: 'prolyte_h30v',
+          name: 'Prolyte H30V',
+          category: CatalogDeviceCategory.rigging,
+          quantityUnit: CatalogQuantityUnit.pcs,
+          createdAt: now,
+          updatedAt: now,
+          loadChart: const [
+            TrussLoadChartEntry(
+              id: 'c1',
+              lengthM: 4,
+              pointLoadKg: 800,
+              distributedLoadKgPerM: 200,
+            ),
+            TrussLoadChartEntry(
+              id: 'c2',
+              lengthM: 8,
+              pointLoadKg: 400,
+              distributedLoadKgPerM: 100,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Demo techniczne'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Kratownice'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(GreenCrewButton, 'Dodaj'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'Dlugosc'), '6');
+      await tester.tap(find.byType(DropdownButtonFormField<String?>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Prolyte H30V').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Zapisz'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Limity z tabeli producenta'), findsOneWidget);
+      // Halfway between the 4m (800kg/200kg-per-m) and 8m (400kg/100kg-per-m)
+      // chart entries: 600kg total, 150kg/m distributed.
+      expect(find.textContaining('/ 600 kg'), findsOneWidget);
+      expect(find.textContaining('/ 150.0 kg/m'), findsOneWidget);
+    },
+  );
 
   testWidgets('assigns a hook to a group that needs rigging points', (
     tester,

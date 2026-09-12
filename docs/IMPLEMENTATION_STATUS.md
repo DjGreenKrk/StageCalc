@@ -262,15 +262,15 @@ Ostatnia aktualizacja: 2026-09-12
 - Dodano `ProjectReportService.buildTextReport` (ADR-021): raport tekstowy projektu (podsumowanie, grupy, rozdzielnice z obciazeniem i ostrzezeniami, kratownice z masa i limitami), uzywajacy tych samych serwisow domenowych co UI. Ikona w AppBar edytora projektu, zapis do `Documents/StageCalc/reports/`. Wydzielono wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`) uzywany teraz przez backup i raport zamiast osobnych kopii tego samego kodu.
 - Etap 11 (ADR-022): przy przegladzie uprawnien platformowych okazalo sie, ze `AndroidManifest.xml` nie mial `android.permission.INTERNET`, mimo ze `PocketBaseProjectSyncService` juz laczy sie z siecia - zweryfikowano w scalonym manifescie release builda, ze uprawnienia faktycznie nigdzie nie bylo. Dodano brakujace uprawnienie. Dodano tez `tool/package_release.dart`, ktory buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip` (ADR-012F), zweryfikowane realnym buildem obu platform.
 - Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" w ekranie "O aplikacji" otwiera natywny wybor pliku zamiast wymagac recznego wklejenia sciezki. Bez nowych uprawnien Android (SAF, zgodnie z ADR-012E). Testy widgetowe podmieniaja `FilePickerPlatform.instance` na fake, bo `flutter test` nie potrafi wyswietlic prawdziwego natywnego dialogu.
-- Dodano haki kratownic (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) daja wymagana liczbe hakow na grupe; nowa tabela `project_group_hook_assignments` trzyma przypisane haki (wybierane z katalogu, waga dolicza sie do masy grupy w `TrussLoadService`). Nowa sekcja "Haki grup urzadzen" w widoku Kratownice. Schemat bazy podniesiony do wersji `11`. Interpolacja tabel nosnosci producenta nadal nie zrealizowana - wymaga `trussCatalogDeviceId` na `ProjectTruss`, ktorego jeszcze nie ma.
+- Dodano haki kratownic (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) daja wymagana liczbe hakow na grupe; nowa tabela `project_group_hook_assignments` trzyma przypisane haki (wybierane z katalogu, waga dolicza sie do masy grupy w `TrussLoadService`). Nowa sekcja "Haki grup urzadzen" w widoku Kratownice. Schemat bazy podniesiony do wersji `11`.
+- Dodano interpolacje tabel nosnosci kratownic (ADR-025), zamykajac Etap 7 w calosci: `ProjectTruss.trussCatalogDeviceId` linkuje kratownice do modelu z katalogu, `CatalogDevice.loadChart` trzyma tabele nosnosci (edytowalna w formularzu katalogu dla kategorii Rigging). `TrussLoadService` interpoluje limit punktowy/rozlozony po dlugosci - dokladne trafienie, interpolacja miedzy punktami, ekstrapolacja z ostrzezeniem poza zakres tabeli (port logiki z legacy). Reczne limity dzialaja jako override per pole, tak jak `manualInputMaxCurrentA`. Schemat bazy podniesiony do wersji `12`.
 
 ## Nastepny krok
 
 1. Przygotowac bardziej wizualny uklad patchera.
-2. Interpolacja tabel nosnosci kratownic (wymaga `trussCatalogDeviceId` na `ProjectTruss` i nowych tabel nosnosci w katalogu).
-3. PDF jako alternatywa/uzupelnienie raportu tekstowego.
-4. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`.
-5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
+2. PDF jako alternatywa/uzupelnienie raportu tekstowego.
+3. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`.
+4. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
 ## Zalozenia obowiazujace
 

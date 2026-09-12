@@ -191,6 +191,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       weightKg: result.weightKg,
       connectorTypeId: result.connectorTypeId,
       riggingPoints: result.riggingPoints,
+      loadChart: result.loadChart,
       quantityUnit: result.quantityUnit,
       createdAt: device?.createdAt ?? now,
       updatedAt: now,
@@ -348,6 +349,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   late final TextEditingController _weightController;
   late final TextEditingController _connectorController;
   late final TextEditingController _riggingPointsController;
+  late List<_LoadChartRowControllers> _loadChartRows;
   late CatalogDeviceCategory _category;
   late CatalogQuantityUnit _quantityUnit;
   var _isUpdatingElectricalFields = false;
@@ -375,6 +377,10 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _riggingPointsController = TextEditingController(
       text: device?.riggingPoints?.toString() ?? '',
     );
+    _loadChartRows = [
+      for (final entry in device?.loadChart ?? const [])
+        _LoadChartRowControllers.fromEntry(entry),
+    ];
     _powerController.addListener(_syncCurrentFromPower);
     _currentController.addListener(_syncPowerFromCurrent);
     _category = device?.category ?? CatalogDeviceCategory.device;
@@ -390,6 +396,9 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _weightController.dispose();
     _connectorController.dispose();
     _riggingPointsController.dispose();
+    for (final row in _loadChartRows) {
+      row.dispose();
+    }
     super.dispose();
   }
 
@@ -475,6 +484,81 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                     'Liczba hakow potrzebnych, gdy urzadzenie wisi na kratownicy.',
               ),
             ),
+            if (_category == CatalogDeviceCategory.rigging) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Tabela nosnosci producenta (opcjonalnie)',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Dodaj wpis',
+                    icon: const Icon(Icons.add),
+                    onPressed: () => setState(
+                      () => _loadChartRows.add(_LoadChartRowControllers()),
+                    ),
+                  ),
+                ],
+              ),
+              const Text(
+                'Uzywana do interpolacji limitow kratownicy po dlugosci - '
+                'zostaw puste, jesli limity beda wpisywane recznie per projekt.',
+                style: TextStyle(fontSize: 12),
+              ),
+              for (final row in _loadChartRows)
+                Padding(
+                  key: ValueKey(row),
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: row.lengthController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Dlugosc',
+                            suffixText: 'm',
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: row.pointLoadController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Obc. punktowe',
+                            suffixText: 'kg',
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: row.distributedLoadController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Obc. rozlozone',
+                            suffixText: 'kg/m',
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Usun wpis',
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () =>
+                            setState(() => _loadChartRows.remove(row)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<CatalogQuantityUnit>(
               initialValue: _quantityUnit,
@@ -525,6 +609,12 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
         weightKg: _parseNumber(_weightController.text),
         connectorTypeId: _emptyToNull(_connectorController.text),
         riggingPoints: int.tryParse(_riggingPointsController.text.trim()),
+        loadChart: _category == CatalogDeviceCategory.rigging
+            ? _loadChartRows
+                  .map((row) => row.toEntry(_parseNumber))
+                  .whereType<TrussLoadChartEntry>()
+                  .toList()
+            : const [],
         quantityUnit: _quantityUnit,
       ),
     );
@@ -615,6 +705,7 @@ class _CatalogDeviceFormResult {
     this.manufacturer,
     this.connectorTypeId,
     this.riggingPoints,
+    this.loadChart = const [],
   });
 
   final String name;
@@ -625,7 +716,56 @@ class _CatalogDeviceFormResult {
   final double weightKg;
   final String? connectorTypeId;
   final int? riggingPoints;
+  final List<TrussLoadChartEntry> loadChart;
   final CatalogQuantityUnit quantityUnit;
+}
+
+/// One editable row of a device's `loadChart` in the catalog form. Holds its
+/// own controllers so the dialog can add/remove rows freely without losing
+/// text state, mirroring the per-row controller pattern used for outlet
+/// templates elsewhere in the app.
+class _LoadChartRowControllers {
+  _LoadChartRowControllers({String? id})
+    : id = id ?? 'chart_${DateTime.now().microsecondsSinceEpoch}_$_counter',
+      lengthController = TextEditingController(),
+      pointLoadController = TextEditingController(),
+      distributedLoadController = TextEditingController() {
+    _counter++;
+  }
+
+  factory _LoadChartRowControllers.fromEntry(TrussLoadChartEntry entry) {
+    final row = _LoadChartRowControllers(id: entry.id);
+    row.lengthController.text = entry.lengthM.toStringAsFixed(1);
+    row.pointLoadController.text = entry.pointLoadKg.toStringAsFixed(0);
+    row.distributedLoadController.text = entry.distributedLoadKgPerM
+        .toStringAsFixed(1);
+    return row;
+  }
+
+  static int _counter = 0;
+
+  final String id;
+  final TextEditingController lengthController;
+  final TextEditingController pointLoadController;
+  final TextEditingController distributedLoadController;
+
+  void dispose() {
+    lengthController.dispose();
+    pointLoadController.dispose();
+    distributedLoadController.dispose();
+  }
+
+  TrussLoadChartEntry? toEntry(double Function(String) parseNumber) {
+    if (lengthController.text.trim().isEmpty) {
+      return null;
+    }
+    return TrussLoadChartEntry(
+      id: id,
+      lengthM: parseNumber(lengthController.text),
+      pointLoadKg: parseNumber(pointLoadController.text),
+      distributedLoadKgPerM: parseNumber(distributedLoadController.text),
+    );
+  }
 }
 
 class _MetricChip extends StatelessWidget {

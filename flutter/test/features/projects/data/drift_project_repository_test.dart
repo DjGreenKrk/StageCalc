@@ -169,6 +169,7 @@ void main() {
           id: 'truss_sqlite',
           name: 'Front 12 m',
           trussSystemId: 'prolyte_h30v',
+          trussCatalogDeviceId: 'catalog_prolyte_h30v',
           lengthM: 12,
           maxTotalLoadKg: 720,
           maxDistributedLoadKgPerM: 60,
@@ -185,6 +186,7 @@ void main() {
 
     expect(truss.name, 'Front 12 m');
     expect(truss.trussSystemId, 'prolyte_h30v');
+    expect(truss.trussCatalogDeviceId, 'catalog_prolyte_h30v');
     expect(truss.lengthM, 12);
     expect(truss.maxTotalLoadKg, 720);
     expect(truss.maxDistributedLoadKgPerM, 60);

@@ -132,6 +132,7 @@ class ProjectTruss {
     required this.name,
     this.phaseId = 'default',
     this.trussSystemId,
+    this.trussCatalogDeviceId,
     this.lengthM = 0,
     this.maxTotalLoadKg,
     this.maxDistributedLoadKgPerM,
@@ -144,8 +145,21 @@ class ProjectTruss {
   final String phaseId;
   final String name;
   final String? trussSystemId;
+
+  /// Optional link to a `CatalogDevice` representing this truss's model,
+  /// used to interpolate length-aware limits from its `loadChart` (see
+  /// `TrussLoadService`) instead of relying only on `maxTotalLoadKg` /
+  /// `maxDistributedLoadKgPerM` as flat, manually-entered numbers.
+  final String? trussCatalogDeviceId;
   final double lengthM;
+
+  /// Manual override of the total load limit. When null and
+  /// [trussCatalogDeviceId] points at a device with a load chart, the
+  /// interpolated value is used instead.
   final double? maxTotalLoadKg;
+
+  /// Manual override of the distributed load limit - same fallback rule as
+  /// [maxTotalLoadKg].
   final double? maxDistributedLoadKgPerM;
   final double manualLoadKg;
   final List<String> assignedGroupIds;
@@ -157,6 +171,7 @@ class ProjectTruss {
       'phaseId': phaseId,
       'name': name,
       'trussSystemId': trussSystemId,
+      'trussCatalogDeviceId': trussCatalogDeviceId,
       'lengthM': lengthM,
       'maxTotalLoadKg': maxTotalLoadKg,
       'maxDistributedLoadKgPerM': maxDistributedLoadKgPerM,
@@ -175,6 +190,7 @@ class ProjectTruss {
       phaseId: json['phaseId'] as String? ?? 'default',
       name: json['name'] as String,
       trussSystemId: json['trussSystemId'] as String?,
+      trussCatalogDeviceId: json['trussCatalogDeviceId'] as String?,
       lengthM: (json['lengthM'] as num? ?? 0).toDouble(),
       maxTotalLoadKg: (json['maxTotalLoadKg'] as num?)?.toDouble(),
       maxDistributedLoadKgPerM: (json['maxDistributedLoadKgPerM'] as num?)

@@ -648,10 +648,15 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     await _runMutation(() => _controller.deleteItem(group, item));
   }
 
+  List<CatalogDevice> get _trussDevices => _controller.catalogDevices
+      .where((device) => device.category == CatalogDeviceCategory.rigging)
+      .toList();
+
   Future<void> _openAddTrussDialog(List<ProjectGroup> groups) async {
     final result = await showDialog<_TrussFormResult>(
       context: context,
-      builder: (context) => _TrussDialog(groups: groups),
+      builder: (context) =>
+          _TrussDialog(groups: groups, trussDevices: _trussDevices),
     );
 
     if (result == null) {
@@ -662,6 +667,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       () => _controller.addTruss(
         name: result.name,
         lengthM: result.lengthM,
+        trussCatalogDeviceId: result.trussCatalogDeviceId,
         manualLoadKg: result.manualLoadKg,
         maxTotalLoadKg: result.maxTotalLoadKg,
         maxDistributedLoadKgPerM: result.maxDistributedLoadKgPerM,
@@ -677,7 +683,11 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   ) async {
     final result = await showDialog<_TrussFormResult>(
       context: context,
-      builder: (context) => _TrussDialog(truss: truss, groups: groups),
+      builder: (context) => _TrussDialog(
+        truss: truss,
+        groups: groups,
+        trussDevices: _trussDevices,
+      ),
     );
 
     if (result == null) {
@@ -689,6 +699,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
         truss,
         name: result.name,
         lengthM: result.lengthM,
+        trussCatalogDeviceId: result.trussCatalogDeviceId,
         manualLoadKg: result.manualLoadKg,
         maxTotalLoadKg: result.maxTotalLoadKg,
         maxDistributedLoadKgPerM: result.maxDistributedLoadKgPerM,

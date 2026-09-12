@@ -85,6 +85,20 @@ class _TrussCard extends StatelessWidget {
                   avatar: Icon(Icons.help_outline, size: 16),
                   label: Text('Brak zdefiniowanych limitow'),
                 ),
+              if (load.hasInterpolatedLimits && load.isChartExtrapolated)
+                Chip(
+                  avatar: const Icon(Icons.warning_amber_outlined, size: 16),
+                  label: const Text(
+                    'Dlugosc poza tabela producenta (ekstrapolacja)',
+                  ),
+                  backgroundColor: Colors.amber.shade700,
+                )
+              else if (load.totalLimitFromChart ||
+                  load.distributedLimitFromChart)
+                const Chip(
+                  avatar: Icon(Icons.rule, size: 16),
+                  label: Text('Limity z tabeli producenta'),
+                ),
             ],
           ),
           if (assignedGroupNames.isNotEmpty) ...[
@@ -211,9 +225,14 @@ class _GroupHooksCard extends StatelessWidget {
 }
 
 class _TrussDialog extends StatefulWidget {
-  const _TrussDialog({required this.groups, this.truss});
+  const _TrussDialog({
+    required this.groups,
+    required this.trussDevices,
+    this.truss,
+  });
 
   final List<ProjectGroup> groups;
+  final List<CatalogDevice> trussDevices;
   final ProjectTruss? truss;
 
   @override
@@ -228,11 +247,13 @@ class _TrussDialogState extends State<_TrussDialog> {
   late final TextEditingController _maxDistributedLoadController;
   late final TextEditingController _notesController;
   late Set<String> _assignedGroupIds;
+  String? _trussCatalogDeviceId;
 
   @override
   void initState() {
     super.initState();
     final truss = widget.truss;
+    _trussCatalogDeviceId = truss?.trussCatalogDeviceId;
     _nameController = TextEditingController(text: truss?.name ?? 'Kratownica');
     _lengthController = TextEditingController(
       text: (truss?.lengthM ?? 0).toStringAsFixed(1),
@@ -297,6 +318,29 @@ class _TrussDialogState extends State<_TrussDialog> {
                   suffixText: 'kg',
                   helperText: 'Np. akcesoria bez wlasnej grupy w projekcie.',
                 ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: _trussCatalogDeviceId,
+                decoration: const InputDecoration(
+                  labelText: 'Model kratownicy (opcjonalnie)',
+                  helperText:
+                      'Gdy model ma tabele nosnosci producenta, limity ponizej '
+                      'mozna zostawic puste - zostana wyliczone z tabeli.',
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Brak / recznie'),
+                  ),
+                  for (final device in widget.trussDevices)
+                    DropdownMenuItem<String?>(
+                      value: device.id,
+                      child: Text(device.name),
+                    ),
+                ],
+                onChanged: (value) =>
+                    setState(() => _trussCatalogDeviceId = value),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -374,6 +418,7 @@ class _TrussDialogState extends State<_TrussDialog> {
       _TrussFormResult(
         name: name,
         lengthM: _parseNumber(_lengthController.text),
+        trussCatalogDeviceId: _trussCatalogDeviceId,
         manualLoadKg: _parseNumber(_manualLoadController.text),
         maxTotalLoadKg: _parseOptionalNumber(_maxTotalLoadController.text),
         maxDistributedLoadKgPerM: _parseOptionalNumber(
@@ -409,11 +454,13 @@ class _TrussFormResult {
     required this.maxTotalLoadKg,
     required this.maxDistributedLoadKgPerM,
     required this.assignedGroupIds,
+    this.trussCatalogDeviceId,
     this.notes,
   });
 
   final String name;
   final double lengthM;
+  final String? trussCatalogDeviceId;
   final double manualLoadKg;
   final double? maxTotalLoadKg;
   final double? maxDistributedLoadKgPerM;

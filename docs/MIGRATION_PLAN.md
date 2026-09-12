@@ -298,7 +298,7 @@ Prace:
   - gniazd `All` — zrealizowano,
   - rozdzielnic potomnych — zrealizowano, w tym poprawnego mapowania fazy kaskady,
   - cykli w grafie — zrealizowano,
-  - interpolacji kratownic — nie zrealizowano (brak tabel nosnosci producenta w katalogu, patrz Etap 7).
+  - interpolacji kratownic — zrealizowano (ADR-025): dokladne trafienie, interpolacja, ekstrapolacja z ostrzezeniem, brak danych.
 
 ### Etap 4: Katalog, klienci, lokacje
 
@@ -374,7 +374,7 @@ Prace:
 Wynik:
 
 - Modul kratownic uzywa tych samych grup projektu.
-- Obecny stan: `ProjectTruss` (tabela `project_trusses`) plus `TrussLoadService` i widok "Kratownice" w edytorze projektu (ADR-020) - lista, formularz, przypisywanie grup, obciazenia reczne i ostrzezenia o przekroczeniu limitu juz dzialaja.
+- Obecny stan: kompletny dla zakresu MVP. `ProjectTruss` (tabela `project_trusses`) plus `TrussLoadService` i widok "Kratownice" w edytorze projektu (ADR-020) - lista, formularz, przypisywanie grup, obciazenia reczne, haki (ADR-024) i interpolacja tabel nosnosci producenta z ostrzeganiem o ekstrapolacji (ADR-025) juz dzialaja.
 
 Prace:
 
@@ -383,7 +383,7 @@ Prace:
 - Przypisywanie grup. Zrealizowano.
 - Haki. Zrealizowano (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) daja wymagana liczbe hakow na grupe; `ProjectGroupHookAssignment` (nowa tabela) trzyma przypisane haki (urzadzenie z katalogu + ilosc) i ich wage, doliczana do masy grupy przy liczeniu obciazenia kratownicy. Sekcja "Haki grup urzadzen" w widoku Kratownice.
 - Obciazenia reczne. Zrealizowano (`manualLoadKg`) - jako jedna zagregowana wartosc, nie rozbita na pozycje punktowe/UDL (`ProjectTrussLoad`).
-- Wyniki limitow i ostrzezenia. Zrealizowano dla limitu recznie wpisanego przez uzytkownika (calkowitego i rozlozonego kg/m, prog 90%). Interpolacja tabeli nosnosci producenta i ostrzeganie o ekstrapolacji nie sa zrealizowane - wymaga `trussCatalogDeviceId` na `ProjectTruss` i `TrussLoadChartEntry`/`TrussWeightChartEntry` w katalogu, ktorych jeszcze nie ma.
+- Wyniki limitow i ostrzezenia. Zrealizowano w calosci (ADR-025): `ProjectTruss.trussCatalogDeviceId` linkuje kratownice do urzadzenia z katalogu, `CatalogDevice.loadChart` (`TrussLoadChartEntry`) trzyma tabele nosnosci producenta, `TrussLoadService` interpoluje limit punktowy/rozlozony po dlugosci (dokladne trafienie, interpolacja miedzy punktami, ekstrapolacja z ostrzezeniem poza zakresem tabeli - port logiki z legacy). Reczne `maxTotalLoadKg`/`maxDistributedLoadKgPerM` pozostaja override'm per pole, dokladnie jak `manualInputMaxCurrentA` dla rozdzielnic. `TrussWeightChartEntry` (waga wlasna kratownicy per dlugosc) nie zrealizowane - nieuzywane rowniez przez legacy w samej kalkulacji, wiec pozostaje bez zdefiniowanego zastosowania.
 
 ### Etap 8: Backup i dane startowe
 
