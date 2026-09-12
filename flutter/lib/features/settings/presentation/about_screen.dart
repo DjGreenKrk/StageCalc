@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_metadata.dart';
@@ -114,13 +115,26 @@ class _AboutScreenState extends State<AboutScreen> {
                 'co juz istniejace zostana nadpisane; nic innego nie zostanie usuniete.',
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _importPathController,
-                decoration: const InputDecoration(
-                  labelText: 'Sciezka do pliku kopii zapasowej',
-                  hintText:
-                      r'np. C:\Users\...\Documents\StageCalc\backups\stagecalc_backup_...json',
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _importPathController,
+                      decoration: const InputDecoration(
+                        labelText: 'Sciezka do pliku kopii zapasowej',
+                        hintText:
+                            r'np. C:\Users\...\Documents\StageCalc\backups\stagecalc_backup_...json',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Wybierz plik',
+                    icon: const Icon(Icons.folder_open_outlined),
+                    onPressed: _isImportingBackup ? null : _pickBackupFile,
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               GreenCrewButton(
@@ -181,6 +195,27 @@ class _AboutScreenState extends State<AboutScreen> {
       if (mounted) {
         setState(() => _isCreatingBackup = false);
       }
+    }
+  }
+
+  Future<void> _pickBackupFile() async {
+    try {
+      final result = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      final path = result?.path;
+      if (path == null || !mounted) {
+        return;
+      }
+      setState(() => _importPathController.text = path);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nie udalo sie otworzyc wyboru pliku: $error')),
+      );
     }
   }
 

@@ -16,6 +16,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 - Dodano pierwszy silnik i UI modulu kratownic (ADR-020): `TrussLoadService` liczy mase kratownicy z przypisanych grup + recznego obciazenia i porownuje z opcjonalnymi limitami (calkowitym i rozlozonym kg/m, z progiem ostrzegawczym 90%). Edytor projektu ma teraz trzeci widok "Kratownice" — lista, dodawanie/edycja (nazwa, dlugosc, reczne obciazenie, limity, notatki, przypisanie grup), usuwanie. Bez hakow i interpolacji tabel nosnosci producenta — to osobny, wiekszy krok wymagajacy nowego schematu (patrz ADR-020). Naprawiono przy okazji ten sam wzorzec osieroconych referencji co przy polaczeniach (ADR-015): usuniecie grupy czysci tez `assignedGroupIds` kratownic.
 - Dodano pierwszy eksport raportu projektu (ADR-021): `ProjectReportService.buildTextReport` generuje czytelny raport tekstowy (podsumowanie, grupy z pozycjami, rozdzielnice z obciazeniem faz i ostrzezeniami, kratownice z masa i limitami) uzywajac dokladnie tych samych serwisow domenowych co UI. Dostepny jako ikona w AppBar edytora projektu. Tekst zamiast PDF na razie — `docs/FEATURE_SCOPE.md` dopuszcza to wprost dla MVP; PDF wymagalby osobnej, wiekszej pracy (nowa zaleznosc, uklad, styl GreenCrew). Wydzielono przy okazji wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`), zamiast trzeciej kopii tego samego trojkata native/web/stub co polaczenie z baza (ADR-016) i backup (ADR-018).
 - Dodano `tool/package_release.dart` (ADR-022): `dart run tool/package_release.dart` buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip`, zgodnie z nazewnictwem z ADR-012F. Wersja czytana z `pubspec.yaml`.
+- Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" obok pola sciezki w ekranie "O aplikacji" otwiera natywny wybor pliku (`.json`) zamiast wymagac recznego wklejenia sciezki. Pole recznej sciezki zostaje jako alternatywa. Bez nowych uprawnien Android (SAF/`GET_CONTENT`, zgodnie z ADR-012E).
 
 ### Naprawiono
 
@@ -171,7 +172,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 - Moduł kratownic nie ma jeszcze haków (`riggingPoints`) ani interpolacji tabel nośności producenta — wymaga nowego schematu katalogu (ADR-020).
 - Eksport PDF nie został jeszcze wdrożony — na razie raport tekstowy (ADR-021).
 - Synchronizacja z bazą hostowaną to na razie tylko jednokierunkowy push bez kolejki i bez obsługi konfliktów (ADR-017).
-- Import backupu wymaga ręcznego wklejenia ścieżki pliku — bez file pickera.
+- Backup i raport eksportują zawsze do ustalonego katalogu `Documents/StageCalc/...` — file picker (ADR-023) jest na razie tylko po stronie importu.
 - Android APK jest podpisywany kluczem debug (`signingConfig` w `android/app/build.gradle.kts`) — brak jeszcze własnego klucza release.
 - Web/iOS nie są jeszcze platformami referencyjnymi; Web bez HTTPS traci trwałość zapisów przy twardym odświeżeniu (ADR-016).
 

@@ -261,15 +261,15 @@ Ostatnia aktualizacja: 2026-09-12
 - Naprawiono ten sam wzorzec osieroconych referencji co przy polaczeniach (ADR-015): usuniecie grupy czysci teraz tez jej ID z `assignedGroupIds` kazdej kratownicy.
 - Dodano `ProjectReportService.buildTextReport` (ADR-021): raport tekstowy projektu (podsumowanie, grupy, rozdzielnice z obciazeniem i ostrzezeniami, kratownice z masa i limitami), uzywajacy tych samych serwisow domenowych co UI. Ikona w AppBar edytora projektu, zapis do `Documents/StageCalc/reports/`. Wydzielono wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`) uzywany teraz przez backup i raport zamiast osobnych kopii tego samego kodu.
 - Etap 11 (ADR-022): przy przegladzie uprawnien platformowych okazalo sie, ze `AndroidManifest.xml` nie mial `android.permission.INTERNET`, mimo ze `PocketBaseProjectSyncService` juz laczy sie z siecia - zweryfikowano w scalonym manifescie release builda, ze uprawnienia faktycznie nigdzie nie bylo. Dodano brakujace uprawnienie. Dodano tez `tool/package_release.dart`, ktory buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip` (ADR-012F), zweryfikowane realnym buildem obu platform.
+- Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" w ekranie "O aplikacji" otwiera natywny wybor pliku zamiast wymagac recznego wklejenia sciezki. Bez nowych uprawnien Android (SAF, zgodnie z ADR-012E). Testy widgetowe podmieniaja `FilePickerPlatform.instance` na fake, bo `flutter test` nie potrafi wyswietlic prawdziwego natywnego dialogu.
 
 ## Nastepny krok
 
 1. Przygotowac bardziej wizualny uklad patchera.
 2. Haki i interpolacja tabel nosnosci kratownic (wymaga nowego schematu katalogu).
 3. PDF jako alternatywa/uzupelnienie raportu tekstowego.
-4. File picker dla importu backupu, zamiast wklejania sciezki recznie.
-5. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`.
-6. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
+4. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`.
+5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
 ## Zalozenia obowiazujace
 

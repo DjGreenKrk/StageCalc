@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:drift/native.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:file_picker_platform_interface/file_picker_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -398,6 +401,32 @@ void main() {
     );
   });
 
+  testWidgets('picking a backup file fills the import path field', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final originalPlatform = FilePickerPlatform.instance;
+    FilePickerPlatform.instance = _FakeFilePickerPlatform(
+      pickedPath: r'C:\fake\stagecalc_backup.json',
+    );
+    addTearDown(() => FilePickerPlatform.instance = originalPlatform);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: AboutScreen())),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Wybierz plik'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, r'C:\fake\stagecalc_backup.json');
+  });
+
   testWidgets('adds a truss and shows its calculated mass', (tester) async {
     tester.view.physicalSize = const Size(1000, 1000);
     tester.view.devicePixelRatio = 1;
@@ -466,4 +495,54 @@ void main() {
 
     reportFile.parent.deleteSync(recursive: true);
   });
+}
+
+class _FakeFilePickerPlatform extends FilePickerPlatform {
+  _FakeFilePickerPlatform({required this.pickedPath});
+
+  final String pickedPath;
+
+  @override
+  Future<PlatformFile?> pickFile({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    void Function(FilePickerStatus)? onFileLoading,
+    int compressionQuality = 0,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    return _FakePlatformFile(pickedPath);
+  }
+}
+
+base class _FakePlatformFile extends PlatformFile {
+  _FakePlatformFile(this._path);
+
+  final String _path;
+
+  @override
+  String get name => _path.split(r'\').last;
+
+  @override
+  Uri get uri => Uri.file(_path);
+
+  @override
+  XFile get xFile => XFile(_path);
+
+  @override
+  int? lengthSync() => null;
+
+  @override
+  Future<int> length() async => File(_path).length();
+
+  @override
+  Future<Uint8List> readAsBytes() => File(_path).readAsBytes();
+
+  @override
+  Stream<Uint8List> readAsByteStream() => File(_path).openRead().cast();
 }

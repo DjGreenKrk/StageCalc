@@ -395,7 +395,7 @@ Prace:
 
 - Eksport JSON backup. Zrealizowano (`AppBackupService`, ekran "O aplikacji"): pelny eksport projektow, klientow, lokacji, katalogu i presetow do jednego pliku JSON z `BackupManifest`. Dziala na Android/Windows; na Web na razie swiadomie niewspierane (`UnsupportedError` z czytelnym komunikatem), zgodnie z Web jako platforma warunkowa.
 - Eksport ZIP z JSON i zalacznikami, gdy pojawia sie pliki projektu. Nie zrealizowano - nie ma jeszcze plikow/zalacznikow w projekcie.
-- Opcjonalny import backupu w nowym formacie Flutter. Zrealizowano (ADR-019): `AppBackupImportService` waliduje przed zapisem (odrzuca caly import przy pierwszym niepoprawnym rekordzie), potem zapisuje przez upsert. Bez file pickera na razie - uzytkownik wkleja sciezke pliku recznie.
+- Opcjonalny import backupu w nowym formacie Flutter. Zrealizowano (ADR-019): `AppBackupImportService` waliduje przed zapisem (odrzuca caly import przy pierwszym niepoprawnym rekordzie), potem zapisuje przez upsert. Import ma file picker (ADR-023) i alternatywne reczne pole na sciezke; eksport (backup/raport) zapisuje zawsze do ustalonego katalogu `Documents/StageCalc/...`, bez pickera po tej stronie.
 - Seed typow zlacz i przykladowych presetow. Zrealizowano wczesniej (`ConnectorTypes`, seed presetow w katalogu).
 - Import legacy tylko jako osobny przyszly projekt, jesli bedzie potrzebny.
 

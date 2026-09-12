@@ -390,6 +390,31 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-023: File picker dla importu backupu
+
+Status: accepted
+
+Kontekst:
+
+- Import backupu (ADR-019) wymagal recznego wklejenia pelnej sciezki do pliku JSON - niewygodne i podatne na literowki, zwlaszcza na Androidzie, gdzie sciezki do `Documents/StageCalc/backups/` nie sa widoczne w typowym eksploratorze plikow bez wpisania ich z pamieci.
+
+Decyzja:
+
+- Dodano zaleznosc `file_picker` (`^12.3.0`) i przycisk "Wybierz plik" (ikona folderu) obok istniejacego pola na sciezke w ekranie "O aplikacji". Przycisk otwiera natywny wybor pliku (`FilePicker.pickFile`, filtr `.json`) i wypelnia pole sciezki wynikiem.
+- Reczne pole na sciezke zostaje - to nie jest zamiennik, tylko dodatkowy, wygodniejszy sposob jej wypelnienia. Caly przeplyw walidacji/importu (ADR-019) sie nie zmienia.
+- `file_picker` na Androidzie (`android_file_picker`) dziala przez Storage Access Framework/`GET_CONTENT` intent, wiec nie wymaga zadnego dodatkowego uprawnienia w `AndroidManifest.xml` - zgodne z ADR-012E (minimalne uprawnienia). Zweryfikowano tresc `AndroidManifest.xml` paczki `android_file_picker`: deklaruje tylko `<queries>` (widocznosc pakietow), zero `<uses-permission>`.
+- Na Windows uzywany jest natywny dialog plikow (`windows_file_picker`), rowniez bez dodatkowych uprawnien.
+
+Uzasadnienie:
+
+- Mala, samodzielna poprawka UX bez wplywu na model danych czy logike importu.
+- Brak nowego uprawnienia systemowego utrzymuje zasade ADR-012E.
+
+Konsekwencje:
+
+- Testy widgetowe importu podmieniaja `FilePickerPlatform.instance` na fake (`_FakeFilePickerPlatform` w `widget_test.dart`) zamiast klikac prawdziwy natywny dialog, ktorego `flutter test` i tak nie potrafi wyswietlic.
+- `file_picker` nie jest jeszcze uzywany do eksportu (backup/raport zapisuja zawsze do ustalonego katalogu `Documents/StageCalc/...`) - to osobna, nie zadana jeszcze zmiana.
+
 ## ADR-022: Uprawnienie INTERNET i skrypt pakowania release
 
 Status: accepted
