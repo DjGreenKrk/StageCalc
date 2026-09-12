@@ -390,6 +390,32 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-020: Pierwszy silnik i UI kratownic (bez hakow i interpolacji)
+
+Status: accepted
+
+Kontekst:
+
+- `ProjectTruss` mial juz model danych i tabele Drift od poczatku (`assignedGroupIds`, `manualLoadKg`, `maxTotalLoadKg`, `maxDistributedLoadKgPerM`), ale `TrussLoadService` z Etapu 3 planu migracji nigdy nie powstal, i nie bylo zadnego UI - modul kratownic byl niewidoczny dla uzytkownika.
+- Pelny docelowy model z `docs/DATA_MODEL.md` obejmuje tez `ProjectTrussLoad` (pozycje punktowe/UDL), `ProjectGroupHookAssignment` (haki) i tabele nosnosci producenta (`TrussLoadChartEntry`, `TrussWeightChartEntry`) z interpolacja liniowa - **zadna z tych czterech rzeczy jeszcze nie istnieje** w schemacie.
+
+Decyzja:
+
+- Dodano `TrussLoadService` dzialajacy wylacznie na obecnym modelu `ProjectTruss`: `totalMassKg = suma masy przypisanych grup (ProjectTotalsService) + manualLoadKg`, `distributedLoadKgPerM = totalMassKg / lengthM` (0, nie dzielenie przez zero, gdy `lengthM == 0`). Porownuje to z `maxTotalLoadKg`/`maxDistributedLoadKgPerM` (progi near-limit 90%, jak `PowerCalculationService`) i wystawia `hasKnownLimits`, zeby brak zdefiniowanych limitow czytal sie jako "nieznane", a nie milczaco jako "OK".
+- Dodano trzeci widok w edytorze projektu ("Kratownice", obok "Sprzet"/"Patcher"): lista kratownic, dialog dodawania/edycji (nazwa, dlugosc, reczne obciazenie, opcjonalne limity, notatki, wybor przypisanych grup checkboxami), usuwanie.
+- Naprawiono przy okazji ten sam wzorzec osieroconych referencji co ADR-015 (dla polaczen), zanim zdazyl sie powtorzyc: usuniecie grupy usuwa teraz jej ID takze z `assignedGroupIds` kazdej kratownicy.
+
+Swiadomie pominiete (nowy schemat, nie architektoniczne "nie da sie" - patrz `docs/DATA_MODEL.md` "Kratownice"):
+
+- Haki (`ProjectGroupHookAssignment`, liczenie z `riggingPoints`) - wymaga pola `riggingPoints` w katalogu urzadzen, ktorego jeszcze nie ma.
+- Rozbicie obciazenia na pozycje punktowe/UDL (`ProjectTrussLoad`) - obecny model liczy jedna zagregowana mase, nie rozklad wzdluz kratownicy.
+- Interpolacja tabel nosnosci producenta (`TrussLoadChartEntry`) i ostrzeganie o ekstrapolacji - `maxTotalLoadKg`/`maxDistributedLoadKgPerM` sa na razie zwyklymi polami wpisywanymi recznie przez uzytkownika, nie wartosciami odczytanymi z tabeli producenta dla konkretnej dlugosci.
+
+Uzasadnienie:
+
+- Ten zakres realizuje dokladnie to, co `docs/FEATURE_SCOPE.md` opisuje jako czesc MVP ("obliczanie masy grup z urzadzen, recznych pozycji" i "kontrola calkowitego limitu obciazenia, obciazenia rozlozonego kg/m"), bez projektowania schematu pod haki/tabele nosnosci, ktore nie maja jeszcze zadnego zrodla danych w katalogu.
+- Dodanie tych czterech rzeczy pozniej nie wymaga przebudowy `TrussLoadService` - to rozszerzenia, nie zmiana istniejacego kontraktu (`ProjectTruss`/`TrussLoad` zostaja, przybywa nowych pol/serwisow).
+
 ## ADR-019: Import backupu JSON
 
 Status: accepted

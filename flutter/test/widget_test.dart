@@ -9,6 +9,7 @@ import 'package:stagecalc/app/app.dart';
 import 'package:stagecalc/features/clients/data/drift_client_repository.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
 import 'package:stagecalc/features/settings/presentation/about_screen.dart';
+import 'package:stagecalc/shared/widgets/greencrew_button.dart';
 import 'package:stagecalc/features/projects/domain/entities/power_models.dart';
 import 'package:stagecalc/features/projects/domain/entities/project_models.dart';
 import 'package:stagecalc/infrastructure/local_database/app_database.dart'
@@ -395,5 +396,38 @@ void main() {
       ),
       isTrue,
     );
+  });
+
+  testWidgets('adds a truss and shows its calculated mass', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Demo techniczne'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Kratownice'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Brak kratownic w projekcie.'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(GreenCrewButton, 'Dodaj'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dodaj kratownice'), findsOneWidget);
+
+    // The demo project has a single group ("Front light") totalling 192 kg;
+    // assigning it should make the truss show that same total mass.
+    await tester.tap(find.text('Front light'));
+    await tester.tap(find.text('Zapisz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Brak kratownic w projekcie.'), findsNothing);
+    expect(find.text('Kratownica'), findsOneWidget);
+    expect(find.textContaining('192.0 kg'), findsOneWidget);
   });
 }

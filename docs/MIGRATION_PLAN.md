@@ -291,14 +291,14 @@ Prace:
 - `ProjectTotalsService`. Zrealizowano.
 - `PowerCalculationService`. Zrealizowano, wraz z limitem wejscia z sumy gniazd i recznym override'm (`manualInputMaxCurrentA`).
 - `PatchValidationService`. Zrealizowano, wraz z wykrywaniem cykli i przeciazeniem jako stanem walidacji.
-- `TrussLoadService`. Nie zrealizowano - modul kratownic ma na razie tylko model danych (patrz Etap 7).
+- `TrussLoadService`. Zrealizowano (ADR-020) - masa z przypisanych grup + reczne obciazenie, porownanie z limitami. Bez interpolacji tabel nosnosci (patrz Etap 7).
 - Testy jednostkowe dla:
   - sum projektu — zrealizowano,
   - obciazenia `L1/L2/L3` — zrealizowano,
   - gniazd `All` — zrealizowano,
   - rozdzielnic potomnych — zrealizowano, w tym poprawnego mapowania fazy kaskady,
   - cykli w grafie — zrealizowano,
-  - interpolacji kratownic — nie zrealizowano (brak `TrussLoadService`).
+  - interpolacji kratownic — nie zrealizowano (brak tabel nosnosci producenta w katalogu, patrz Etap 7).
 
 ### Etap 4: Katalog, klienci, lokacje
 
@@ -374,16 +374,16 @@ Prace:
 Wynik:
 
 - Modul kratownic uzywa tych samych grup projektu.
-- Obecny stan: dodano pierwszy model `ProjectTruss` w projekcie oraz tabele Drift/SQLite `project_trusses`; kratownica moze przechowac dlugosc, system, limity, reczne obciazenie, notatki i przypisane grupy.
+- Obecny stan: `ProjectTruss` (tabela `project_trusses`) plus `TrussLoadService` i widok "Kratownice" w edytorze projektu (ADR-020) - lista, formularz, przypisywanie grup, obciazenia reczne i ostrzezenia o przekroczeniu limitu juz dzialaja.
 
 Prace:
 
-- Lista kratownic w projekcie.
-- Formularz kratownicy.
-- Przypisywanie grup.
-- Haki.
-- Obciazenia reczne.
-- Wyniki limitow i ostrzezenia.
+- Lista kratownic w projekcie. Zrealizowano.
+- Formularz kratownicy. Zrealizowano.
+- Przypisywanie grup. Zrealizowano.
+- Haki. Nie zrealizowano - wymaga pola `riggingPoints` w katalogu urzadzen (`ProjectGroupHookAssignment` z `docs/DATA_MODEL.md`), ktorego jeszcze nie ma.
+- Obciazenia reczne. Zrealizowano (`manualLoadKg`) - jako jedna zagregowana wartosc, nie rozbita na pozycje punktowe/UDL (`ProjectTrussLoad`).
+- Wyniki limitow i ostrzezenia. Zrealizowano dla limitu recznie wpisanego przez uzytkownika (calkowitego i rozlozonego kg/m, prog 90%). Interpolacja tabeli nosnosci producenta i ostrzeganie o ekstrapolacji nie sa zrealizowane - wymaga `TrussLoadChartEntry`/`TrussWeightChartEntry` w katalogu, ktorych jeszcze nie ma.
 
 ### Etap 8: Backup i dane startowe
 

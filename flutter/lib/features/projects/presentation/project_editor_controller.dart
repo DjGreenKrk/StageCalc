@@ -15,8 +15,9 @@ import '../domain/entities/project_models.dart';
 import '../domain/services/patch_validation_service.dart';
 import '../domain/services/power_calculation_service.dart';
 import '../domain/services/project_totals_service.dart';
+import '../domain/services/truss_load_service.dart';
 
-enum ProjectEditorView { equipment, patcher }
+enum ProjectEditorView { equipment, patcher, trusses }
 
 /// A source outlet feeding a new [PowerConnection].
 class ProjectConnectionSource {
@@ -49,6 +50,7 @@ class ProjectEditorController extends ChangeNotifier {
   static const _totalsService = ProjectTotalsService();
   static const _powerService = PowerCalculationService();
   static const _validationService = PatchValidationService();
+  static const _trussLoadService = TrussLoadService();
 
   Project _project;
   Project get project => _project;
@@ -81,6 +83,9 @@ class ProjectEditorController extends ChangeNotifier {
 
   PatchValidationResult get patchValidation =>
       _validationService.validate(_project, powerLoads);
+
+  TrussLoad trussLoad(ProjectTruss truss) =>
+      _trussLoadService.calculateLoad(truss, _project);
 
   bool get canCreateConnection {
     return (_project.groups.isNotEmpty || _project.distros.length > 1) &&
@@ -313,10 +318,22 @@ class ProjectEditorController extends ChangeNotifier {
   /// (the exact "orphaned connections" bug from legacy StageCalc, see
   /// `docs/legacy_stagecalc_debug_context.md` and ADR-015) that permanently
   /// blocks the outlet it used to occupy.
+  /// Removes [group], every [PowerConnection] targeting it, and its ID from
+  /// every truss's `assignedGroupIds` - the same "don't leave a dangling
+  /// reference behind" rule as [deleteDistro], applied here too so this
+  /// group-deletion path doesn't grow a second copy of the orphaned-
+  /// reference bug ADR-015 already fixed once for connections.
   Future<void> deleteGroup(ProjectGroup group) {
     final now = DateTime.now();
     final groups = _project.groups
         .where((candidate) => candidate.id != group.id)
+        .toList();
+    final trusses = _project.trusses
+        .map(
+          (truss) => truss.assignedGroupIds.contains(group.id)
+              ? _withoutAssignedGroup(truss, group.id)
+              : truss,
+        )
         .toList();
 
     return _persist(
@@ -325,8 +342,26 @@ class ProjectEditorController extends ChangeNotifier {
         connections: _project.connections
             .where((connection) => connection.targetGroupId != group.id)
             .toList(),
+        trusses: trusses,
         updatedAt: now,
       ),
+    );
+  }
+
+  ProjectTruss _withoutAssignedGroup(ProjectTruss truss, String groupId) {
+    return ProjectTruss(
+      id: truss.id,
+      phaseId: truss.phaseId,
+      name: truss.name,
+      trussSystemId: truss.trussSystemId,
+      lengthM: truss.lengthM,
+      maxTotalLoadKg: truss.maxTotalLoadKg,
+      maxDistributedLoadKgPerM: truss.maxDistributedLoadKgPerM,
+      manualLoadKg: truss.manualLoadKg,
+      assignedGroupIds: truss.assignedGroupIds
+          .where((id) => id != groupId)
+          .toList(),
+      notes: truss.notes,
     );
   }
 
@@ -438,6 +473,75 @@ class ProjectEditorController extends ChangeNotifier {
     }).toList();
 
     return _persist(_project.copyWith(groups: groups, updatedAt: now));
+  }
+
+  Future<void> addTruss({
+    required String name,
+    required double lengthM,
+    double manualLoadKg = 0,
+    double? maxTotalLoadKg,
+    double? maxDistributedLoadKgPerM,
+    List<String> assignedGroupIds = const [],
+    String? notes,
+  }) {
+    final now = DateTime.now();
+    final truss = ProjectTruss(
+      id: 'truss_${now.microsecondsSinceEpoch}',
+      phaseId: _project.phaseId,
+      name: name,
+      lengthM: lengthM,
+      manualLoadKg: manualLoadKg,
+      maxTotalLoadKg: maxTotalLoadKg,
+      maxDistributedLoadKgPerM: maxDistributedLoadKgPerM,
+      assignedGroupIds: assignedGroupIds,
+      notes: notes,
+    );
+
+    return _persist(
+      _project.copyWith(trusses: [..._project.trusses, truss], updatedAt: now),
+    );
+  }
+
+  Future<void> editTruss(
+    ProjectTruss truss, {
+    required String name,
+    required double lengthM,
+    required double manualLoadKg,
+    double? maxTotalLoadKg,
+    double? maxDistributedLoadKgPerM,
+    required List<String> assignedGroupIds,
+    String? notes,
+  }) {
+    final now = DateTime.now();
+    final trusses = _project.trusses.map((candidate) {
+      if (candidate.id != truss.id) {
+        return candidate;
+      }
+
+      return ProjectTruss(
+        id: candidate.id,
+        phaseId: candidate.phaseId,
+        name: name,
+        trussSystemId: candidate.trussSystemId,
+        lengthM: lengthM,
+        manualLoadKg: manualLoadKg,
+        maxTotalLoadKg: maxTotalLoadKg,
+        maxDistributedLoadKgPerM: maxDistributedLoadKgPerM,
+        assignedGroupIds: assignedGroupIds,
+        notes: notes,
+      );
+    }).toList();
+
+    return _persist(_project.copyWith(trusses: trusses, updatedAt: now));
+  }
+
+  Future<void> deleteTruss(ProjectTruss truss) {
+    final now = DateTime.now();
+    final trusses = _project.trusses
+        .where((candidate) => candidate.id != truss.id)
+        .toList();
+
+    return _persist(_project.copyWith(trusses: trusses, updatedAt: now));
   }
 
   Future<void> _persist(Project project) async {

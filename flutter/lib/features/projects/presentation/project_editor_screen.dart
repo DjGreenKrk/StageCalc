@@ -13,6 +13,7 @@ import '../domain/entities/project_models.dart';
 import '../domain/services/patch_validation_service.dart';
 import '../domain/services/power_calculation_service.dart';
 import '../domain/services/project_totals_service.dart';
+import '../domain/services/truss_load_service.dart';
 import 'project_editor_controller.dart';
 
 part 'project_editor/metadata_widgets.dart';
@@ -23,6 +24,7 @@ part 'project_editor/distro_layout_dialog.dart';
 part 'project_editor/connection_widgets.dart';
 part 'project_editor/group_widgets.dart';
 part 'project_editor/catalog_selection_dialog.dart';
+part 'project_editor/truss_widgets.dart';
 part 'project_editor/shared_helpers.dart';
 
 /// Editor screen for a single [Project]. All project mutations live in
@@ -130,6 +132,11 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                   icon: Icon(Icons.cable),
                   label: Text('Patcher'),
                 ),
+                ButtonSegment(
+                  value: ProjectEditorView.trusses,
+                  icon: Icon(Icons.linear_scale),
+                  label: Text('Kratownice'),
+                ),
               ],
               selected: {view},
               onSelectionChanged: (selection) {
@@ -165,7 +172,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-            ] else ...[
+            ] else if (view == ProjectEditorView.patcher) ...[
               GreenCrewSectionHeader(
                 title: 'Rozdzielnice',
                 action: GreenCrewButton(
@@ -223,6 +230,30 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                     project: project,
                     patchValidation: patchValidation,
                     onDelete: () => _deleteConnection(connection),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+            ] else ...[
+              GreenCrewSectionHeader(
+                title: 'Kratownice',
+                action: GreenCrewButton(
+                  label: 'Dodaj',
+                  icon: Icons.add,
+                  onPressed: () => _openAddTrussDialog(project.groups),
+                  secondary: true,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (project.trusses.isEmpty)
+                const GreenCrewCard(child: Text('Brak kratownic w projekcie.'))
+              else
+                for (final truss in project.trusses) ...[
+                  _TrussCard(
+                    truss: truss,
+                    load: _controller.trussLoad(truss),
+                    groups: project.groups,
+                    onEdit: () => _openEditTrussDialog(truss, project.groups),
+                    onDelete: () => _deleteTruss(truss),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -533,5 +564,81 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     }
 
     await _runMutation(() => _controller.deleteItem(group, item));
+  }
+
+  Future<void> _openAddTrussDialog(List<ProjectGroup> groups) async {
+    final result = await showDialog<_TrussFormResult>(
+      context: context,
+      builder: (context) => _TrussDialog(groups: groups),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    await _runMutation(
+      () => _controller.addTruss(
+        name: result.name,
+        lengthM: result.lengthM,
+        manualLoadKg: result.manualLoadKg,
+        maxTotalLoadKg: result.maxTotalLoadKg,
+        maxDistributedLoadKgPerM: result.maxDistributedLoadKgPerM,
+        assignedGroupIds: result.assignedGroupIds,
+        notes: result.notes,
+      ),
+    );
+  }
+
+  Future<void> _openEditTrussDialog(
+    ProjectTruss truss,
+    List<ProjectGroup> groups,
+  ) async {
+    final result = await showDialog<_TrussFormResult>(
+      context: context,
+      builder: (context) => _TrussDialog(truss: truss, groups: groups),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    await _runMutation(
+      () => _controller.editTruss(
+        truss,
+        name: result.name,
+        lengthM: result.lengthM,
+        manualLoadKg: result.manualLoadKg,
+        maxTotalLoadKg: result.maxTotalLoadKg,
+        maxDistributedLoadKgPerM: result.maxDistributedLoadKgPerM,
+        assignedGroupIds: result.assignedGroupIds,
+        notes: result.notes,
+      ),
+    );
+  }
+
+  Future<void> _deleteTruss(ProjectTruss truss) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usunac kratownice?'),
+        content: Text('"${truss.name}" zostanie usunieta lokalnie.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Usun'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await _runMutation(() => _controller.deleteTruss(truss));
   }
 }
