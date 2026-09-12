@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/app/app.dart';
+import 'package:stagecalc/features/clients/data/drift_client_repository.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
+import 'package:stagecalc/features/settings/presentation/about_screen.dart';
 import 'package:stagecalc/features/projects/domain/entities/power_models.dart';
 import 'package:stagecalc/features/projects/domain/entities/project_models.dart';
 import 'package:stagecalc/infrastructure/local_database/app_database.dart'
@@ -291,5 +293,107 @@ void main() {
     expect((contents['data']['projects'] as List).length, greaterThan(0));
 
     File(path).parent.deleteSync(recursive: true);
+  });
+
+  testWidgets('imports a JSON backup file from the About screen', (
+    tester,
+  ) async {
+    // Tall enough that every field/button on the About screen is visible
+    // without scrolling, so the test only has to deal with real vs. fake
+    // async timing (see below), not scroll geometry.
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final date = DateTime(2026, 7, 5).toUtc().toIso8601String();
+    final backupFile = File(
+      '${Directory.systemTemp.path}/stagecalc_import_test_'
+      '${DateTime.now().microsecondsSinceEpoch}.json',
+    );
+    backupFile.writeAsStringSync(
+      jsonEncode({
+        'manifest': {
+          'schemaVersion': 1,
+          'appName': 'StageCalc',
+          'appVersion': '0.2.0',
+          'createdAt': date,
+          'workspaceId': 'local',
+          'recordCounts': {'clients': 1},
+        },
+        'data': {
+          'projects': [],
+          'clients': [
+            {
+              'id': 'imported_client',
+              'name': 'Zaimportowany klient',
+              'createdAt': date,
+              'updatedAt': date,
+              'syncStatus': 'localOnly',
+            },
+          ],
+          'locations': [],
+          'catalogDevices': [],
+          'powerPresets': [],
+        },
+      }),
+    );
+    addTearDown(() {
+      if (backupFile.existsSync()) {
+        backupFile.deleteSync();
+      }
+    });
+
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: AboutScreen())),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Sciezka do pliku kopii zapasowej'),
+      backupFile.path,
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Wczytaj i zwaliduj'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Zaimportowac kopie zapasowa?').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zaimportowac kopie zapasowa?'), findsOneWidget);
+    expect(find.textContaining('1 klientow'), findsOneWidget);
+
+    await tester.tap(find.text('Importuj'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.textContaining('Zaimportowano').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Zaimportowano 1 rekordow'), findsOneWidget);
+
+    final clients = await DriftClientRepository(database).getClients();
+    expect(
+      clients.any(
+        (client) =>
+            client.id == 'imported_client' &&
+            client.name == 'Zaimportowany klient',
+      ),
+      isTrue,
+    );
   });
 }

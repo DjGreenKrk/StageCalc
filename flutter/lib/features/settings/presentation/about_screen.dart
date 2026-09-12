@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_metadata.dart';
+import '../../../infrastructure/backup/app_backup_import_service.dart';
 import '../../../infrastructure/backup/app_backup_service.dart';
 import '../../../infrastructure/local_database/app_database_provider.dart';
 import '../../../shared/widgets/greencrew_button.dart';
@@ -20,7 +21,15 @@ class AboutScreen extends StatefulWidget {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
+  final _importPathController = TextEditingController();
   var _isCreatingBackup = false;
+  var _isImportingBackup = false;
+
+  @override
+  void dispose() {
+    _importPathController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +100,41 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
         ),
         const SizedBox(height: 12),
+        GreenCrewCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Przywracanie z kopii zapasowej',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Wczytuje plik kopii zapasowej JSON. Rekordy o tych samych ID '
+                'co juz istniejace zostana nadpisane; nic innego nie zostanie usuniete.',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _importPathController,
+                decoration: const InputDecoration(
+                  labelText: 'Sciezka do pliku kopii zapasowej',
+                  hintText:
+                      r'np. C:\Users\...\Documents\StageCalc\backups\stagecalc_backup_...json',
+                ),
+              ),
+              const SizedBox(height: 12),
+              GreenCrewButton(
+                label: _isImportingBackup
+                    ? 'Wczytywanie...'
+                    : 'Wczytaj i zwaliduj',
+                icon: Icons.file_open_outlined,
+                secondary: true,
+                onPressed: _isImportingBackup ? null : _startImport,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         const GreenCrewCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,17 +152,8 @@ class _AboutScreenState extends State<AboutScreen> {
   Future<void> _createBackup() async {
     setState(() => _isCreatingBackup = true);
 
-    final database = AppDatabaseProvider.instance;
-    final service = AppBackupService(
-      projectRepository: DriftProjectRepository(database),
-      clientRepository: DriftClientRepository(database),
-      locationRepository: DriftLocationRepository(database),
-      catalogRepository: DriftCatalogRepository(database),
-      powerPresetRepository: DriftPowerPresetRepository(database),
-    );
-
     try {
-      final location = await service.createBackupFile();
+      final location = await _backupService().createBackupFile();
       if (!mounted) {
         return;
       }
@@ -147,6 +182,105 @@ class _AboutScreenState extends State<AboutScreen> {
         setState(() => _isCreatingBackup = false);
       }
     }
+  }
+
+  Future<void> _startImport() async {
+    final path = _importPathController.text.trim();
+    if (path.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Podaj sciezke do pliku.')));
+      return;
+    }
+
+    setState(() => _isImportingBackup = true);
+
+    final importService = _importService();
+
+    try {
+      final preview = await importService.loadAndValidate(path);
+
+      if (!mounted) {
+        return;
+      }
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Zaimportowac kopie zapasowa?'),
+          content: Text(
+            'Plik z wersji aplikacji ${preview.appVersion}'
+            '${preview.createdAt == null ? '' : ' (${preview.createdAt})'}.\n\n'
+            'Znaleziono:\n'
+            '${preview.projects.length} projektow\n'
+            '${preview.clients.length} klientow\n'
+            '${preview.locations.length} lokacji\n'
+            '${preview.catalogDevices.length} pozycji katalogu\n'
+            '${preview.powerPresets.length} presetow rozdzielnic\n\n'
+            'Rekordy o tych samych ID co juz istniejace zostana nadpisane. '
+            'Tej operacji nie mozna cofnac.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Importuj'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) {
+        return;
+      }
+
+      await importService.import(preview);
+
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Zaimportowano ${preview.totalRecords} rekordow.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nie udalo sie zaimportowac kopii: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isImportingBackup = false);
+      }
+    }
+  }
+
+  AppBackupService _backupService() {
+    final database = AppDatabaseProvider.instance;
+    return AppBackupService(
+      projectRepository: DriftProjectRepository(database),
+      clientRepository: DriftClientRepository(database),
+      locationRepository: DriftLocationRepository(database),
+      catalogRepository: DriftCatalogRepository(database),
+      powerPresetRepository: DriftPowerPresetRepository(database),
+    );
+  }
+
+  AppBackupImportService _importService() {
+    final database = AppDatabaseProvider.instance;
+    return AppBackupImportService(
+      projectRepository: DriftProjectRepository(database),
+      clientRepository: DriftClientRepository(database),
+      locationRepository: DriftLocationRepository(database),
+      catalogRepository: DriftCatalogRepository(database),
+      powerPresetRepository: DriftPowerPresetRepository(database),
+    );
   }
 }
 

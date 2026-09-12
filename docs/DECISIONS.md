@@ -390,6 +390,34 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-019: Import backupu JSON
+
+Status: accepted
+
+Kontekst:
+
+- ADR-018 dostarczyl eksport (`AppBackupService`), ale import zostal tam swiadomie wylaczony z zakresu.
+- `docs/DATA_MODEL.md` ("Backup") wymaga, zeby "Import backupu... walidowal dane przed zapisem".
+
+Decyzja:
+
+- Dodano `AppBackupImportService` z dwoma odrebnymi krokami:
+  1. `validate(String jsonContent) -> BackupImportPreview` — czysta funkcja, nic nie zapisuje. Sprawdza: poprawnosc JSON, obecnosc sekcji `manifest`/`data`, `schemaVersion` (odrzuca backup z **nowszego** formatu niz `appBackupFormatVersion` obslugiwany przez ta wersje aplikacji), oraz parsuje kazdy rekord w kazdej sekcji przez odpowiadajace `fromJson`. Pierwszy niepoprawny rekord przerywa cala walidacje z komunikatem wskazujacym sekcje i numer rekordu — **zero rekordow** trafia do bazy, jesli cokolwiek jest zle.
+  2. `import(BackupImportPreview) -> Future<void>` — zapisuje juz zwalidowane dane przez istniejace repozytoria (`save*`), ktore wszystkie robia upsert po `id`. Rekordy o pasujacym ID sa nadpisywane; nic, czego nie ma w backupie, nie jest usuwane.
+- Wczytanie pliku idzie przez kolejny conditional-import writer/reader (`backup_file_reader/`, analogicznie do ADR-016/ADR-018): native czyta plik z podanej sciezki, web/stub rzuca czytelny `UnsupportedError`.
+- UI (ekran "O aplikacji"): pole tekstowe na sciezke pliku (bez file pickera — patrz "Swiadomie pominiete" nizej), przycisk "Wczytaj i zwaliduj", a po udanej walidacji dialog potwierdzenia pokazujacy liczby rekordow per sekcja i jawne ostrzezenie "Rekordy o tych samych ID... zostana nadpisane... Tej operacji nie mozna cofnac" przed faktycznym zapisem.
+
+Swiadomie pominiete (mniejszy zakres, nie architektoniczne "nie da sie"):
+
+- Brak prawdziwego file pickera (`file_picker`/`file_selector`) — uzytkownik wkleja sciezke, ktora i tak zobaczyl po eksporcie. Dodanie file pickera to osobna, przyszla decyzja o nowej zaleznosci, nie blokuje pierwszego dzialajacego importu.
+- Brak importu na Web, spojnie z eksportem (ADR-018) i statusem Web jako platformy warunkowej.
+- Import nie laczy sie z odczytem/scalaniem "inteligentnym" (np. wykrywaniem konfliktow wersji `revision`) - to nalezy do przyszlego Etapu 10 (sync), nie do prostego przywracania z lokalnego pliku.
+
+Uzasadnienie:
+
+- Rozdzielenie "waliduj" od "zapisz" na dwie osobne, jawne metody wprost realizuje wymog z `DATA_MODEL.md` i daje UI naturalne miejsce na krok potwierdzenia miedzy nimi.
+- Merge-by-upsert (zamiast pelnego zastapienia lokalnej bazy) jest bezpieczniejszym domyslnym zachowaniem: przywrocenie starszego backupu nie kasuje danych dodanych po jego utworzeniu, chyba ze maja to samo ID.
+
 ## ADR-018: Pierwszy backup JSON
 
 Status: accepted
