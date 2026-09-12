@@ -2,7 +2,7 @@
 
 ## Status
 
-Ostatnia aktualizacja: 2026-07-05
+Ostatnia aktualizacja: 2026-09-12
 
 ## Wykonane
 
@@ -240,6 +240,16 @@ Ostatnia aktualizacja: 2026-07-05
 - Dodano test repozytorium projektu dla kratownic.
 - Nie dodano jeszcze pelnego wizualnego patchera ani modulu kratownic.
 - Nie dodano jeszcze backupu JSON.
+- Naprawiono blad osieroconych polaczen: usuniecie grupy usuwa teraz takze `PowerConnection` wskazujace na te grupe (analogicznie do usuwania rozdzielnicy). Ten sam blad byl znanym problemem legacy (`docs/legacy_stagecalc_debug_context.md`) i mimo przepisania na Fluttera przeszedl niezauwazony przez niespojnosc miedzy `_deleteGroup` a `_deleteDistro`.
+- Dodano test widgetowy regresyjny dla usuwania grupy z aktywnymi polaczeniami.
+- Rozbito `project_editor_screen.dart` zgodnie z ADR-015: dodano `ProjectEditorController` (`ChangeNotifier`) z pelna logika mutacji projektu i ladowania danych referencyjnych, a klasy dialogow/kart przeniesiono do 9 plikow tematycznych w `presentation/project_editor/` (metadane projektu, karty rozdzielnic, dialog tworzenia rozdzielnicy, edytor sekcji custom, dialog ukladu/edycji gniazd, polaczenia, grupy/pozycje, katalog, wspolne helpery), polaczonych z ekranem przez `part`/`part of`. Kazdy plik miesci sie w przedziale ok. 100-560 linii.
+- `flutter analyze`, `flutter test` (27/27) i `flutter build windows` przechodza po refaktorze bez zmiany zachowania UI.
+- Dodano wsparcie bazy Drift na Web (ADR-016): `flutter build web` wczesniej sie nie kompilowal (`dart:io`/`dart:ffi` w `app_database.dart`). Rozdzielono polaczenie z baza na `connection_native.dart`/`connection_web.dart`/`connection_stub.dart` wybierane conditional importem. Web uzywa `drift/wasm.dart` + `sqlite3.wasm`/`drift_worker.js` w `web/`.
+- Zweryfikowano dzialanie w przegladarce (Chrome): demo projekt laduje sie z poprawnymi sumami, dodawanie projektu dziala w ramach sesji. Bez HTTPS trwalosc zapisu miedzy sesjami nie jest gwarantowana (patrz ADR-016, znane ograniczenie).
+- Wdrozono StageCalc jako projekt Flutter web pod Caddy na LXC 113 (`stagecalc`, 192.168.0.113), zastepujac placeholder w `/var/www/stagecalc`.
+- Na tym samym serwerze dziala PocketBase (`/opt/pocketbase`, systemd, port 8090 za Caddy `/api` i `/_`). Utworzono konto superusera i pelny schemat 13 kolekcji odzwierciedlajacy obecne tabele Drift (ADR-017).
+- Dodano `PocketBaseProjectSyncService` — pierwszy prawdziwy, jednokierunkowy push lokalnego `Project` (z grupami/pozycjami/rozdzielnicami/gniazdami/polaczeniami/kratownicami oraz opcjonalnym klientem/lokacja) do PocketBase, idempotentny (upsert po `local_id`), bez UI i bez obslugi konfliktow. Zweryfikowano recznie: `dart run tool/push_demo_project.dart` poprawnie tworzy i aktualizuje powiazane rekordy w PocketBase.
+- Reguly dostepu wszystkich kolekcji PocketBase sa na razie puste (publiczne) — do zaadresowania przed jakimkolwiek wyjsciem poza prywatna siec LAN.
 
 ## Nastepny krok
 

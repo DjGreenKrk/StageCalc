@@ -2,6 +2,9 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/app/app.dart';
+import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
+import 'package:stagecalc/features/projects/domain/entities/power_models.dart';
+import 'package:stagecalc/features/projects/domain/entities/project_models.dart';
 import 'package:stagecalc/infrastructure/local_database/app_database.dart'
     as db;
 import 'package:stagecalc/infrastructure/local_database/app_database_provider.dart';
@@ -158,5 +161,78 @@ void main() {
 
     expect(find.text('Rozdzielnice'), findsOneWidget);
     expect(find.text('Polaczenia'), findsOneWidget);
+  });
+
+  testWidgets('deleting a group removes its dangling connections', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final repository = DriftProjectRepository(database);
+    final now = DateTime(2026, 9, 1);
+    await repository.saveProject(
+      Project(
+        id: 'orphan_test_project',
+        name: 'Projekt osieroconych polaczen',
+        createdAt: now,
+        updatedAt: now,
+        groups: const [ProjectGroup(id: 'group_1', name: 'Front', items: [])],
+        distros: const [
+          ProjectDistro(
+            id: 'distro_1',
+            name: 'Rozdzielnia testowa',
+            outlets: [
+              ProjectOutlet(
+                id: 'outlet_1',
+                name: 'Schuko L1.1',
+                connectorTypeId: 'schuko_16a',
+                phase: PowerPhase.l1,
+                maxCurrentA: 16,
+              ),
+            ],
+          ),
+        ],
+        connections: const [
+          PowerConnection(
+            id: 'connection_1',
+            sourceDistroId: 'distro_1',
+            sourceOutletId: 'outlet_1',
+            targetGroupId: 'group_1',
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Projekt osieroconych polaczen'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Patcher'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Brak polaczen grup z rozdzielnicami.'), findsNothing);
+
+    await tester.tap(find.text('Sprzet'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Usun grupe'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Usun').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Patcher'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Brak polaczen grup z rozdzielnicami.'), findsOneWidget);
+
+    final reloaded = (await repository.getProjects()).firstWhere(
+      (project) => project.id == 'orphan_test_project',
+    );
+    expect(reloaded.connections, isEmpty);
   });
 }

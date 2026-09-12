@@ -389,3 +389,88 @@ Uzasadnienie:
 
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
+
+## ADR-017: Pierwsza integracja z PocketBase (push, bez syncu)
+
+Status: accepted
+
+Kontekst:
+
+- LXC 113 (`stagecalc`, 192.168.0.113) ma dzialajacy PocketBase 0.40.4 za Caddy (`/api`, `/_`), bez zadnego schematu i bez konta admina. ADR-012 zostawial backend syncu jako otwarty wybor (PocketBase/Supabase/wlasne API) - PocketBase jest tym, co realnie jest juz postawione.
+- Uzytkownik poprosil o pelny schemat kolekcji wedlug `docs/DATA_MODEL.md` oraz o pierwszy prawdziwy push lokalnego `Project` do PocketBase, bez UI i bez obslugi konfliktow.
+
+Decyzja:
+
+- Utworzono w PocketBase 13 kolekcji odzwierciedlajacych 1:1 obecne tabele Drift (nie hipotetyczny przyszly model): `clients`, `locations`, `location_contacts`, `location_power_connectors`, `catalog_devices`, `power_presets`, `power_outlet_templates`, `projects`, `project_groups`, `project_items`, `project_distros`, `project_outlets`, `power_connections`, `project_trusses`. Kazda ma pole `local_id` (unikalny klucz lokalny, nie ten sam co PocketBase `id`) plus `created_at`/`updated_at`/`deleted_at`/`revision`/`deleted` gdzie ma to sens.
+- Encje nie majace jeszcze implementacji w aplikacji (Workspace/AppUser, ConnectorTypeDefinition jako kolekcja, tabele nosnosci kratownic, haki grup) **nie zostaly utworzone** - `ConnectorTypeDefinition` pozostaje stalym slownikiem w kodzie (`ConnectorTypes` w `power_models.dart`), zgodnie z tym co `DATA_MODEL.md` juz sugerowal ("na start moze byc seedowany jako dane stale aplikacji").
+- Dodano `PocketBaseProjectSyncService` (`features/projects/data/pocketbase_project_sync_service.dart`): jednokierunkowy push jednego `Project` z pelnym drzewem (grupy, pozycje, rozdzielnice, gniazda, polaczenia, kratownice) plus opcjonalny `Client`/`Location`. Upsert po `local_id` (idempotentny - ponowny push aktualizuje te same rekordy zamiast tworzyc duplikaty), ale **bez wykrywania konfliktow** i **bez odczytu z powrotem do lokalnej bazy**.
+- Adres backendu (`PocketBaseClientProvider`) jest na razie zahardkodowany na `http://192.168.0.113` - nie ma jeszcze ekranu ustawien do jego konfiguracji.
+- Dowod dzialania: `flutter/tool/push_demo_project.dart` (`dart run tool/push_demo_project.dart`) - pushuje projekt demo i wypisuje zdalne ID. Zweryfikowano recznie w PocketBase, ze rekordy i relacje (`project` -> `project_groups` -> `project_items` itd.) sa poprawne, oraz ze podwojne uruchomienie nie tworzy duplikatow.
+
+Uzasadnienie:
+
+- Schemat 1:1 z obecnymi tabelami Drift, a nie z pelnym `DATA_MODEL.md`, unika projektowania kolekcji pod funkcje ktore jeszcze nie istnieja w aplikacji (kratownice - haki/tabele nosnosci, konta/role) - dokladnie ten typ przedwczesnej abstrakcji, ktorego projekt ma unikac.
+- Push zamiast pelnego dwukierunkowego syncu jest swiadomie minimalnym pierwszym krokiem: dowodzi, ze polaczenie i mapowanie modelu dzialaja, bez podejmowania jeszcze decyzji o strategii rozwiazywania konfliktow (to osobna, wieksza decyzja projektowa).
+
+Ryzyka i znane ograniczenia (do adresowania, zanim to wyjdzie poza prywatna siec LAN):
+
+- **Wszystkie reguly dostepu kolekcji sa puste (publiczne)** - kazdy z dostepem do `http://192.168.0.113` moze czytac/tworzyc/edytowac/usuwac dowolny rekord bez logowania. Akceptowalne tylko w obecnej, prywatnej sieci LAN, do czasu zaprojektowania prawdziwego modelu autoryzacji.
+- Push nie usuwa po stronie PocketBase rekordow, ktore lokalnie zostaly soft-deleted (`deletedAt`) - `deleted`/`deleted_at` istnieja w schemacie, ale serwis jeszcze ich nie ustawia.
+- Brak odczytu/importu z PocketBase - to tylko kierunek lokalne -> zdalne.
+
+## ADR-016: Wsparcie lokalnej bazy na Web (Drift + sqlite3 wasm)
+
+Status: accepted
+
+Kontekst:
+
+- `flutter build web` nie kompilowal sie w ogole: `app_database.dart` uzywal `dart:io` (`File`, `getApplicationDocumentsDirectory`) i `NativeDatabase` z Drift, co pod spodem wymaga `dart:ffi` - niedostepnego w kompilacji na web (dart2js/wasm). Aplikacja nigdy nie miala dzialajacej sciezki bazy danych na Web, mimo ze ADR-011 to przewidywal ("Web pozostaje platforma warunkowa... adapter Drift web").
+
+Decyzja:
+
+- Rozdzielono polaczenie z baza na trzy pliki w `infrastructure/local_database/connection/` wybierane przez conditional import (`connection_stub.dart` / `connection_native.dart` / `connection_web.dart`), spinane przez `connection/connection.dart`. `app_database.dart` nie zawiera juz zadnego kodu specyficznego dla platformy.
+- Native (`dart.library.io`): bez zmian, `NativeDatabase.createInBackground` na pliku w katalogu dokumentow.
+- Web (`dart.library.js_interop`): `drift/wasm.dart` (`WasmDatabase.open`) z `sqlite3.wasm` i `drift_worker.js` skopiowanymi do `web/` (pliki binarne, nie sa czescia zrodel Dart - trzeba je podmieniac przy kazdej istotnej podmianie wersji `drift`/`sqlite3`).
+- Dodano `sqlite3` jako bezposrednia zaleznosc (wymagane przez `package:sqlite3/wasm.dart`), usunieto `sqlite3_flutter_libs` (od wersji 0.6.0 pakiet jest pustym no-opem, jego wlasny README zaleca usuniecie po migracji na `sqlite3` v3.x).
+
+Uzasadnienie:
+
+- Zgodnie z ADR-011: web ma dzialac przez Drift + sqlite3 wasm, nie osobna implementacje IndexedDB.
+- Podzial przez conditional import pozwala trzymac jeden model domenowy i jeden `AppDatabase`, bez duplikowania logiki tabel/migracji per platforma.
+
+Znane ograniczenie (do rozwiazania pozniej, patrz PS niżej):
+
+- `WasmDatabase.open` probuje wybrac najbardziej trwala implementacje storage (OPFS), ale OPFS/`SharedArrayBuffer` wymagaja bezpiecznego kontekstu przegladarki (HTTPS lub `localhost`). Serwer LXC 113 (`stagecalc`, 192.168.0.113) obecnie nie ma domeny ani TLS, wiec przegladarka spada do `sharedIndexedDb` - dziala, ale zapisy moga zostac utracone przy twardym odswiezeniu/awarii karty tuz po zapisie (zweryfikowane empirycznie: nowo dodany projekt znikal po `location.reload()` mimo widocznego komunikatu "Projekt zapisany lokalnie"). Uzytkownik swiadomie zaakceptowal to ryzyko do czasu, az pojawi sie domena i mozliwosc automatycznego Let's Encrypt w Caddy. Gdy domena bedzie dostepna, dodac w bloku SPA Caddyfile naglowki `Cross-Origin-Opener-Policy: same-origin` i `Cross-Origin-Embedder-Policy: require-corp`, co odblokuje OPFS.
+
+## ADR-015: Rozbicie ProjectEditorScreen na kontroler i widoki
+
+Status: accepted
+
+Kontekst:
+
+- `project_editor_screen.dart` urosl do ok. 3900 linii i stal sie dokladnie tym "nadmiernie duzym komponentem kalkulatora", ktory ADR-001 i `FEATURE_SCOPE.md` (sekcja "Elementy do pominiecia lub przeprojektowania") wskazuja jako wzorzec do unikniecia przy migracji z legacy.
+- Plik laczyl w jednym miejscu: stan UI (`_view`, `_hasChanges`), ladowanie referencji (klienci, lokacje, presety) bezposrednio z repozytoriow Drift, wszystkie mutacje projektu (dodawanie/edycja/usuwanie grup, pozycji, rozdzielnic, polaczen), wywolania serwisow obliczeniowych w `build()` i ok. 15 prywatnych klas dialogow/kart.
+- Brak wydzielonej warstwy sprawil, ze blad "osieroconych polaczen" (usuniecie grupy bez usuniecia jej `PowerConnection`, dokladnie ten sam problem co w legacy, opisany w `docs/legacy_stagecalc_debug_context.md`) przeszedl niezauwazony: logika usuwania grupy i rozdzielnicy byla zduplikowana w dwoch miejscach zamiast zyc w jednym testowalnym miejscu.
+
+Decyzja:
+
+- Wprowadzic `ProjectEditorController` (`ChangeNotifier`) w `features/projects/presentation/project_editor_controller.dart`, ktory:
+  - trzyma stan edytora: biezacy `Project`, liste klientow/lokacji/presetow, flage `hasChanges`, tryb widoku,
+  - laduje referencje z repozytoriow,
+  - wykonuje wszystkie mutacje projektu (dodaj/edytuj/usun grupe, pozycje, rozdzielnice, gniazda, polaczenia) i zapisuje przez `ProjectRepository`,
+  - udostepnia jako gettery wyniki `ProjectTotalsService`, `PowerCalculationService` i `PatchValidationService` przeliczone z biezacego stanu.
+- `ProjectEditorScreen` zostaje cienkim widokiem: pokazuje dialogi (bo tylko widok ma `BuildContext`), a wynik dialogu przekazuje do metody kontrolera. Widok nie wykonuje juz samodzielnie logiki czyszczenia powiazanych rekordow.
+- Klasy dialogow i kart (`_DistroCreateDialog`, `_ConnectionDialog`, `_OutletEditDialog`, `_GroupCard`, `_ConnectionCard` itd.) zostaja przeniesione z jednego pliku do osobnych plikow w `features/projects/presentation/project_editor/`, pogrupowane tematycznie (rozdzielnice, polaczenia, grupy/pozycje, metadane projektu), zamiast zyc w jednym pliku 1:1 z ekranem.
+- Nie wprowadzamy nowej zaleznosci do zarzadzania stanem (np. Riverpod/Bloc) na tym etapie — `ChangeNotifier` z Fluttera wystarcza i nie zwieksza powierzchni zaleznosci projektu.
+
+Uzasadnienie:
+
+- Zgodnosc z ADR-001: rozdzielenie `domain`/`data`/`presentation` mialo dotyczyc rowniez najwiekszego ekranu aplikacji, nie tylko nowych funkcji.
+- Logika mutacji projektu (np. "usuniecie grupy usuwa tez jej polaczenia") staje sie mozliwa do przetestowania niezaleznie od drzewa widgetow i bez duplikacji miedzy operacjami.
+- Mniejsze, tematyczne pliki prezentacji latwiej przegladac i code-review'owac niz jeden plik na 3900 linii.
+
+Konsekwencje:
+
+- Widoki nie moga juz zakladac, ze maja bezposredni dostep do repozytoriow — wywoluja metody kontrolera.
+- Kazda nowa operacja na projekcie (dodanie kolejnego typu mutacji) powinna trafiac do `ProjectEditorController`, nie bezposrednio do widgetu ekranu.
+- Testy widgetowe edytora projektu pozostaja aktualne, poniewaz zachowanie UI (teksty, dialogi, przeplyw) sie nie zmienia — zmienia sie tylko miejsce, w ktorym zyje logika.

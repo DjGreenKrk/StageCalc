@@ -4,6 +4,28 @@ Wszystkie istotne zmiany w projekcie StageCalc Flutter będą opisywane w tym pl
 
 Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać schematu `MAJOR.MINOR.PATCH+BUILD`.
 
+## [Unreleased]
+
+### Dodano
+
+- Dodano wsparcie lokalnej bazy Drift na platformie Web (ADR-016): `WasmDatabase` (sqlite3 skompilowane do WebAssembly) zamiast `NativeDatabase`, wybierane automatycznie przez conditional import (`infrastructure/local_database/connection/`). `flutter build web` wczesniej w ogole sie nie kompilowal (`dart:io`/`dart:ffi` nie dzialaja na web) — aplikacja pierwszy raz faktycznie dziala w przegladarce.
+- Wdrozono StageCalc Web pod `http://192.168.0.113/` (LXC 113, Caddy jako serwer statyczny + reverse proxy do PocketBase na `/api` i `/_`).
+- Dodano pierwsza integracje z PocketBase (ADR-017): utworzono w PocketBase 13 kolekcji odzwierciedlajacych obecny schemat Drift, dodano `PocketBaseProjectSyncService` (jednokierunkowy, idempotentny push projektu z pelnym drzewem grup/pozycji/rozdzielnic/gniazd/polaczen/kratownic do PocketBase) i skrypt dowodowy `tool/push_demo_project.dart`. Bez zmian w UI, bez odczytu z powrotem, bez obslugi konfliktow — to pierwszy krok, nie sync engine.
+
+### Naprawiono
+
+- Naprawiono osierocone połączenia po usunięciu grupy: `_deleteGroup` w edytorze projektu teraz usuwa też wszystkie `PowerConnection` wskazujące na usuniętą grupę (`targetGroupId`), analogicznie do już istniejącego zachowania przy usuwaniu rozdzielnicy. Przed poprawką takie połączenie zostawało w bazie na stałe, pokazywało się jako „Nieznany cel połączenia” na liście Połączeń i trwale blokowało zajęte gniazdo jako niedostępne do ponownego użycia, mimo że nic już nie było do niego podłączone. To dokładnie ten sam błąd „osieroconych połączeń”, który dokumentacja legacy (`docs/legacy_stagecalc_debug_context.md`, sekcja 8) wskazywała jako znany problem do zaadresowania przy przepisaniu na Fluttera.
+- Dodano test widgetowy `deleting a group removes its dangling connections` jako regresję dla powyższego przypadku.
+
+### Znane ograniczenia
+
+- Web bez HTTPS: przeglądarka wybiera `sharedIndexedDb` zamiast trwałego OPFS (wymaga bezpiecznego kontekstu, czyli TLS lub `localhost`). Zapisy mogą się zgubić przy twardym odświeżeniu/awarii karty tuż po zapisie. Do czasu skonfigurowania domeny + automatycznego HTTPS w Caddy jest to zaakceptowane ryzyko (patrz ADR-016).
+- Kolekcje PocketBase mają na razie **puste (publiczne) reguły dostępu** — każdy z dostępem do serwera może czytać/zapisywać dowolne dane bez logowania. Akceptowalne tylko w obecnej prywatnej sieci LAN (patrz ADR-017).
+
+### Zmieniono
+
+- Rozbito `project_editor_screen.dart` (ok. 3900 linii, jeden plik na cały ekran edytora projektu) zgodnie z ADR-015. Wydzielono `ProjectEditorController` (`ChangeNotifier`) z całą logiką mutacji projektu, ładowaniem danych referencyjnych i przeliczeniami mocy/faz/walidacji patchera. Klasy dialogów i kart podzielono na 9 plików tematycznych w `presentation/project_editor/` (karty/dialog metadanych projektu, karty rozdzielnic, dialog tworzenia rozdzielnicy, edytor sekcji custom, dialog układu/edycji gniazd, karty i dialog połączeń, karty i dialogi grup/pozycji, dialog wyboru z katalogu, wspólne helpery faz/złączy), połączone z ekranem przez `part`/`part of`. Ekran `ProjectEditorScreen` (3900 → 536 linii) pozostał cienkim widokiem: pokazuje dialogi i przekazuje ich wynik do kontrolera. Zachowanie UI się nie zmieniło — potwierdzają to wszystkie dotychczasowe testy widgetowe plus nowy test regresyjny, bez modyfikacji, oraz zielony `flutter build windows`.
+
 ## v0.2.0+1 - 2026-07-08
 
 ### Dodano
