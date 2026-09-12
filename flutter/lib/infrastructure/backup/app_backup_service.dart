@@ -6,7 +6,7 @@ import '../../features/clients/data/client_repository.dart';
 import '../../features/locations/data/location_repository.dart';
 import '../../features/power_presets/data/power_preset_repository.dart';
 import '../../features/projects/data/project_repository.dart';
-import 'backup_file_writer/backup_file_writer.dart';
+import '../files/local_file_writer/local_file_writer.dart';
 
 /// Format version of the JSON backup produced by [AppBackupService]. This is
 /// independent of the local Drift schema version: it only needs to change
@@ -84,6 +84,10 @@ class AppBackupService {
         .first;
     final fileName = 'stagecalc_backup_$timestamp.json';
 
-    return writeBackupFile(fileName, json);
+    return writeLocalFile(
+      subfolder: 'backups',
+      fileName: fileName,
+      content: json,
+    );
   }
 }

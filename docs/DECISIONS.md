@@ -390,6 +390,28 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-021: Raport tekstowy zamiast PDF, plus wspolny zapis plikow
+
+Status: accepted
+
+Kontekst:
+
+- ADR-014 (proposed) zaklada `ProjectReportService` osobny od widokow, uzywajacy tych samych serwisow domenowych co UI - ale nie przesadzil formatu.
+- `docs/FEATURE_SCOPE.md` (Zakres MVP) explicite dopuszcza prostszy format: "eksport danych lub PDF w prostszej formie, jesli PDF opoznia MVP".
+- PDF wymagalby nowej, wiekszej zaleznosci (`pdf`/`printing`) i osobnej pracy nad ukladem/stylem zgodnym z GreenCrew branding - nie jest to male rozszerzenie.
+- Przy okazji: trzeci raz z rzedu (polaczenie z baza - ADR-016, backup - ADR-018, teraz raport) potrzebny byl niemal identyczny trojkat plikow native/web/stub do zapisu czegos na dysku.
+
+Decyzja:
+
+- `ProjectReportService.buildTextReport(Project)` generuje czytelny raport tekstowy (podsumowanie mocy/pradu/masy, grupy z pozycjami, rozdzielnice z obciazeniem faz i ostrzezeniami - przeciazenie, duplikat gniazda, cykl - kratownice z masa i ostrzezeniami o limicie), uzywajac dokladnie tych samych serwisow co UI edytora (`ProjectTotalsService`, `PowerCalculationService`, `PatchValidationService`, `TrussLoadService`), wiec liczby w raporcie nigdy nie roznia sie od tego, co pokazuje aplikacja.
+- Akcja "Eksportuj raport tekstowy" jako ikona w AppBar edytora projektu (raport jest per-projekt, nie aplikacyjny jak backup).
+- Wydzielono `infrastructure/files/local_file_writer/` (`writeLocalFile({subfolder, fileName, content})`) jako jedyny mechanizm zapisu lokalnych plikow tekstowych/JSON, zapisujacy do `Documents/StageCalc/<subfolder>/`. `AppBackupService` i `ProjectReportService`/ekran edytora korzystaja z niego zamiast z wlasnych kopii tego samego trojkata plikow. Odczyt backupu (`backup_file_reader/`) zostaje osobno, bo ma inny ksztalt (czyta po sciezce) i na razie tylko jeden uzytkownik.
+- PDF pozostaje mozliwym nastepnym krokiem (Etap 9 planu migracji), ale nie blokuje posiadania czytelnego, dajacego sie skopiowac/wyslac raportu juz teraz.
+
+Uzasadnienie:
+
+- Trzeci niemal identyczny trojkat plikow to dokladnie ten prog, po ktorym duplikacja przestaje byc "trzy proste linie" i staje sie realnym kosztem utrzymania (kazda przyszla zmiana - np. dodanie prawdziwego file pickera - musialaby powtorzyc sie w trzech miejscach zamiast jednym).
+
 ## ADR-020: Pierwszy silnik i UI kratownic (bez hakow i interpolacji)
 
 Status: accepted

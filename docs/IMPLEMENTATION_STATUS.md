@@ -259,13 +259,15 @@ Ostatnia aktualizacja: 2026-09-12
 - Dodano import backupu JSON (ADR-019): `AppBackupImportService` z osobnymi krokami `validate` (nic nie zapisuje, odrzuca caly import przy pierwszym niepoprawnym rekordzie) i `import` (zapisuje przez istniejace repozytoria, upsert po ID). UI na ekranie "O aplikacji": pole na sciezke pliku, przycisk "Wczytaj i zwaliduj", dialog potwierdzenia z liczba rekordow i ostrzezeniem o nadpisaniu. Bez file pickera na razie - uzytkownik wkleja sciezke.
 - Dodano `TrussLoadService` i trzeci widok "Kratownice" w edytorze projektu (ADR-020): lista, dodawanie/edycja (nazwa, dlugosc, reczne obciazenie, opcjonalne limity, notatki, przypisanie grup), usuwanie. Masa = suma wagi przypisanych grup + reczne obciazenie; porownanie z limitem calkowitym i rozlozonym kg/m, prog ostrzegawczy 90%. Bez hakow i interpolacji tabel nosnosci - to wymaga nowego schematu (pole `riggingPoints` w katalogu, tabele nosnosci producenta), ktorego jeszcze nie ma.
 - Naprawiono ten sam wzorzec osieroconych referencji co przy polaczeniach (ADR-015): usuniecie grupy czysci teraz tez jej ID z `assignedGroupIds` kazdej kratownicy.
+- Dodano `ProjectReportService.buildTextReport` (ADR-021): raport tekstowy projektu (podsumowanie, grupy, rozdzielnice z obciazeniem i ostrzezeniami, kratownice z masa i limitami), uzywajacy tych samych serwisow domenowych co UI. Ikona w AppBar edytora projektu, zapis do `Documents/StageCalc/reports/`. Wydzielono wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`) uzywany teraz przez backup i raport zamiast osobnych kopii tego samego kodu.
 
 ## Nastepny krok
 
 1. Przygotowac bardziej wizualny uklad patchera.
 2. Haki i interpolacja tabel nosnosci kratownic (wymaga nowego schematu katalogu).
-3. File picker dla importu backupu, zamiast wklejania sciezki recznie.
-4. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
+3. PDF jako alternatywa/uzupelnienie raportu tekstowego.
+4. File picker dla importu backupu, zamiast wklejania sciezki recznie.
+5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
 ## Zalozenia obowiazujace
 

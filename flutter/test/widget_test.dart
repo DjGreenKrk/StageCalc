@@ -430,4 +430,40 @@ void main() {
     expect(find.text('Kratownica'), findsOneWidget);
     expect(find.textContaining('192.0 kg'), findsOneWidget);
   });
+
+  testWidgets('exports a text report from the project editor', (tester) async {
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Demo techniczne'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Eksportuj raport tekstowy'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Raport wyeksportowany').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Raport wyeksportowany'), findsOneWidget);
+
+    final pathFinder = find.byType(SelectableText);
+    expect(pathFinder, findsOneWidget);
+    final path = tester.widget<SelectableText>(pathFinder).data!;
+    final reportFile = File(path);
+    expect(reportFile.existsSync(), isTrue);
+
+    final content = reportFile.readAsStringSync();
+    expect(content, contains('RAPORT TECHNICZNY - Demo techniczne'));
+    expect(content, contains('Moc: 10.4 kW'));
+    expect(content, contains('Front light'));
+
+    reportFile.parent.deleteSync(recursive: true);
+  });
 }

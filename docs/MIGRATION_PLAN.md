@@ -404,12 +404,13 @@ Prace:
 Wynik:
 
 - Projekt mozna wyeksportowac do raportu.
+- Obecny stan: `ProjectReportService` (ADR-021) generuje raport tekstowy uzywajac tych samych serwisow domenowych co UI; dostepny z AppBar edytora projektu.
 
 Prace:
 
-- Najpierw eksport JSON/CSV dla diagnostyki.
-- Nastepnie PDF z wynikami zasilania i kratownic.
-- Test porownujacy wartosci raportu z wynikami serwisow domenowych.
+- Najpierw eksport JSON/CSV dla diagnostyki. Zrealizowano jako raport tekstowy (czytelniejszy niz surowy CSV do przekazania ekipie na miejscu), nie scisle JSON/CSV - `docs/FEATURE_SCOPE.md` dopuszcza "eksport danych... w prostszej formie".
+- Nastepnie PDF z wynikami zasilania i kratownic. Nie zrealizowano - wymaga nowej zaleznosci (`pdf`/`printing`) i pracy nad ukladem/stylem GreenCrew.
+- Test porownujacy wartosci raportu z wynikami serwisow domenowych. Zrealizowano (`project_report_service_test.dart`).
 
 ### Etap 10: Przygotowanie sync
 

@@ -10,8 +10,10 @@ import '../../power_presets/domain/entities/power_preset.dart';
 import '../data/project_repository.dart';
 import '../domain/entities/power_models.dart';
 import '../domain/entities/project_models.dart';
+import '../../../infrastructure/files/local_file_writer/local_file_writer.dart';
 import '../domain/services/patch_validation_service.dart';
 import '../domain/services/power_calculation_service.dart';
+import '../domain/services/project_report_service.dart';
 import '../domain/services/project_totals_service.dart';
 import '../domain/services/truss_load_service.dart';
 import 'project_editor_controller.dart';
@@ -46,6 +48,7 @@ class ProjectEditorScreen extends StatefulWidget {
 
 class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   late final ProjectEditorController _controller;
+  static const _reportService = ProjectReportService();
 
   @override
   void initState() {
@@ -88,7 +91,16 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
         Navigator.of(context).pop(_controller.hasChanges);
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(project.name)),
+        appBar: AppBar(
+          title: Text(project.name),
+          actions: [
+            IconButton(
+              tooltip: 'Eksportuj raport tekstowy',
+              onPressed: _exportReport,
+              icon: const Icon(Icons.summarize_outlined),
+            ),
+          ],
+        ),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -274,6 +286,47 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Projekt zapisany lokalnie')));
+  }
+
+  Future<void> _exportReport() async {
+    final report = _reportService.buildTextReport(_controller.project);
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .split('.')
+        .first;
+
+    try {
+      final path = await writeLocalFile(
+        subfolder: 'reports',
+        fileName: 'stagecalc_raport_$timestamp.txt',
+        content: report,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Raport wyeksportowany'),
+          content: SelectableText(path),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Zamknij'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nie udalo sie wyeksportowac raportu: $error')),
+      );
+    }
   }
 
   Future<void> _openProjectMetadataDialog() async {
