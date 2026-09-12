@@ -441,12 +441,10 @@ Wynik:
 
 Prace:
 
-- Przygotowac wersjonowanie `x.y.z+build`.
-- Przygotowac changelog.
-- Przygotowac nazwy artefaktow:
-  - `StageCalc-v1_0_0-android.apk`,
-  - `StageCalc-v1_0_0-windows.zip`.
-- Sprawdzic wymagane uprawnienia platformowe i usunac niepotrzebne.
+- Wersjonowanie `x.y.z+build`. Zrealizowano od poczatku projektu (`pubspec.yaml`, obecnie `0.2.0+1`).
+- Changelog. Zrealizowano od poczatku projektu (`CHANGELOG.md`).
+- Nazwy artefaktow (ADR-022): zrealizowano automatyzacje w `tool/package_release.dart` (`dart run tool/package_release.dart`), buduje i pakuje `dist/StageCalc-vX_Y_Z-android.apk` oraz `dist/StageCalc-vX_Y_Z-windows.zip`. Podpisywanie APK wlasnym kluczem (release uzywa na razie klucza debug) i CI nie sa zrealizowane.
+- Uprawnienia platformowe (ADR-022): sprawdzono scalony manifest Androida - brakowalo `android.permission.INTERNET`, mimo ze `PocketBaseProjectSyncService` juz laczy sie z siecia. Dodano brakujace uprawnienie; poza nim manifest nie prosi o nic wiecej niz domyslne minimum Fluttera.
 
 ## Ryzyka techniczne
 

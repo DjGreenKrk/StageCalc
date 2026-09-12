@@ -390,6 +390,35 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-022: Uprawnienie INTERNET i skrypt pakowania release
+
+Status: accepted
+
+Kontekst:
+
+- Przy przegladzie Etapu 11 (`docs/MIGRATION_PLAN.md`) okazalo sie, ze `AndroidManifest.xml` nie deklarowal `android.permission.INTERNET`, mimo ze `PocketBaseProjectSyncService` (ADR-017) juz laczy sie z serwerem PocketBase. Zweryfikowano w scalonym manifescie release builda (`build/app/.../processReleaseMainManifest/AndroidManifest.xml`) - uprawnienia INTERNET nie bylo tam ani z aplikacji, ani z zadnej biblioteki. Na Androidzie brak tego uprawnienia konczy kazde polaczenie sieciowe `SecurityException`, niezaleznie od trybu builda (debug/release) - to nie byla jeszcze zauwazona regresja, bo dotychczasowa synchronizacja byla testowana tylko z `dart run tool/push_demo_project.dart` na Windows, nie z samej aplikacji na telefonie.
+- ADR-012F (nazewnictwo release, `StageCalc-vX_Y_Z-platform.ext`) i pozycja "Przygotowac nazwy artefaktow" w Etapie 11 byly zdecydowane, ale nie mialy jeszcze zadnej automatyzacji - nazwa musialaby byc nadawana recznie po kazdym `flutter build`.
+
+Decyzja:
+
+- Dodano `<uses-permission android:name="android.permission.INTERNET" />` do `android/app/src/main/AndroidManifest.xml`, z komentarzem odsylajacym do ADR-017 jako powodu.
+- Dodano `tool/package_release.dart` (`dart run tool/package_release.dart [--platform=android|windows|all]`), ktory:
+  - czyta wersje z `pubspec.yaml` (`version: X.Y.Z+build`, numer builda pomijany w nazwie pliku - zgodnie z przykladami w ADR-012F),
+  - uruchamia `flutter build apk --release` / `flutter build windows --release`,
+  - kopiuje/pakuje wynik do `dist/StageCalc-vX_Y_Z-android.apk` i `dist/StageCalc-vX_Y_Z-windows.zip`.
+- Do pakowania Windows uzyto `Compress-Archive` z PowerShell zamiast dodawania zaleznosci `archive` do `pubspec.yaml` - pakowanie Windows i tak dziala tylko na maszynie z Windows (tam, gdzie mozna skompilowac `.exe`), wiec PowerShell jest zawsze dostepny.
+- `dist/` dodany do `.gitignore` - to sa artefakty builda, nie zrodla.
+
+Uzasadnienie:
+
+- To dokladnie ten typ bledu, ktory user prosil zglaszac od razu: "dlaczego cos dziala tak jak dziala, a nie inaczej" — tu odpowiedzia bylo "bo jeszcze nikt nie sprawdzil, ze telefon w ogole moze wykonac zapytanie sieciowe".
+- Automatyzacja nazewnictwa usuwa reczny, latwy do pomylenia krok przed kazdym udostepnieniem builda.
+
+Konsekwencje:
+
+- Etap 11 (`Przygotowac nazwy artefaktow`) jest zrealizowany dla Android/Windows. Podpisywanie APK wlasnym kluczem (obecnie release uzywa klucza debug) i ewentualny CI pozostaja poza zakresem tej zmiany.
+- Kazda przyszla platforma (np. iOS) powinna dostac wlasna funkcje `_packageX` w tym samym skrypcie, zamiast osobnego narzedzia.
+
 ## ADR-021: Raport tekstowy zamiast PDF, plus wspolny zapis plikow
 
 Status: accepted

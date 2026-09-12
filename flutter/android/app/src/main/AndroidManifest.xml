@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Wymagane do polaczenia z PocketBase (ADR-017, PocketBaseProjectSyncService) -
+         bez tego uprawnienia kazde polaczenie sieciowe konczy sie SecurityException,
+         niezaleznie od trybu builda. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="StageCalc"
         android:name="${applicationName}"

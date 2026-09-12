@@ -15,9 +15,11 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 - Dodano import backupu JSON (ADR-019): `AppBackupImportService.validate` sprawdza kompletnosc i poprawnosc pliku (JSON, manifest, wersja formatu, kazdy rekord przez `fromJson`) przed jakimkolwiek zapisem — jeden zly rekord odrzuca caly import. Po walidacji UI pokazuje dialog z liczba znalezionych rekordow i ostrzezeniem o nadpisaniu, dopiero potem `import` zapisuje przez istniejace repozytoria (upsert po ID, nic innego nie jest kasowane). Na razie bez file pickera — uzytkownik wkleja sciezke do pliku.
 - Dodano pierwszy silnik i UI modulu kratownic (ADR-020): `TrussLoadService` liczy mase kratownicy z przypisanych grup + recznego obciazenia i porownuje z opcjonalnymi limitami (calkowitym i rozlozonym kg/m, z progiem ostrzegawczym 90%). Edytor projektu ma teraz trzeci widok "Kratownice" — lista, dodawanie/edycja (nazwa, dlugosc, reczne obciazenie, limity, notatki, przypisanie grup), usuwanie. Bez hakow i interpolacji tabel nosnosci producenta — to osobny, wiekszy krok wymagajacy nowego schematu (patrz ADR-020). Naprawiono przy okazji ten sam wzorzec osieroconych referencji co przy polaczeniach (ADR-015): usuniecie grupy czysci tez `assignedGroupIds` kratownic.
 - Dodano pierwszy eksport raportu projektu (ADR-021): `ProjectReportService.buildTextReport` generuje czytelny raport tekstowy (podsumowanie, grupy z pozycjami, rozdzielnice z obciazeniem faz i ostrzezeniami, kratownice z masa i limitami) uzywajac dokladnie tych samych serwisow domenowych co UI. Dostepny jako ikona w AppBar edytora projektu. Tekst zamiast PDF na razie — `docs/FEATURE_SCOPE.md` dopuszcza to wprost dla MVP; PDF wymagalby osobnej, wiekszej pracy (nowa zaleznosc, uklad, styl GreenCrew). Wydzielono przy okazji wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`), zamiast trzeciej kopii tego samego trojkata native/web/stub co polaczenie z baza (ADR-016) i backup (ADR-018).
+- Dodano `tool/package_release.dart` (ADR-022): `dart run tool/package_release.dart` buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip`, zgodnie z nazewnictwem z ADR-012F. Wersja czytana z `pubspec.yaml`.
 
 ### Naprawiono
 
+- Dodano brakujace `android.permission.INTERNET` w `AndroidManifest.xml` (ADR-022). Zweryfikowano w scalonym manifescie release builda, ze uprawnienia nie bylo ani z aplikacji, ani z zadnej biblioteki — `PocketBaseProjectSyncService` (ADR-017) na Androidzie konczylby kazde polaczenie `SecurityException`, niezaleznie od trybu builda. Blad niezauwazony wczesniej, bo sync byl dotychczas testowany tylko z Windows (`tool/push_demo_project.dart`), nie z samej aplikacji na telefonie.
 - Naprawiono bledne przypisanie fazy przy kaskadzie rozdzielnica -> rozdzielnica: `PowerCalculationService` sumowal obciazenie rozdzielnicy podrzednej wprost po jej wewnetrznych etykietach L1/L2/L3, ignorujac faze gniazda rodzica, przez ktore dziecko jest faktycznie podpiete. Rozdzielnica podrzedna o wejsciu 1-fazowym (kazde jej gniazdo wewnetrznie oznaczone jako "L1") podpieta do gniazda L2 lub L3 rodzica pokazywala caly prad na L1 rodzica zamiast na fazie, na ktorej fizycznie jest podpieta - niezgodnie z `docs/DATA_MODEL.md` ("Jesli dziecko podpiete do 1 fazy rodzica: suma wszystkich faz dziecka trafia na te jedna faze rodzica"). Dodano test regresyjny.
 
 ### Dodano
@@ -165,12 +167,13 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ### Znane ograniczenia
 
-- Pełny wizualny patcher nie jest jeszcze gotowy.
-- Moduł kratownic nie został jeszcze wdrożony.
-- Backup JSON nie został jeszcze wdrożony.
-- Eksport PDF nie został jeszcze wdrożony.
-- Synchronizacja z bazą hostowaną nie została jeszcze wdrożona.
-- Web/iOS nie są jeszcze platformami referencyjnymi.
+- Pełny wizualny patcher (drag&drop) nie jest jeszcze gotowy — obecny patcher działa przez listy i dialogi.
+- Moduł kratownic nie ma jeszcze haków (`riggingPoints`) ani interpolacji tabel nośności producenta — wymaga nowego schematu katalogu (ADR-020).
+- Eksport PDF nie został jeszcze wdrożony — na razie raport tekstowy (ADR-021).
+- Synchronizacja z bazą hostowaną to na razie tylko jednokierunkowy push bez kolejki i bez obsługi konfliktów (ADR-017).
+- Import backupu wymaga ręcznego wklejenia ścieżki pliku — bez file pickera.
+- Android APK jest podpisywany kluczem debug (`signingConfig` w `android/app/build.gradle.kts`) — brak jeszcze własnego klucza release.
+- Web/iOS nie są jeszcze platformami referencyjnymi; Web bez HTTPS traci trwałość zapisów przy twardym odświeżeniu (ADR-016).
 
 ### Weryfikacja
 
