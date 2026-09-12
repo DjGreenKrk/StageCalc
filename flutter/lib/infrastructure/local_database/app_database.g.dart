@@ -2665,6 +2665,17 @@ class $ProjectDistrosTable extends ProjectDistros
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _manualInputMaxCurrentAMeta =
+      const VerificationMeta('manualInputMaxCurrentA');
+  @override
+  late final GeneratedColumn<double> manualInputMaxCurrentA =
+      GeneratedColumn<double>(
+        'manual_input_max_current_a',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _sortOrderMeta = const VerificationMeta(
     'sortOrder',
   );
@@ -2757,6 +2768,7 @@ class $ProjectDistrosTable extends ProjectDistros
     presetId,
     inputConnectorTypeId,
     isRootPowerSource,
+    manualInputMaxCurrentA,
     sortOrder,
     createdAt,
     updatedAt,
@@ -2849,6 +2861,15 @@ class $ProjectDistrosTable extends ProjectDistros
         isRootPowerSource.isAcceptableOrUnknown(
           data['is_root_power_source']!,
           _isRootPowerSourceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_input_max_current_a')) {
+      context.handle(
+        _manualInputMaxCurrentAMeta,
+        manualInputMaxCurrentA.isAcceptableOrUnknown(
+          data['manual_input_max_current_a']!,
+          _manualInputMaxCurrentAMeta,
         ),
       );
     }
@@ -2950,6 +2971,10 @@ class $ProjectDistrosTable extends ProjectDistros
         DriftSqlType.bool,
         data['${effectivePrefix}is_root_power_source'],
       )!,
+      manualInputMaxCurrentA: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}manual_input_max_current_a'],
+      ),
       sortOrder: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
@@ -2998,6 +3023,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
   final String? presetId;
   final String? inputConnectorTypeId;
   final bool isRootPowerSource;
+  final double? manualInputMaxCurrentA;
   final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -3016,6 +3042,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
     this.presetId,
     this.inputConnectorTypeId,
     required this.isRootPowerSource,
+    this.manualInputMaxCurrentA,
     required this.sortOrder,
     required this.createdAt,
     required this.updatedAt,
@@ -3047,6 +3074,11 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
       map['input_connector_type_id'] = Variable<String>(inputConnectorTypeId);
     }
     map['is_root_power_source'] = Variable<bool>(isRootPowerSource);
+    if (!nullToAbsent || manualInputMaxCurrentA != null) {
+      map['manual_input_max_current_a'] = Variable<double>(
+        manualInputMaxCurrentA,
+      );
+    }
     map['sort_order'] = Variable<int>(sortOrder);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -3081,6 +3113,9 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
           ? const Value.absent()
           : Value(inputConnectorTypeId),
       isRootPowerSource: Value(isRootPowerSource),
+      manualInputMaxCurrentA: manualInputMaxCurrentA == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualInputMaxCurrentA),
       sortOrder: Value(sortOrder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -3115,6 +3150,9 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
         json['inputConnectorTypeId'],
       ),
       isRootPowerSource: serializer.fromJson<bool>(json['isRootPowerSource']),
+      manualInputMaxCurrentA: serializer.fromJson<double?>(
+        json['manualInputMaxCurrentA'],
+      ),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -3140,6 +3178,9 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
       'presetId': serializer.toJson<String?>(presetId),
       'inputConnectorTypeId': serializer.toJson<String?>(inputConnectorTypeId),
       'isRootPowerSource': serializer.toJson<bool>(isRootPowerSource),
+      'manualInputMaxCurrentA': serializer.toJson<double?>(
+        manualInputMaxCurrentA,
+      ),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -3161,6 +3202,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
     Value<String?> presetId = const Value.absent(),
     Value<String?> inputConnectorTypeId = const Value.absent(),
     bool? isRootPowerSource,
+    Value<double?> manualInputMaxCurrentA = const Value.absent(),
     int? sortOrder,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -3185,6 +3227,9 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
         ? inputConnectorTypeId.value
         : this.inputConnectorTypeId,
     isRootPowerSource: isRootPowerSource ?? this.isRootPowerSource,
+    manualInputMaxCurrentA: manualInputMaxCurrentA.present
+        ? manualInputMaxCurrentA.value
+        : this.manualInputMaxCurrentA,
     sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -3215,6 +3260,9 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
       isRootPowerSource: data.isRootPowerSource.present
           ? data.isRootPowerSource.value
           : this.isRootPowerSource,
+      manualInputMaxCurrentA: data.manualInputMaxCurrentA.present
+          ? data.manualInputMaxCurrentA.value
+          : this.manualInputMaxCurrentA,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -3240,6 +3288,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
           ..write('presetId: $presetId, ')
           ..write('inputConnectorTypeId: $inputConnectorTypeId, ')
           ..write('isRootPowerSource: $isRootPowerSource, ')
+          ..write('manualInputMaxCurrentA: $manualInputMaxCurrentA, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3263,6 +3312,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
     presetId,
     inputConnectorTypeId,
     isRootPowerSource,
+    manualInputMaxCurrentA,
     sortOrder,
     createdAt,
     updatedAt,
@@ -3285,6 +3335,7 @@ class ProjectDistro extends DataClass implements Insertable<ProjectDistro> {
           other.presetId == this.presetId &&
           other.inputConnectorTypeId == this.inputConnectorTypeId &&
           other.isRootPowerSource == this.isRootPowerSource &&
+          other.manualInputMaxCurrentA == this.manualInputMaxCurrentA &&
           other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -3305,6 +3356,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
   final Value<String?> presetId;
   final Value<String?> inputConnectorTypeId;
   final Value<bool> isRootPowerSource;
+  final Value<double?> manualInputMaxCurrentA;
   final Value<int> sortOrder;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -3324,6 +3376,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
     this.presetId = const Value.absent(),
     this.inputConnectorTypeId = const Value.absent(),
     this.isRootPowerSource = const Value.absent(),
+    this.manualInputMaxCurrentA = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3344,6 +3397,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
     this.presetId = const Value.absent(),
     this.inputConnectorTypeId = const Value.absent(),
     this.isRootPowerSource = const Value.absent(),
+    this.manualInputMaxCurrentA = const Value.absent(),
     this.sortOrder = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -3368,6 +3422,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
     Expression<String>? presetId,
     Expression<String>? inputConnectorTypeId,
     Expression<bool>? isRootPowerSource,
+    Expression<double>? manualInputMaxCurrentA,
     Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3390,6 +3445,8 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
       if (inputConnectorTypeId != null)
         'input_connector_type_id': inputConnectorTypeId,
       if (isRootPowerSource != null) 'is_root_power_source': isRootPowerSource,
+      if (manualInputMaxCurrentA != null)
+        'manual_input_max_current_a': manualInputMaxCurrentA,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3412,6 +3469,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
     Value<String?>? presetId,
     Value<String?>? inputConnectorTypeId,
     Value<bool>? isRootPowerSource,
+    Value<double?>? manualInputMaxCurrentA,
     Value<int>? sortOrder,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -3433,6 +3491,8 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
       presetId: presetId ?? this.presetId,
       inputConnectorTypeId: inputConnectorTypeId ?? this.inputConnectorTypeId,
       isRootPowerSource: isRootPowerSource ?? this.isRootPowerSource,
+      manualInputMaxCurrentA:
+          manualInputMaxCurrentA ?? this.manualInputMaxCurrentA,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3481,6 +3541,11 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
     if (isRootPowerSource.present) {
       map['is_root_power_source'] = Variable<bool>(isRootPowerSource.value);
     }
+    if (manualInputMaxCurrentA.present) {
+      map['manual_input_max_current_a'] = Variable<double>(
+        manualInputMaxCurrentA.value,
+      );
+    }
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
@@ -3521,6 +3586,7 @@ class ProjectDistrosCompanion extends UpdateCompanion<ProjectDistro> {
           ..write('presetId: $presetId, ')
           ..write('inputConnectorTypeId: $inputConnectorTypeId, ')
           ..write('isRootPowerSource: $isRootPowerSource, ')
+          ..write('manualInputMaxCurrentA: $manualInputMaxCurrentA, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -13033,7 +13099,7 @@ class $$ProjectsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectsTable, Project>(table),
                   $$ProjectsTableReferences(db, table, e),
                 ),
               )
@@ -13677,7 +13743,7 @@ class $$ProjectGroupsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectGroupsTable, ProjectGroup>(table),
                   $$ProjectGroupsTableReferences(db, table, e),
                 ),
               )
@@ -14374,7 +14440,7 @@ class $$ProjectItemsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectItemsTable, ProjectItem>(table),
                   $$ProjectItemsTableReferences(db, table, e),
                 ),
               )
@@ -14463,6 +14529,7 @@ typedef $$ProjectDistrosTableCreateCompanionBuilder =
       Value<String?> presetId,
       Value<String?> inputConnectorTypeId,
       Value<bool> isRootPowerSource,
+      Value<double?> manualInputMaxCurrentA,
       Value<int> sortOrder,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -14484,6 +14551,7 @@ typedef $$ProjectDistrosTableUpdateCompanionBuilder =
       Value<String?> presetId,
       Value<String?> inputConnectorTypeId,
       Value<bool> isRootPowerSource,
+      Value<double?> manualInputMaxCurrentA,
       Value<int> sortOrder,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -14609,6 +14677,11 @@ class $$ProjectDistrosTableFilterComposer
 
   ColumnFilters<bool> get isRootPowerSource => $composableBuilder(
     column: $table.isRootPowerSource,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get manualInputMaxCurrentA => $composableBuilder(
+    column: $table.manualInputMaxCurrentA,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14775,6 +14848,11 @@ class $$ProjectDistrosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get manualInputMaxCurrentA => $composableBuilder(
+    column: $table.manualInputMaxCurrentA,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
@@ -14877,6 +14955,11 @@ class $$ProjectDistrosTableAnnotationComposer
 
   GeneratedColumn<bool> get isRootPowerSource => $composableBuilder(
     column: $table.isRootPowerSource,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get manualInputMaxCurrentA => $composableBuilder(
+    column: $table.manualInputMaxCurrentA,
     builder: (column) => column,
   );
 
@@ -15021,6 +15104,7 @@ class $$ProjectDistrosTableTableManager
                 Value<String?> presetId = const Value.absent(),
                 Value<String?> inputConnectorTypeId = const Value.absent(),
                 Value<bool> isRootPowerSource = const Value.absent(),
+                Value<double?> manualInputMaxCurrentA = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -15040,6 +15124,7 @@ class $$ProjectDistrosTableTableManager
                 presetId: presetId,
                 inputConnectorTypeId: inputConnectorTypeId,
                 isRootPowerSource: isRootPowerSource,
+                manualInputMaxCurrentA: manualInputMaxCurrentA,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -15061,6 +15146,7 @@ class $$ProjectDistrosTableTableManager
                 Value<String?> presetId = const Value.absent(),
                 Value<String?> inputConnectorTypeId = const Value.absent(),
                 Value<bool> isRootPowerSource = const Value.absent(),
+                Value<double?> manualInputMaxCurrentA = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -15080,6 +15166,7 @@ class $$ProjectDistrosTableTableManager
                 presetId: presetId,
                 inputConnectorTypeId: inputConnectorTypeId,
                 isRootPowerSource: isRootPowerSource,
+                manualInputMaxCurrentA: manualInputMaxCurrentA,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -15092,7 +15179,7 @@ class $$ProjectDistrosTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectDistrosTable, ProjectDistro>(table),
                   $$ProjectDistrosTableReferences(db, table, e),
                 ),
               )
@@ -15837,7 +15924,7 @@ class $$ProjectOutletsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectOutletsTable, ProjectOutlet>(table),
                   $$ProjectOutletsTableReferences(db, table, e),
                 ),
               )
@@ -16601,7 +16688,7 @@ class $$PowerConnectionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PowerConnectionsTable, PowerConnection>(table),
                   $$PowerConnectionsTableReferences(db, table, e),
                 ),
               )
@@ -17229,7 +17316,7 @@ class $$ProjectTrussesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectTrussesTable, ProjectTrussesData>(table),
                   $$ProjectTrussesTableReferences(db, table, e),
                 ),
               )
@@ -17710,7 +17797,16 @@ class $$CatalogDevicesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CatalogDevicesTable, CatalogDevice>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CatalogDevicesTable,
+                    CatalogDevice
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -18122,7 +18218,16 @@ class $$ClientsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ClientsTable, Client>(table),
+                  BaseReferences<_$AppDatabase, $ClientsTable, Client>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -18693,7 +18798,7 @@ class $$LocationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$LocationsTable, Location>(table),
                   $$LocationsTableReferences(db, table, e),
                 ),
               )
@@ -19208,7 +19313,10 @@ class $$LocationPowerConnectorsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<
+                    $LocationPowerConnectorsTable,
+                    LocationPowerConnector
+                  >(table),
                   $$LocationPowerConnectorsTableReferences(db, table, e),
                 ),
               )
@@ -19707,7 +19815,7 @@ class $$LocationContactsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$LocationContactsTable, LocationContact>(table),
                   $$LocationContactsTableReferences(db, table, e),
                 ),
               )
@@ -20168,7 +20276,7 @@ class $$PowerPresetsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PowerPresetsTable, PowerPreset>(table),
                   $$PowerPresetsTableReferences(db, table, e),
                 ),
               )
@@ -20630,7 +20738,9 @@ class $$PowerOutletTemplatesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PowerOutletTemplatesTable, PowerOutletTemplate>(
+                    table,
+                  ),
                   $$PowerOutletTemplatesTableReferences(db, table, e),
                 ),
               )

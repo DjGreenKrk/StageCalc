@@ -73,13 +73,10 @@ class PowerCalculationService {
         visitedDistroIds: const {},
       );
 
-      final inputConnector = ConnectorTypes.findById(
-        distro.inputConnectorTypeId,
-      );
       distroLoads[distro.id] = DistroPowerLoad(
         distroId: distro.id,
         load: distroLoad,
-        inputMaxCurrentA: inputConnector?.maxCurrentA ?? 0,
+        inputMaxCurrentA: _inputMaxCurrentA(distro),
       );
     }
 
@@ -127,7 +124,7 @@ class PowerCalculationService {
         if (connection.targetDistroId != null) {
           final childDistro = distrosById[connection.targetDistroId];
           if (childDistro != null) {
-            outletLoad += _calculateDistroLoad(
+            final childLoad = _calculateDistroLoad(
               project: project,
               distro: childDistro,
               distrosById: distrosById,
@@ -135,6 +132,7 @@ class PowerCalculationService {
               groupConnectionCounts: groupConnectionCounts,
               visitedDistroIds: nextVisitedDistroIds,
             );
+            outletLoad += _projectOntoOutletPhase(childLoad, outlet.phase);
           }
         }
       }
@@ -148,6 +146,49 @@ class PowerCalculationService {
     }
 
     return distroLoad;
+  }
+
+  /// The input current limit used for overload checks. A manual override
+  /// always wins (the user may know the real limit is lower than either
+  /// automatic estimate, e.g. 4 outlets rated 125 A that actually share only
+  /// 2 breakers). Otherwise it comes from the declared input connector type,
+  /// and failing that (e.g. distros built from a location power group, which
+  /// has no single declared "input") falls back to the sum of the distro's
+  /// own outlet ratings, giving at least a rough estimate instead of no
+  /// overload protection at all.
+  double _inputMaxCurrentA(ProjectDistro distro) {
+    final manualLimit = distro.manualInputMaxCurrentA;
+    if (manualLimit != null) {
+      return manualLimit;
+    }
+
+    final inputConnector = ConnectorTypes.findById(distro.inputConnectorTypeId);
+    if (inputConnector != null) {
+      return inputConnector.maxCurrentA;
+    }
+
+    return distro.outlets.fold<double>(
+      0,
+      (sum, outlet) => sum + outlet.maxCurrentA,
+    );
+  }
+
+  /// Maps a child distro's own recursively-calculated [childLoad] onto the
+  /// phase of the parent outlet feeding it. A three-phase ([PowerPhase.all])
+  /// outlet passes the child's L1/L2/L3 breakdown through 1:1. A single-phase
+  /// outlet only has one physical conductor, so the child's entire current
+  /// draw (across whatever phases it uses internally) is carried on that one
+  /// parent phase.
+  PowerPhaseLoad _projectOntoOutletPhase(
+    PowerPhaseLoad childLoad,
+    PowerPhase outletPhase,
+  ) {
+    return switch (outletPhase) {
+      PowerPhase.all => childLoad,
+      PowerPhase.l1 => PowerPhaseLoad(l1A: childLoad.totalA),
+      PowerPhase.l2 => PowerPhaseLoad(l2A: childLoad.totalA),
+      PowerPhase.l3 => PowerPhaseLoad(l3A: childLoad.totalA),
+    };
   }
 }
 

@@ -80,7 +80,7 @@ class ProjectEditorController extends ChangeNotifier {
       _powerService.calculateProjectLoads(_project);
 
   PatchValidationResult get patchValidation =>
-      _validationService.validate(_project);
+      _validationService.validate(_project, powerLoads);
 
   bool get canCreateConnection {
     return (_project.groups.isNotEmpty || _project.distros.length > 1) &&
@@ -171,6 +171,7 @@ class ProjectEditorController extends ChangeNotifier {
     required String name,
     required String? inputConnectorTypeId,
     required List<ProjectOutlet> outlets,
+    double? manualInputMaxCurrentA,
   }) {
     final now = DateTime.now();
     final distros = _project.distros.map((candidate) {
@@ -188,6 +189,7 @@ class ProjectEditorController extends ChangeNotifier {
         presetId: candidate.presetId,
         inputConnectorTypeId: inputConnectorTypeId,
         isRootPowerSource: candidate.isRootPowerSource,
+        manualInputMaxCurrentA: manualInputMaxCurrentA,
         outlets: outlets,
       );
     }).toList();
@@ -456,6 +458,7 @@ class ProjectEditorController extends ChangeNotifier {
       presetId: distro.presetId,
       inputConnectorTypeId: distro.inputConnectorTypeId,
       isRootPowerSource: false,
+      manualInputMaxCurrentA: distro.manualInputMaxCurrentA,
       outlets: distro.outlets,
     );
   }

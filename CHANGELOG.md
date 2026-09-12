@@ -14,6 +14,14 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ### Naprawiono
 
+- Naprawiono bledne przypisanie fazy przy kaskadzie rozdzielnica -> rozdzielnica: `PowerCalculationService` sumowal obciazenie rozdzielnicy podrzednej wprost po jej wewnetrznych etykietach L1/L2/L3, ignorujac faze gniazda rodzica, przez ktore dziecko jest faktycznie podpiete. Rozdzielnica podrzedna o wejsciu 1-fazowym (kazde jej gniazdo wewnetrznie oznaczone jako "L1") podpieta do gniazda L2 lub L3 rodzica pokazywala caly prad na L1 rodzica zamiast na fazie, na ktorej fizycznie jest podpieta - niezgodnie z `docs/DATA_MODEL.md` ("Jesli dziecko podpiete do 1 fazy rodzica: suma wszystkich faz dziecka trafia na te jedna faze rodzica"). Dodano test regresyjny.
+
+### Dodano
+
+- Dodano wykrywanie cykli w grafie polaczen rozdzielnica-rozdzielnica (`PatchValidationService`). Kalkulator juz wczesniej chronil sie przed nieskonczona rekursja (`visitedDistroIds`), ale robil to cicho - uzytkownik nie mial zadnego sygnalu, ze wynik jest ucinany. Rozdzielnice w cyklu maja teraz w patcherze chip ostrzegawczy "Cykl w polaczeniach rozdzielnic", zgodnie z `docs/DATA_MODEL.md` ("Nalezy blokowac cykle w grafie rozdzielnic").
+- Przeniesiono wykrywanie przeciazenia gniazda/wejscia rozdzielnicy z czystego stanu UI (kolor chipa) do `PatchValidationResult` (`isOutletOverloaded`, `isDistroOverloaded`), zgodnie z `docs/DATA_MODEL.md` ("Przekroczenie limitu fazy powinno byc stanem walidacji, nie tylko kolorem UI"). `PatchValidationService.validate` przyjmuje teraz obliczone `ProjectPowerLoad` jako argument.
+- Dodano limit wejscia dla rozdzielnic bez zadeklarowanego `inputConnectorTypeId` (np. zaimportowanych z grupy zlaczy lokacji) — domyslnie suma `maxCurrentA` wlasnych gniazd (tak jak w legacy StageCalc), zamiast braku jakiejkolwiek ochrony przed przeciazeniem. Dodano tez `manualInputMaxCurrentA` — reczny override limitu wejscia dla przypadkow, gdy automatyczne oszacowanie jest zbyt optymistyczne (np. 4 gniazda 125 A dzielace tylko 2 zabezpieczenia). Pole edytowalne w dialogu edycji rozdzielnicy. Podniesiono wersje schematu bazy do `10`.
+
 - Naprawiono osierocone połączenia po usunięciu grupy: `_deleteGroup` w edytorze projektu teraz usuwa też wszystkie `PowerConnection` wskazujące na usuniętą grupę (`targetGroupId`), analogicznie do już istniejącego zachowania przy usuwaniu rozdzielnicy. Przed poprawką takie połączenie zostawało w bazie na stałe, pokazywało się jako „Nieznany cel połączenia” na liście Połączeń i trwale blokowało zajęte gniazdo jako niedostępne do ponownego użycia, mimo że nic już nie było do niego podłączone. To dokładnie ten sam błąd „osieroconych połączeń”, który dokumentacja legacy (`docs/legacy_stagecalc_debug_context.md`, sekcja 8) wskazywała jako znany problem do zaadresowania przy przepisaniu na Fluttera.
 - Dodano test widgetowy `deleting a group removes its dangling connections` jako regresję dla powyższego przypadku.
 

@@ -271,6 +271,7 @@ class ProjectDistro {
     this.presetId,
     this.inputConnectorTypeId,
     this.isRootPowerSource = false,
+    this.manualInputMaxCurrentA,
   });
 
   final String id;
@@ -284,6 +285,13 @@ class ProjectDistro {
   final bool isRootPowerSource;
   final List<ProjectOutlet> outlets;
 
+  /// Manual override for the input current limit, taking precedence over
+  /// both `inputConnectorTypeId` and the outlet-sum fallback. Lets the user
+  /// correct cases where the automatic estimate does not match reality, e.g.
+  /// a location power group with 4 outlets rated 125 A that actually share
+  /// only 2 breakers behind them.
+  final double? manualInputMaxCurrentA;
+
   Map<String, Object?> toJson() {
     return {
       'id': id,
@@ -295,6 +303,7 @@ class ProjectDistro {
       'presetId': presetId,
       'inputConnectorTypeId': inputConnectorTypeId,
       'isRootPowerSource': isRootPowerSource,
+      'manualInputMaxCurrentA': manualInputMaxCurrentA,
       'outlets': outlets.map((outlet) => outlet.toJson()).toList(),
     };
   }
@@ -314,6 +323,8 @@ class ProjectDistro {
       presetId: json['presetId'] as String?,
       inputConnectorTypeId: json['inputConnectorTypeId'] as String?,
       isRootPowerSource: json['isRootPowerSource'] as bool? ?? false,
+      manualInputMaxCurrentA: (json['manualInputMaxCurrentA'] as num?)
+          ?.toDouble(),
       outlets: outletsJson
           .whereType<Map>()
           .map(

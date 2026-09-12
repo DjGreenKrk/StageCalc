@@ -11,6 +11,7 @@ class _DistroLayoutDialog extends StatefulWidget {
 
 class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
   late final TextEditingController _nameController;
+  late final TextEditingController _manualLimitController;
   late String? _inputConnectorTypeId;
   late List<ProjectOutlet> _outlets;
 
@@ -18,6 +19,11 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.distro.name);
+    _manualLimitController = TextEditingController(
+      text: widget.distro.manualInputMaxCurrentA == null
+          ? ''
+          : widget.distro.manualInputMaxCurrentA!.toStringAsFixed(0),
+    );
     _inputConnectorTypeId = widget.distro.inputConnectorTypeId;
     _outlets = [...widget.distro.outlets];
   }
@@ -25,11 +31,16 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
   @override
   void dispose() {
     _nameController.dispose();
+    _manualLimitController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final automaticLimitA =
+        ConnectorTypes.findById(_inputConnectorTypeId)?.maxCurrentA ??
+        _outlets.fold<double>(0, (sum, outlet) => sum + outlet.maxCurrentA);
+
     return AlertDialog(
       title: const Text('Edytuj rozdzielnice'),
       content: SizedBox(
@@ -64,6 +75,18 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
                     _outlets = _normalizeOutletPhases(_outlets);
                   });
                 },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _manualLimitController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Reczny limit wejscia (opcjonalnie)',
+                  suffixText: 'A',
+                  helperText:
+                      'Automatycznie: ${automaticLimitA.toStringAsFixed(0)} A. '
+                      'Zostaw puste, zeby uzyc wartosci automatycznej.',
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -207,11 +230,19 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
       return;
     }
 
+    final manualLimitText = _manualLimitController.text.trim().replaceAll(
+      ',',
+      '.',
+    );
+
     Navigator.of(context).pop(
       _DistroLayoutResult(
         name: name,
         inputConnectorTypeId: _inputConnectorTypeId,
         outlets: _normalizeOutletPhases(_outlets),
+        manualInputMaxCurrentA: manualLimitText.isEmpty
+            ? null
+            : double.tryParse(manualLimitText),
       ),
     );
   }
@@ -409,11 +440,13 @@ class _DistroLayoutResult {
     required this.name,
     required this.inputConnectorTypeId,
     required this.outlets,
+    this.manualInputMaxCurrentA,
   });
 
   final String name;
   final String? inputConnectorTypeId;
   final List<ProjectOutlet> outlets;
+  final double? manualInputMaxCurrentA;
 }
 
 List<ProjectOutlet> _autoAssignOutletPhases(

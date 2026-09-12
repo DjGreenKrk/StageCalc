@@ -405,6 +405,7 @@ Runtime instancja rozdzielnicy lub zrodla w projekcie. To rozdziela katalog od k
 - `presetId`
 - `inputConnectorTypeId`
 - `isRootPowerSource`
+- `manualInputMaxCurrentA`: reczny override limitu wejscia, nadrzedny wobec `inputConnectorTypeId` i wobec sumy gniazd (patrz "Pojemnosc i przeciazenia" nizej)
 - `sortOrder`
 
 ### ProjectOutlet
@@ -595,8 +596,9 @@ W katalogu:
 
 ### Pojemnosc i przeciazenia
 
-- Limit fazy wynika z wejscia rozdzielnicy albo sumy gniazd.
-- Przekroczenie limitu fazy powinno byc stanem walidacji, nie tylko kolorem UI.
+- Limit wejscia rozdzielnicy jest wyznaczany w kolejnosci: `manualInputMaxCurrentA` (jesli ustawiony) -> `inputConnectorTypeId` (jesli zadeklarowany) -> suma `maxCurrentA` wlasnych gniazd rozdzielnicy (fallback dla rozdzielnic bez jednego wspolnego wejscia, np. zaimportowanych z grupy zlaczy lokacji). Suma gniazd jest tylko orientacyjnym gornym oszacowaniem (np. przy niezaleznych obwodach lokacji moze byc znaczaco zawyzona) - `manualInputMaxCurrentA` pozwala uzytkownikowi wpisac realny, nizszy limit, jesli go zna.
+- Przekroczenie limitu fazy jest stanem walidacji (`PatchValidationResult.isOutletOverloaded` / `isDistroOverloaded`), nie tylko kolorem UI.
+- Cykle w grafie rozdzielnic sa wykrywane (`PatchValidationResult.isDistroInCycle`) i oznaczane ostrzezeniem w patcherze.
 
 ### Kratownice
 

@@ -250,6 +250,7 @@ class DriftProjectRepository implements ProjectRepository {
                 presetId: Value(distro.presetId),
                 inputConnectorTypeId: Value(distro.inputConnectorTypeId),
                 isRootPowerSource: Value(distro.isRootPowerSource),
+                manualInputMaxCurrentA: Value(distro.manualInputMaxCurrentA),
                 sortOrder: Value(distroIndex),
                 createdAt: Value(project.createdAt),
                 updatedAt: Value(project.updatedAt),
@@ -453,6 +454,7 @@ class DriftProjectRepository implements ProjectRepository {
       presetId: row.presetId,
       inputConnectorTypeId: row.inputConnectorTypeId,
       isRootPowerSource: row.isRootPowerSource,
+      manualInputMaxCurrentA: row.manualInputMaxCurrentA,
       outlets: outletRows.map(_mapOutlet).toList(),
     );
   }

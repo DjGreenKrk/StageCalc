@@ -250,14 +250,18 @@ Ostatnia aktualizacja: 2026-09-12
 - Na tym samym serwerze dziala PocketBase (`/opt/pocketbase`, systemd, port 8090 za Caddy `/api` i `/_`). Utworzono konto superusera i pelny schemat 13 kolekcji odzwierciedlajacy obecne tabele Drift (ADR-017).
 - Dodano `PocketBaseProjectSyncService` — pierwszy prawdziwy, jednokierunkowy push lokalnego `Project` (z grupami/pozycjami/rozdzielnicami/gniazdami/polaczeniami/kratownicami oraz opcjonalnym klientem/lokacja) do PocketBase, idempotentny (upsert po `local_id`), bez UI i bez obslugi konfliktow. Zweryfikowano recznie: `dart run tool/push_demo_project.dart` poprawnie tworzy i aktualizuje powiazane rekordy w PocketBase.
 - Reguly dostepu wszystkich kolekcji PocketBase sa na razie puste (publiczne) — do zaadresowania przed jakimkolwiek wyjsciem poza prywatna siec LAN.
+- Naprawiono blad kaskady rozdzielnica -> rozdzielnica: obciazenie dziecka trafialo na wewnetrzna etykiete fazy dziecka zamiast na faze gniazda rodzica, przez ktore dziecko jest podpiete. Dodano test regresyjny.
+- Zablokowano (jako ostrzezenie w patcherze) cykle w grafie rozdzielnic — `PatchValidationService` wykrywa cykl i `_DistroCard` pokazuje chip "Cykl w polaczeniach rozdzielnic". Odhaczono pkt 1 z poprzedniej listy "Nastepny krok".
+- `PatchValidationService.validate` przyjmuje teraz `ProjectPowerLoad` i wystawia przeciazenie gniazda/wejscia rozdzielnicy jako czesc `PatchValidationResult` (`isOutletOverloaded`, `isDistroOverloaded`), a nie tylko jako kolor chipa w UI.
+- Dodano limit wejscia dla rozdzielnic bez `inputConnectorTypeId` (suma gniazd, jak w legacy) oraz `manualInputMaxCurrentA` jako reczny override. Podniesiono schemat bazy do wersji `10` (nowa kolumna `manual_input_max_current_a` w `project_distros`), z migracja i polem w dialogu edycji rozdzielnicy.
 
 ## Nastepny krok
 
-1. Zablokowac cykle rozdzielnic w patcherze.
-2. Przygotowac bardziej wizualny uklad patchera.
-3. Dodac szybkie podpinanie grupy do wielu gniazd.
-4. Dodac pierwszy backup JSON.
-5. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows.
+1. Przygotowac bardziej wizualny uklad patchera.
+2. Dodac pierwszy backup JSON.
+3. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows.
+
+Zablokowanie cykli rozdzielnic i szybkie podpinanie grupy do wielu gniazd zostaly juz zrealizowane (patrz wpisy wyzej i w CHANGELOG).
 
 ## Zalozenia obowiazujace
 

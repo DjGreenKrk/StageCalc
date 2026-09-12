@@ -312,6 +312,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
         name: result.name,
         inputConnectorTypeId: result.inputConnectorTypeId,
         outlets: result.outlets,
+        manualInputMaxCurrentA: result.manualInputMaxCurrentA,
       ),
     );
   }

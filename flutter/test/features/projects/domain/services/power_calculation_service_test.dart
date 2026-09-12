@@ -248,6 +248,165 @@ void main() {
     expect(loads.distroPhaseLoads['parent']!.l1A, 12);
   });
 
+  test('projects single-phase child distro load onto the parent outlet phase '
+      'it is actually plugged into', () {
+    final date = DateTime(2026, 7, 5);
+    final project = Project(
+      id: 'project',
+      name: 'Project',
+      createdAt: date,
+      updatedAt: date,
+      groups: const [
+        ProjectGroup(
+          id: 'group',
+          name: 'Child load',
+          items: [
+            ProjectItem(
+              id: 'load',
+              nameSnapshot: 'Load',
+              quantity: 1,
+              currentASnapshot: 12,
+            ),
+          ],
+        ),
+      ],
+      distros: const [
+        ProjectDistro(
+          id: 'parent',
+          name: 'Parent',
+          inputConnectorTypeId: 'cee_32a_5p',
+          outlets: [
+            ProjectOutlet(
+              id: 'parent_l2_out',
+              name: 'Schuko L2.1',
+              connectorTypeId: 'schuko_16a',
+              phase: PowerPhase.l2,
+              maxCurrentA: 16,
+            ),
+          ],
+        ),
+        ProjectDistro(
+          id: 'child',
+          name: 'Child',
+          inputConnectorTypeId: 'schuko_16a',
+          outlets: [
+            ProjectOutlet(
+              id: 'child_out',
+              name: 'Schuko L1.1',
+              connectorTypeId: 'schuko_16a',
+              phase: PowerPhase.l1,
+              maxCurrentA: 16,
+            ),
+          ],
+        ),
+      ],
+      connections: const [
+        PowerConnection(
+          id: 'parent_to_child',
+          sourceDistroId: 'parent',
+          sourceOutletId: 'parent_l2_out',
+          targetType: PowerConnectionTargetType.distro,
+          targetGroupId: null,
+          targetDistroId: 'child',
+        ),
+        PowerConnection(
+          id: 'child_to_group',
+          sourceDistroId: 'child',
+          sourceOutletId: 'child_out',
+          targetGroupId: 'group',
+        ),
+      ],
+    );
+
+    final loads = service.calculateProjectLoads(project);
+    final parentLoad = loads.distroPhaseLoads['parent']!;
+
+    // The child draws its 12 A on its own (internal) L1 label, but it is
+    // physically wired into the parent's L2 outlet, so the parent must
+    // see 12 A on L2, not L1.
+    expect(parentLoad.l2A, 12);
+    expect(parentLoad.l1A, 0);
+  });
+
+  test('falls back to the sum of outlet ratings when a distro has no declared '
+      'input connector (e.g. imported from a location power group)', () {
+    final date = DateTime(2026, 7, 5);
+    final project = Project(
+      id: 'project',
+      name: 'Project',
+      createdAt: date,
+      updatedAt: date,
+      groups: const [],
+      distros: const [
+        ProjectDistro(
+          id: 'distro',
+          name: 'Location power',
+          sourceType: ProjectDistroSourceType.location,
+          outlets: [
+            ProjectOutlet(
+              id: 'out_1',
+              name: 'CEE 32A #1',
+              connectorTypeId: 'cee_32a_5p',
+              phase: PowerPhase.all,
+              maxCurrentA: 32,
+            ),
+            ProjectOutlet(
+              id: 'out_2',
+              name: 'CEE 32A #2',
+              connectorTypeId: 'cee_32a_5p',
+              phase: PowerPhase.all,
+              maxCurrentA: 32,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final loads = service.calculateProjectLoads(project);
+
+    expect(loads.distroLoads['distro']!.inputMaxCurrentA, 64);
+  });
+
+  test('a manual input limit override wins over both the declared input '
+      'connector and the outlet-sum fallback', () {
+    final date = DateTime(2026, 7, 5);
+    final project = Project(
+      id: 'project',
+      name: 'Project',
+      createdAt: date,
+      updatedAt: date,
+      groups: const [],
+      distros: const [
+        ProjectDistro(
+          id: 'distro',
+          name: 'Location power',
+          sourceType: ProjectDistroSourceType.location,
+          manualInputMaxCurrentA: 32,
+          outlets: [
+            ProjectOutlet(
+              id: 'out_1',
+              name: 'CEE 32A #1',
+              connectorTypeId: 'cee_32a_5p',
+              phase: PowerPhase.all,
+              maxCurrentA: 32,
+            ),
+            ProjectOutlet(
+              id: 'out_2',
+              name: 'CEE 32A #2',
+              connectorTypeId: 'cee_32a_5p',
+              phase: PowerPhase.all,
+              maxCurrentA: 32,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final loads = service.calculateProjectLoads(project);
+
+    expect(loads.distroLoads['distro']!.inputMaxCurrentA, 32);
+  });
+
   test('marks overloaded distro input', () {
     const distroLoad = DistroPowerLoad(
       distroId: 'distro',

@@ -66,6 +66,12 @@ class _DistroCard extends StatelessWidget {
                   avatar: Icon(Icons.location_city_outlined, size: 16),
                   label: Text('Lokacja'),
                 ),
+              if (patchValidation.isDistroInCycle(distro.id))
+                const _StatusChip(
+                  label: 'Cykl w polaczeniach rozdzielnic',
+                  isError: true,
+                  isWarning: false,
+                ),
               if ((distroLoad?.isInputOverloaded ?? false) ||
                   (distroLoad?.isInputNearLimit ?? false))
                 _StatusChip(
