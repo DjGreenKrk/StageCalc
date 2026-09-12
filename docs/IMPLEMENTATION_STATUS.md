@@ -254,14 +254,15 @@ Ostatnia aktualizacja: 2026-09-12
 - Zablokowano (jako ostrzezenie w patcherze) cykle w grafie rozdzielnic — `PatchValidationService` wykrywa cykl i `_DistroCard` pokazuje chip "Cykl w polaczeniach rozdzielnic". Odhaczono pkt 1 z poprzedniej listy "Nastepny krok".
 - `PatchValidationService.validate` przyjmuje teraz `ProjectPowerLoad` i wystawia przeciazenie gniazda/wejscia rozdzielnicy jako czesc `PatchValidationResult` (`isOutletOverloaded`, `isDistroOverloaded`), a nie tylko jako kolor chipa w UI.
 - Dodano limit wejscia dla rozdzielnic bez `inputConnectorTypeId` (suma gniazd, jak w legacy) oraz `manualInputMaxCurrentA` jako reczny override. Podniesiono schemat bazy do wersji `10` (nowa kolumna `manual_input_max_current_a` w `project_distros`), z migracja i polem w dialogu edycji rozdzielnicy.
+- Dodano pierwszy backup JSON (ADR-018): `AppBackupService` eksportuje projekty, klientow, lokacje, katalog i presety do jednego pliku JSON. Dostepny z ekranu "O aplikacji" na Android/Windows (zapis do `Documents/StageCalc/backups/`); na Web swiadomie niewspierany. Dodano brakujace `toJson`/`fromJson` do `Client`, `Location` i `PowerPreset`. Import backupu nie jest zrealizowany.
+- Zaktualizowano `docs/MIGRATION_PLAN.md` do aktualnego stanu (kilka wpisow bylo nieaktualnych, np. Etap 6A pokazywal jako "kolejny krok" cos, co juz dzialalo).
 
 ## Nastepny krok
 
 1. Przygotowac bardziej wizualny uklad patchera.
-2. Dodac pierwszy backup JSON.
-3. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows.
-
-Zablokowanie cykli rozdzielnic i szybkie podpinanie grupy do wielu gniazd zostaly juz zrealizowane (patrz wpisy wyzej i w CHANGELOG).
+2. Import backupu JSON (z walidacja przed zapisem).
+3. Modul kratownic: UI, `TrussLoadService`, interpolacja tabel nosnosci.
+4. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
 ## Zalozenia obowiazujace
 

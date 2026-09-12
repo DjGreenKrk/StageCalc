@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/app/app.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
@@ -15,6 +19,15 @@ void main() {
   setUp(() {
     database = db.AppDatabase.forTesting(NativeDatabase.memory());
     AppDatabaseProvider.overrideForTesting(database);
+
+    // path_provider has no real platform plugin registered under
+    // `flutter test`; stub its channel so code that calls
+    // getApplicationDocumentsDirectory() (e.g. the backup writer) works.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (call) async => Directory.systemTemp.path,
+        );
   });
 
   tearDown(() async {
@@ -234,5 +247,49 @@ void main() {
       (project) => project.id == 'orphan_test_project',
     );
     expect(reloaded.connections, isEmpty);
+  });
+
+  testWidgets('creates a JSON backup file from the About screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Info'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Utworz kopie zapasowa (JSON)'));
+    await tester.pump();
+    // Real dart:io file writes need real wall-clock time to complete even
+    // inside the fake-async test zone, so poll with tester.runAsync until
+    // the confirmation dialog appears instead of a single pumpAndSettle.
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Kopia zapasowa utworzona').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kopia zapasowa utworzona'), findsOneWidget);
+
+    final pathFinder = find.byType(SelectableText);
+    expect(pathFinder, findsOneWidget);
+    final path = tester.widget<SelectableText>(pathFinder).data!;
+    expect(File(path).existsSync(), isTrue);
+
+    final contents = jsonDecode(File(path).readAsStringSync());
+    expect(contents['manifest']['appName'], 'StageCalc');
+    expect((contents['data']['projects'] as List).length, greaterThan(0));
+
+    File(path).parent.deleteSync(recursive: true);
   });
 }

@@ -62,6 +62,61 @@ class Location {
       (sum, connector) => sum + connector.availablePowerKw,
     );
   }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'address': address,
+      'capacity': capacity,
+      'contactName': contactName,
+      'contactPhone': contactPhone,
+      'contactEmail': contactEmail,
+      'notes': notes,
+      'powerConnectors': powerConnectors
+          .map((connector) => connector.toJson())
+          .toList(),
+      'contacts': contacts.map((contact) => contact.toJson()).toList(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'syncStatus': syncStatus.toJson(),
+    };
+  }
+
+  static Location fromJson(Map<String, Object?> json) {
+    final powerConnectorsJson =
+        json['powerConnectors'] as List<Object?>? ?? const [];
+    final contactsJson = json['contacts'] as List<Object?>? ?? const [];
+
+    return Location(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      address: json['address'] as String?,
+      capacity: json['capacity'] as int?,
+      contactName: json['contactName'] as String?,
+      contactPhone: json['contactPhone'] as String?,
+      contactEmail: json['contactEmail'] as String?,
+      notes: json['notes'] as String?,
+      powerConnectors: powerConnectorsJson
+          .whereType<Map>()
+          .map(
+            (connector) => LocationPowerConnector.fromJson(
+              Map<String, Object?>.from(connector),
+            ),
+          )
+          .toList(),
+      contacts: contactsJson
+          .whereType<Map>()
+          .map(
+            (contact) =>
+                LocationContact.fromJson(Map<String, Object?>.from(contact)),
+          )
+          .toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      syncStatus: OfflineSyncStatusJson.fromJson(json['syncStatus'] as String?),
+    );
+  }
 }
 
 class LocationContact {
@@ -84,6 +139,32 @@ class LocationContact {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'role': role,
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'notes': notes,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  static LocationContact fromJson(Map<String, Object?> json) {
+    return LocationContact(
+      id: json['id'] as String,
+      role: json['role'] as String,
+      name: json['name'] as String,
+      phone: json['phone'] as String?,
+      email: json['email'] as String?,
+      notes: json['notes'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+  }
 }
 
 class LocationPowerConnector {
@@ -119,5 +200,29 @@ class LocationPowerConnector {
         ? 400 * type.maxCurrentA * 1.732
         : 230 * type.maxCurrentA;
     return wattsPerConnector * quantity / 1000;
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'connectorTypeId': connectorTypeId,
+      'quantity': quantity,
+      'notes': notes,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  static LocationPowerConnector fromJson(Map<String, Object?> json) {
+    return LocationPowerConnector(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      connectorTypeId: json['connectorTypeId'] as String,
+      quantity: json['quantity'] as int,
+      notes: json['notes'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
   }
 }

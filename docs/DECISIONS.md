@@ -390,6 +390,34 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-018: Pierwszy backup JSON
+
+Status: accepted
+
+Kontekst:
+
+- ADR-012D i `docs/DATA_MODEL.md` ("Backup") wymagaly eksportu JSON niezaleznego od legacy, oddzielonego od raportow PDF/CSV. `IMPLEMENTATION_STATUS.md` mial to jako pkt 2 "Nastepny krok".
+- Czesc encji (`Client`, `Location` + `LocationContact`/`LocationPowerConnector`, `PowerPreset` + `PowerOutletTemplate`) nie miala jeszcze `toJson`/`fromJson` — tylko `Project` (z pelnym drzewem) i `CatalogDevice` je mialy.
+
+Decyzja:
+
+- Dodano `toJson`/`fromJson` do wszystkich encji, ktorych brakowalo, zeby kazdy top-level agregat dalo sie zserializowac.
+- Dodano `AppBackupService` (`infrastructure/backup/`): buduje jeden JSON z `BackupManifest` (`schemaVersion`, `appName`, `appVersion`, `createdAt`, `workspaceId`, `recordCounts`) i sekcja `data` z pelnymi projektami, klientami, lokacjami, katalogiem i presetami.
+- `schemaVersion` w manifescie (`appBackupFormatVersion`) jest **niezalezny** od wersji schematu Drift — wersjonuje sam format pliku backupu, nie wewnetrzny schemat SQLite. Nie maja obowiazku byc rownolegle.
+- Zapis pliku idzie przez conditional import (`backup_file_writer_native.dart` / `_web.dart` / `_stub.dart`), analogicznie do polaczenia z baza danych (ADR-016): native zapisuje do `Documents/StageCalc/backups/`, web na razie rzuca `UnsupportedError` z czytelnym komunikatem zamiast probowac niepewnego mechanizmu pobierania w przegladarce.
+- Wejscie do funkcji: przycisk "Utworz kopie zapasowa (JSON)" na ekranie "O aplikacji" (`AboutScreen`) — to funkcja aplikacyjna, nie projektowa, wiec pasuje tam zgodnie z `docs/DATA_MODEL.md` ("ekran O aplikacji jako funkcja aplikacyjna").
+- To jest **eksport-only**. Import backupu (z walidacja przed zapisem, jak wymaga `DATA_MODEL.md`) jest swiadomie poza zakresem tej decyzji.
+
+Uzasadnienie:
+
+- Backup jest podstawowym zabezpieczeniem przed utrata danych i ma powstac przed sync (ADR-012D) — to zostalo zachowane w kolejnosci prac.
+- Rozdzielenie wersji formatu backupu od wersji schematu Drift pozwala pozniej zmieniac jedno bez wymuszania zmiany drugiego (np. dodanie pola do backupu bez migracji SQLite).
+- Ten sam wzorzec conditional-import co polaczenie z baza (ADR-016) utrzymuje spojnosc w sposobie obslugi roznic platformowych w projekcie.
+
+Znane ograniczenie:
+
+- Backup na Web nie dziala. Wymagalby albo mechanizmu pobierania pliku w przegladarce (Blob + link), albo zaakceptowania, ze na Web funkcja jest niedostepna do czasu realnej potrzeby.
+
 ## ADR-017: Pierwsza integracja z PocketBase (push, bez syncu)
 
 Status: accepted

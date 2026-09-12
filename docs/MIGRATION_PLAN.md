@@ -163,12 +163,12 @@ test/
 
 Rekomendowane biblioteki nalezy zatwierdzic na poczatku implementacji, ale kierunek jest taki:
 
-- state management: Riverpod, Provider albo Bloc; rekomendacja dla StageCalc: Riverpod,
+- state management: zrealizowano bez Riverpod/Provider/Bloc - `ChangeNotifier` (`ProjectEditorController`, ADR-015) okazal sie wystarczajacy i nie zwieksza powierzchni zaleznosci,
 - lokalna baza: Drift/SQLite dla Android/Windows/iOS; decyzja zaakceptowana w ADR-011,
-- Web: adapter IndexedDB lub Drift web po weryfikacji,
-- routing: go_router,
-- modele: freezed/json_serializable albo recznie, jesli projekt ma byc prostszy,
-- PDF: pakiet `pdf`/`printing` po osobnym spike'u.
+- Web: zrealizowano jako Drift + sqlite3 wasm (ADR-016), nie adapter IndexedDB,
+- routing: nie wprowadzono go_router - obecny prosty shell z zakladkami nie tego potrzebowal,
+- modele: recznie pisane `toJson`/`fromJson`, bez freezed/json_serializable,
+- PDF: nadal nie zrealizowane (patrz Etap 9).
 
 ## Co przepisac 1:1
 
@@ -288,17 +288,17 @@ Wynik:
 
 Prace:
 
-- `ProjectTotalsService`.
-- `PowerCalculationService`.
-- `PatchValidationService`.
-- `TrussLoadService`.
+- `ProjectTotalsService`. Zrealizowano.
+- `PowerCalculationService`. Zrealizowano, wraz z limitem wejscia z sumy gniazd i recznym override'm (`manualInputMaxCurrentA`).
+- `PatchValidationService`. Zrealizowano, wraz z wykrywaniem cykli i przeciazeniem jako stanem walidacji.
+- `TrussLoadService`. Nie zrealizowano - modul kratownic ma na razie tylko model danych (patrz Etap 7).
 - Testy jednostkowe dla:
-  - sum projektu,
-  - obciazenia `L1/L2/L3`,
-  - gniazd `All`,
-  - rozdzielnic potomnych,
-  - cykli w grafie,
-  - interpolacji kratownic.
+  - sum projektu — zrealizowano,
+  - obciazenia `L1/L2/L3` — zrealizowano,
+  - gniazd `All` — zrealizowano,
+  - rozdzielnic potomnych — zrealizowano, w tym poprawnego mapowania fazy kaskady,
+  - cykli w grafie — zrealizowano,
+  - interpolacji kratownic — nie zrealizowano (brak `TrussLoadService`).
 
 ### Etap 4: Katalog, klienci, lokacje
 
@@ -367,7 +367,7 @@ Prace:
 
 - Obecny stan: lokacje maja lokalne przylacza energetyczne.
 - Obecny stan: dostepna moc obiektu jest liczona z przylaczy.
-- Kolejny krok: uzycie przylaczy lokacji jako zrodel w patcherze projektu.
+- Zrealizowano: grupy zlaczy lokacji mozna dodac w patcherze jako zrodla zasilania projektu.
 
 ### Etap 7: Kratownice
 
@@ -393,10 +393,10 @@ Wynik:
 
 Prace:
 
-- Eksport JSON backup.
-- Eksport ZIP z JSON i zalacznikami, gdy pojawia sie pliki projektu.
-- Opcjonalny import backupu w nowym formacie Flutter.
-- Seed typow zlacz i przykladowych presetow.
+- Eksport JSON backup. Zrealizowano (`AppBackupService`, ekran "O aplikacji"): pelny eksport projektow, klientow, lokacji, katalogu i presetow do jednego pliku JSON z `BackupManifest`. Dziala na Android/Windows; na Web na razie swiadomie niewspierane (`UnsupportedError` z czytelnym komunikatem), zgodnie z Web jako platforma warunkowa.
+- Eksport ZIP z JSON i zalacznikami, gdy pojawia sie pliki projektu. Nie zrealizowano - nie ma jeszcze plikow/zalacznikow w projekcie.
+- Opcjonalny import backupu w nowym formacie Flutter. Nie zrealizowano.
+- Seed typow zlacz i przykladowych presetow. Zrealizowano wczesniej (`ConnectorTypes`, seed presetow w katalogu).
 - Import legacy tylko jako osobny przyszly projekt, jesli bedzie potrzebny.
 
 ### Etap 9: Raporty i eksport
@@ -419,17 +419,18 @@ Wynik:
 
 Prace:
 
-- Sync queue.
-- Rewizje rekordow.
-- Soft delete.
-- Strategia konfliktow.
+- Sync queue. Nie zrealizowano.
+- Rewizje rekordow. Pole `revision` istnieje w schemacie lokalnym od poczatku, ale nic jeszcze go nie inkrementuje ani nie porownuje.
+- Soft delete. Zrealizowano lokalnie (`deletedAt` + diff przy zapisie projektu).
+- Strategia konfliktow. Nie zrealizowano.
 - Statusy synchronizacji:
   - `localOnly`,
   - `pendingSync`,
   - `synced`,
   - `syncError`,
   - `conflict`.
-- Spike backendu: PocketBase/Supabase/wlasne API.
+  Pole istnieje w modelu (`OfflineSyncStatus`), ale nic jeszcze go realnie nie zmienia poza `localOnly`.
+- Spike backendu: PocketBase/Supabase/wlasne API. Rozstrzygnieto na PocketBase (juz postawiony jako infrastruktura, ADR-017): pelny schemat 13 kolekcji odzwierciedlajacy tabele Drift oraz pierwszy, jednokierunkowy, idempotentny push `Project` (`PocketBaseProjectSyncService`). To nie jest jeszcze sync queue ani obsluga konfliktow - to dowod, ze polaczenie i mapowanie modelu dzialaja.
 
 ### Etap 11: Release i dystrybucja
 
