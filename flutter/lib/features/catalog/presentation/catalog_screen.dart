@@ -190,6 +190,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       currentA: result.currentA,
       weightKg: result.weightKg,
       connectorTypeId: result.connectorTypeId,
+      riggingPoints: result.riggingPoints,
       quantityUnit: result.quantityUnit,
       createdAt: device?.createdAt ?? now,
       updatedAt: now,
@@ -315,6 +316,11 @@ class _CatalogDeviceCard extends StatelessWidget {
                 icon: Icons.scale,
                 label: '${device.weightKg.toStringAsFixed(1)} kg',
               ),
+              if (device.riggingPoints != null)
+                _MetricChip(
+                  icon: Icons.anchor,
+                  label: '${device.riggingPoints} pkt. zaczepienia',
+                ),
             ],
           ),
         ],
@@ -341,6 +347,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   late final TextEditingController _currentController;
   late final TextEditingController _weightController;
   late final TextEditingController _connectorController;
+  late final TextEditingController _riggingPointsController;
   late CatalogDeviceCategory _category;
   late CatalogQuantityUnit _quantityUnit;
   var _isUpdatingElectricalFields = false;
@@ -365,6 +372,9 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _connectorController = TextEditingController(
       text: device?.connectorTypeId ?? '',
     );
+    _riggingPointsController = TextEditingController(
+      text: device?.riggingPoints?.toString() ?? '',
+    );
     _powerController.addListener(_syncCurrentFromPower);
     _currentController.addListener(_syncPowerFromCurrent);
     _category = device?.category ?? CatalogDeviceCategory.device;
@@ -379,6 +389,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _currentController.dispose();
     _weightController.dispose();
     _connectorController.dispose();
+    _riggingPointsController.dispose();
     super.dispose();
   }
 
@@ -455,6 +466,16 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
               decoration: const InputDecoration(labelText: 'Typ zlacza'),
             ),
             const SizedBox(height: 12),
+            TextField(
+              controller: _riggingPointsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Punkty zaczepienia (opcjonalnie)',
+                helperText:
+                    'Liczba hakow potrzebnych, gdy urzadzenie wisi na kratownicy.',
+              ),
+            ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<CatalogQuantityUnit>(
               initialValue: _quantityUnit,
               decoration: const InputDecoration(labelText: 'Jednostka'),
@@ -503,6 +524,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
         currentA: _parseNumber(_currentController.text),
         weightKg: _parseNumber(_weightController.text),
         connectorTypeId: _emptyToNull(_connectorController.text),
+        riggingPoints: int.tryParse(_riggingPointsController.text.trim()),
         quantityUnit: _quantityUnit,
       ),
     );
@@ -592,6 +614,7 @@ class _CatalogDeviceFormResult {
     required this.quantityUnit,
     this.manufacturer,
     this.connectorTypeId,
+    this.riggingPoints,
   });
 
   final String name;
@@ -601,6 +624,7 @@ class _CatalogDeviceFormResult {
   final double currentA;
   final double weightKg;
   final String? connectorTypeId;
+  final int? riggingPoints;
   final CatalogQuantityUnit quantityUnit;
 }
 

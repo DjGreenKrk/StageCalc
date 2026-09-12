@@ -13,6 +13,7 @@ class CatalogDevice {
     this.currentA = 0,
     this.weightKg = 0,
     this.connectorTypeId,
+    this.riggingPoints,
     this.syncStatus = OfflineSyncStatus.localOnly,
   });
 
@@ -24,6 +25,11 @@ class CatalogDevice {
   final double currentA;
   final double weightKg;
   final String? connectorTypeId;
+
+  /// Number of rigging points (hook attachment points) this device needs
+  /// when it hangs from a truss, e.g. a moving head with two eyebolts. Null
+  /// means unknown/not applicable - most devices never need this.
+  final int? riggingPoints;
   final CatalogQuantityUnit quantityUnit;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -38,6 +44,7 @@ class CatalogDevice {
     double? currentA,
     double? weightKg,
     String? connectorTypeId,
+    int? riggingPoints,
     CatalogQuantityUnit? quantityUnit,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -52,6 +59,7 @@ class CatalogDevice {
       currentA: currentA ?? this.currentA,
       weightKg: weightKg ?? this.weightKg,
       connectorTypeId: connectorTypeId ?? this.connectorTypeId,
+      riggingPoints: riggingPoints ?? this.riggingPoints,
       quantityUnit: quantityUnit ?? this.quantityUnit,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -69,6 +77,7 @@ class CatalogDevice {
       'currentA': currentA,
       'weightKg': weightKg,
       'connectorTypeId': connectorTypeId,
+      'riggingPoints': riggingPoints,
       'quantityUnit': quantityUnit.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
@@ -86,6 +95,7 @@ class CatalogDevice {
       currentA: (json['currentA'] as num? ?? 0).toDouble(),
       weightKg: (json['weightKg'] as num? ?? 0).toDouble(),
       connectorTypeId: json['connectorTypeId'] as String?,
+      riggingPoints: (json['riggingPoints'] as num?)?.toInt(),
       quantityUnit: CatalogQuantityUnitJson.fromJson(
         json['quantityUnit'] as String?,
       ),

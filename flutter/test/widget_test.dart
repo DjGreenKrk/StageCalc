@@ -451,13 +451,51 @@ void main() {
 
     // The demo project has a single group ("Front light") totalling 192 kg;
     // assigning it should make the truss show that same total mass.
-    await tester.tap(find.text('Front light'));
+    await tester.tap(find.text('Front light').last);
     await tester.tap(find.text('Zapisz'));
     await tester.pumpAndSettle();
 
     expect(find.text('Brak kratownic w projekcie.'), findsNothing);
     expect(find.text('Kratownica'), findsOneWidget);
     expect(find.textContaining('192.0 kg'), findsOneWidget);
+  });
+
+  testWidgets('assigns a hook to a group that needs rigging points', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Demo techniczne'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Kratownice'));
+    await tester.pumpAndSettle();
+
+    // "Front light" has 4x BMFL Spot needing 2 rigging points each.
+    expect(find.text('Front light'), findsOneWidget);
+    expect(find.textContaining('Wymagane: 8'), findsOneWidget);
+    expect(find.textContaining('Przypisane: 0'), findsOneWidget);
+
+    await tester.tap(find.text('Dodaj hak'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dodaj z katalogu'), findsOneWidget);
+    await tester.enterText(find.byType(EditableText).at(0), 'Zacisk');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Zacisk hakowy'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText).last, '8');
+    await tester.tap(find.text('Dodaj').last);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Przypisane: 8'), findsOneWidget);
+    expect(find.textContaining('Zacisk hakowy'), findsOneWidget);
   });
 
   testWidgets('exports a text report from the project editor', (tester) async {

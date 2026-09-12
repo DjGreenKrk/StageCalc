@@ -22,6 +22,7 @@ class DemoProjectFactory {
               powerWSnapshot: 2000,
               currentASnapshot: 8.7,
               weightKgSnapshot: 36,
+              riggingPointsSnapshot: 2,
             ),
             ProjectItem(
               id: 'par_1',

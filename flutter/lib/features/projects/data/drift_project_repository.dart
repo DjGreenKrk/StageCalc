@@ -45,7 +45,17 @@ class DriftProjectRepository implements ProjectRepository {
                   ..orderBy([(row) => OrderingTerm.asc(row.sortOrder)]))
                 .get();
 
-        groups.add(_mapGroup(groupRow, itemRows));
+        final hookAssignmentRows =
+            await (_database.select(_database.projectGroupHookAssignments)
+                  ..where(
+                    (row) =>
+                        row.groupId.equals(groupRow.id) &
+                        row.deletedAt.isNull(),
+                  )
+                  ..orderBy([(row) => OrderingTerm.asc(row.sortOrder)]))
+                .get();
+
+        groups.add(_mapGroup(groupRow, itemRows, hookAssignmentRows));
       }
 
       final distroRows =
@@ -195,8 +205,54 @@ class DriftProjectRepository implements ProjectRepository {
                   powerWSnapshot: Value(item.powerWSnapshot),
                   currentASnapshot: Value(item.currentASnapshot),
                   weightKgSnapshot: Value(item.weightKgSnapshot),
+                  riggingPointsSnapshot: Value(item.riggingPointsSnapshot),
                   unit: Value(item.unit.toJson()),
                   sortOrder: Value(itemIndex),
+                  createdAt: Value(project.createdAt),
+                  updatedAt: Value(project.updatedAt),
+                  deletedAt: const Value(null),
+                ),
+              );
+        }
+
+        final existingHookAssignments = await (_database.select(
+          _database.projectGroupHookAssignments,
+        )..where((row) => row.groupId.equals(group.id))).get();
+        final groupHookAssignmentIds = group.hookAssignments
+            .map((assignment) => assignment.id)
+            .toSet();
+
+        for (final existingHookAssignment in existingHookAssignments) {
+          if (!groupHookAssignmentIds.contains(existingHookAssignment.id)) {
+            await (_database.update(
+              _database.projectGroupHookAssignments,
+            )..where((row) => row.id.equals(existingHookAssignment.id))).write(
+              db.ProjectGroupHookAssignmentsCompanion(
+                deletedAt: Value(project.updatedAt),
+                updatedAt: Value(project.updatedAt),
+              ),
+            );
+          }
+        }
+
+        for (final (hookAssignmentIndex, hookAssignment)
+            in group.hookAssignments.indexed) {
+          await _database
+              .into(_database.projectGroupHookAssignments)
+              .insertOnConflictUpdate(
+                db.ProjectGroupHookAssignmentsCompanion(
+                  id: Value(hookAssignment.id),
+                  projectId: Value(project.id),
+                  groupId: Value(group.id),
+                  hookCatalogDeviceId: Value(
+                    hookAssignment.hookCatalogDeviceId,
+                  ),
+                  hookNameSnapshot: Value(hookAssignment.hookNameSnapshot),
+                  hookWeightKgSnapshot: Value(
+                    hookAssignment.hookWeightKgSnapshot,
+                  ),
+                  quantity: Value(hookAssignment.quantity),
+                  sortOrder: Value(hookAssignmentIndex),
                   createdAt: Value(project.createdAt),
                   updatedAt: Value(project.updatedAt),
                   deletedAt: const Value(null),
@@ -417,12 +473,17 @@ class DriftProjectRepository implements ProjectRepository {
     );
   }
 
-  ProjectGroup _mapGroup(db.ProjectGroup row, List<db.ProjectItem> itemRows) {
+  ProjectGroup _mapGroup(
+    db.ProjectGroup row,
+    List<db.ProjectItem> itemRows,
+    List<db.ProjectGroupHookAssignment> hookAssignmentRows,
+  ) {
     return ProjectGroup(
       id: row.id,
       name: row.name,
       powerProfile: ProjectGroupPowerProfileJson.fromJson(row.powerProfile),
       items: itemRows.map(_mapItem).toList(),
+      hookAssignments: hookAssignmentRows.map(_mapHookAssignment).toList(),
     );
   }
 
@@ -436,7 +497,20 @@ class DriftProjectRepository implements ProjectRepository {
       powerWSnapshot: row.powerWSnapshot,
       currentASnapshot: row.currentASnapshot,
       weightKgSnapshot: row.weightKgSnapshot,
+      riggingPointsSnapshot: row.riggingPointsSnapshot,
       unit: ProjectItemUnitJson.fromJson(row.unit),
+    );
+  }
+
+  ProjectGroupHookAssignment _mapHookAssignment(
+    db.ProjectGroupHookAssignment row,
+  ) {
+    return ProjectGroupHookAssignment(
+      id: row.id,
+      hookCatalogDeviceId: row.hookCatalogDeviceId,
+      hookNameSnapshot: row.hookNameSnapshot,
+      hookWeightKgSnapshot: row.hookWeightKgSnapshot,
+      quantity: row.quantity,
     );
   }
 

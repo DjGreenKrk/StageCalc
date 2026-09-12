@@ -413,6 +413,7 @@ class ProjectGroup {
     required this.name,
     required this.items,
     this.powerProfile = ProjectGroupPowerProfile.singlePhase,
+    this.hookAssignments = const [],
   });
 
   final String id;
@@ -420,17 +421,25 @@ class ProjectGroup {
   final ProjectGroupPowerProfile powerProfile;
   final List<ProjectItem> items;
 
+  /// Hooks (rigging hardware) assigned to carry this group when it hangs
+  /// from a truss - independent of which truss, since a group keeps the
+  /// same physical hooks regardless of assignment. See `requiredHooks` on
+  /// `TrussLoadService` for how many are actually needed.
+  final List<ProjectGroupHookAssignment> hookAssignments;
+
   ProjectGroup copyWith({
     String? id,
     String? name,
     ProjectGroupPowerProfile? powerProfile,
     List<ProjectItem>? items,
+    List<ProjectGroupHookAssignment>? hookAssignments,
   }) {
     return ProjectGroup(
       id: id ?? this.id,
       name: name ?? this.name,
       powerProfile: powerProfile ?? this.powerProfile,
       items: items ?? this.items,
+      hookAssignments: hookAssignments ?? this.hookAssignments,
     );
   }
 
@@ -440,11 +449,16 @@ class ProjectGroup {
       'name': name,
       'powerProfile': powerProfile.toJson(),
       'items': items.map((item) => item.toJson()).toList(),
+      'hookAssignments': hookAssignments
+          .map((assignment) => assignment.toJson())
+          .toList(),
     };
   }
 
   static ProjectGroup fromJson(Map<String, Object?> json) {
     final itemsJson = json['items'] as List<Object?>? ?? const [];
+    final hookAssignmentsJson =
+        json['hookAssignments'] as List<Object?>? ?? const [];
 
     return ProjectGroup(
       id: json['id'] as String,
@@ -456,6 +470,67 @@ class ProjectGroup {
           .whereType<Map>()
           .map((item) => ProjectItem.fromJson(Map<String, Object?>.from(item)))
           .toList(),
+      hookAssignments: hookAssignmentsJson
+          .whereType<Map>()
+          .map(
+            (assignment) => ProjectGroupHookAssignment.fromJson(
+              Map<String, Object?>.from(assignment),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class ProjectGroupHookAssignment {
+  const ProjectGroupHookAssignment({
+    required this.id,
+    required this.hookNameSnapshot,
+    this.hookCatalogDeviceId,
+    this.hookWeightKgSnapshot = 0,
+    this.quantity = 1,
+  });
+
+  final String id;
+  final String? hookCatalogDeviceId;
+  final String hookNameSnapshot;
+  final double hookWeightKgSnapshot;
+  final int quantity;
+
+  ProjectGroupHookAssignment copyWith({
+    String? id,
+    String? hookCatalogDeviceId,
+    String? hookNameSnapshot,
+    double? hookWeightKgSnapshot,
+    int? quantity,
+  }) {
+    return ProjectGroupHookAssignment(
+      id: id ?? this.id,
+      hookCatalogDeviceId: hookCatalogDeviceId ?? this.hookCatalogDeviceId,
+      hookNameSnapshot: hookNameSnapshot ?? this.hookNameSnapshot,
+      hookWeightKgSnapshot: hookWeightKgSnapshot ?? this.hookWeightKgSnapshot,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'hookCatalogDeviceId': hookCatalogDeviceId,
+      'hookNameSnapshot': hookNameSnapshot,
+      'hookWeightKgSnapshot': hookWeightKgSnapshot,
+      'quantity': quantity,
+    };
+  }
+
+  static ProjectGroupHookAssignment fromJson(Map<String, Object?> json) {
+    return ProjectGroupHookAssignment(
+      id: json['id'] as String,
+      hookCatalogDeviceId: json['hookCatalogDeviceId'] as String?,
+      hookNameSnapshot: json['hookNameSnapshot'] as String,
+      hookWeightKgSnapshot: (json['hookWeightKgSnapshot'] as num? ?? 0)
+          .toDouble(),
+      quantity: (json['quantity'] as num? ?? 1).toInt(),
     );
   }
 }
@@ -470,6 +545,7 @@ class ProjectItem {
     this.powerWSnapshot = 0,
     this.currentASnapshot = 0,
     this.weightKgSnapshot = 0,
+    this.riggingPointsSnapshot,
     this.unit = ProjectItemUnit.pcs,
   });
 
@@ -481,6 +557,11 @@ class ProjectItem {
   final double powerWSnapshot;
   final double currentASnapshot;
   final double weightKgSnapshot;
+
+  /// Snapshot of `CatalogDevice.riggingPoints` at the time this item was
+  /// added, per ADR-008 - required hook count should not silently change if
+  /// the catalog entry is edited later.
+  final int? riggingPointsSnapshot;
   final ProjectItemUnit unit;
 
   ProjectItem copyWith({
@@ -492,6 +573,7 @@ class ProjectItem {
     double? powerWSnapshot,
     double? currentASnapshot,
     double? weightKgSnapshot,
+    int? riggingPointsSnapshot,
     ProjectItemUnit? unit,
   }) {
     return ProjectItem(
@@ -503,6 +585,8 @@ class ProjectItem {
       powerWSnapshot: powerWSnapshot ?? this.powerWSnapshot,
       currentASnapshot: currentASnapshot ?? this.currentASnapshot,
       weightKgSnapshot: weightKgSnapshot ?? this.weightKgSnapshot,
+      riggingPointsSnapshot:
+          riggingPointsSnapshot ?? this.riggingPointsSnapshot,
       unit: unit ?? this.unit,
     );
   }
@@ -517,6 +601,7 @@ class ProjectItem {
       'powerWSnapshot': powerWSnapshot,
       'currentASnapshot': currentASnapshot,
       'weightKgSnapshot': weightKgSnapshot,
+      'riggingPointsSnapshot': riggingPointsSnapshot,
       'unit': unit.toJson(),
     };
   }
@@ -531,6 +616,7 @@ class ProjectItem {
       powerWSnapshot: (json['powerWSnapshot'] as num? ?? 0).toDouble(),
       currentASnapshot: (json['currentASnapshot'] as num? ?? 0).toDouble(),
       weightKgSnapshot: (json['weightKgSnapshot'] as num? ?? 0).toDouble(),
+      riggingPointsSnapshot: (json['riggingPointsSnapshot'] as num?)?.toInt(),
       unit: ProjectItemUnitJson.fromJson(json['unit'] as String?),
     );
   }

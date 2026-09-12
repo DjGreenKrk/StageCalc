@@ -381,9 +381,9 @@ Prace:
 - Lista kratownic w projekcie. Zrealizowano.
 - Formularz kratownicy. Zrealizowano.
 - Przypisywanie grup. Zrealizowano.
-- Haki. Nie zrealizowano - wymaga pola `riggingPoints` w katalogu urzadzen (`ProjectGroupHookAssignment` z `docs/DATA_MODEL.md`), ktorego jeszcze nie ma.
+- Haki. Zrealizowano (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) daja wymagana liczbe hakow na grupe; `ProjectGroupHookAssignment` (nowa tabela) trzyma przypisane haki (urzadzenie z katalogu + ilosc) i ich wage, doliczana do masy grupy przy liczeniu obciazenia kratownicy. Sekcja "Haki grup urzadzen" w widoku Kratownice.
 - Obciazenia reczne. Zrealizowano (`manualLoadKg`) - jako jedna zagregowana wartosc, nie rozbita na pozycje punktowe/UDL (`ProjectTrussLoad`).
-- Wyniki limitow i ostrzezenia. Zrealizowano dla limitu recznie wpisanego przez uzytkownika (calkowitego i rozlozonego kg/m, prog 90%). Interpolacja tabeli nosnosci producenta i ostrzeganie o ekstrapolacji nie sa zrealizowane - wymaga `TrussLoadChartEntry`/`TrussWeightChartEntry` w katalogu, ktorych jeszcze nie ma.
+- Wyniki limitow i ostrzezenia. Zrealizowano dla limitu recznie wpisanego przez uzytkownika (calkowitego i rozlozonego kg/m, prog 90%). Interpolacja tabeli nosnosci producenta i ostrzeganie o ekstrapolacji nie sa zrealizowane - wymaga `trussCatalogDeviceId` na `ProjectTruss` i `TrussLoadChartEntry`/`TrussWeightChartEntry` w katalogu, ktorych jeszcze nie ma.
 
 ### Etap 8: Backup i dane startowe
 

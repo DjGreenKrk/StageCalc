@@ -38,6 +38,7 @@ void main() {
           powerW: 500,
           currentA: 2.2,
           weightKg: 12,
+          riggingPoints: 2,
           createdAt: now,
           updatedAt: now,
         ),
@@ -50,6 +51,7 @@ void main() {
 
       expect(savedDevice.name, 'SQLite fixture');
       expect(savedDevice.powerW, 500);
+      expect(savedDevice.riggingPoints, 2);
 
       await repository.deleteDevice(deviceId);
       final devicesAfterDelete = await repository.getDevices();

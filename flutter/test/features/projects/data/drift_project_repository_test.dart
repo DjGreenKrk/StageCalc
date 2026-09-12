@@ -193,6 +193,63 @@ void main() {
     expect(truss.notes, 'Pierwszy model danych kratownic.');
   });
 
+  test(
+    'saves group items and hook assignments with their rigging snapshots',
+    () async {
+      final now = DateTime(2026, 7, 5);
+      final project = Project(
+        id: 'project_hooks',
+        name: 'Projekt z hakami',
+        createdAt: now,
+        updatedAt: now,
+        groups: const [
+          ProjectGroup(
+            id: 'group_hooks',
+            name: 'Moving heads',
+            items: [
+              ProjectItem(
+                id: 'item_hooks',
+                nameSnapshot: 'Moving head',
+                quantity: 2,
+                riggingPointsSnapshot: 2,
+              ),
+            ],
+            hookAssignments: [
+              ProjectGroupHookAssignment(
+                id: 'hook_sqlite',
+                hookCatalogDeviceId: 'device_hook',
+                hookNameSnapshot: 'Half coupler',
+                hookWeightKgSnapshot: 0.3,
+                quantity: 4,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      await repository.saveProject(project);
+      final loaded = await repository.getProjects();
+      final group = loaded.single.groups.single;
+
+      expect(group.items.single.riggingPointsSnapshot, 2);
+      final assignment = group.hookAssignments.single;
+      expect(assignment.hookCatalogDeviceId, 'device_hook');
+      expect(assignment.hookNameSnapshot, 'Half coupler');
+      expect(assignment.hookWeightKgSnapshot, 0.3);
+      expect(assignment.quantity, 4);
+
+      await repository.saveProject(
+        project.copyWith(
+          groups: [project.groups.single.copyWith(hookAssignments: const [])],
+          updatedAt: now.add(const Duration(minutes: 1)),
+        ),
+      );
+
+      final afterRemoval = await repository.getProjects();
+      expect(afterRemoval.single.groups.single.hookAssignments, isEmpty);
+    },
+  );
+
   test('soft deletes removed groups and items on project save', () async {
     final now = DateTime(2026, 7, 5);
     final project = Project(

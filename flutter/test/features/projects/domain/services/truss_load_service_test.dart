@@ -133,4 +133,98 @@ void main() {
       expect(load.distributedLoadKgPerM, 0);
     },
   );
+
+  group('hookRequirement', () {
+    test('sums riggingPointsSnapshot across items, times their quantity', () {
+      const group = ProjectGroup(
+        id: 'g1',
+        name: 'Moving heads',
+        items: [
+          ProjectItem(
+            id: 'i1',
+            nameSnapshot: 'Moving head',
+            quantity: 3,
+            riggingPointsSnapshot: 2,
+          ),
+          // No rigging points at all - must contribute nothing.
+          ProjectItem(id: 'i2', nameSnapshot: 'Cable', quantity: 10),
+        ],
+      );
+
+      final requirement = service.hookRequirement(group);
+
+      expect(requirement.requiredHooks, 6);
+      expect(requirement.assignedHooks, 0);
+      expect(requirement.isSatisfied, isFalse);
+    });
+
+    test('counts assigned hooks and their weight', () {
+      const group = ProjectGroup(
+        id: 'g1',
+        name: 'Moving heads',
+        items: [
+          ProjectItem(
+            id: 'i1',
+            nameSnapshot: 'Moving head',
+            quantity: 2,
+            riggingPointsSnapshot: 2,
+          ),
+        ],
+        hookAssignments: [
+          ProjectGroupHookAssignment(
+            id: 'hook1',
+            hookNameSnapshot: 'Half coupler',
+            hookWeightKgSnapshot: 0.3,
+            quantity: 4,
+          ),
+        ],
+      );
+
+      final requirement = service.hookRequirement(group);
+
+      expect(requirement.requiredHooks, 4);
+      expect(requirement.assignedHooks, 4);
+      expect(requirement.hooksWeightKg, closeTo(1.2, 0.0001));
+      expect(requirement.isSatisfied, isTrue);
+    });
+  });
+
+  test('adds hook weight from assigned groups on top of their item weight', () {
+    final truss = const ProjectTruss(
+      id: 'truss',
+      name: 'Truss',
+      lengthM: 4,
+      assignedGroupIds: ['g1'],
+    );
+    final project = buildProject(
+      groups: const [
+        ProjectGroup(
+          id: 'g1',
+          name: 'Moving heads',
+          items: [
+            ProjectItem(
+              id: 'i1',
+              nameSnapshot: 'Moving head',
+              quantity: 2,
+              weightKgSnapshot: 10,
+            ),
+          ],
+          hookAssignments: [
+            ProjectGroupHookAssignment(
+              id: 'hook1',
+              hookNameSnapshot: 'Half coupler',
+              hookWeightKgSnapshot: 0.5,
+              quantity: 4,
+            ),
+          ],
+        ),
+      ],
+      truss: truss,
+    );
+
+    final load = service.calculateLoad(truss, project);
+
+    // 2*10kg items + 4*0.5kg hooks = 22kg.
+    expect(load.groupsMassKg, 22);
+  });
 }

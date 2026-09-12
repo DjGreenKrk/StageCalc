@@ -1603,6 +1603,16 @@ class $ProjectItemsTable extends ProjectItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _riggingPointsSnapshotMeta =
+      const VerificationMeta('riggingPointsSnapshot');
+  @override
+  late final GeneratedColumn<int> riggingPointsSnapshot = GeneratedColumn<int>(
+    'rigging_points_snapshot',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _unitMeta = const VerificationMeta('unit');
   @override
   late final GeneratedColumn<String> unit = GeneratedColumn<String>(
@@ -1706,6 +1716,7 @@ class $ProjectItemsTable extends ProjectItems
     powerWSnapshot,
     currentASnapshot,
     weightKgSnapshot,
+    riggingPointsSnapshot,
     unit,
     sortOrder,
     createdAt,
@@ -1818,6 +1829,15 @@ class $ProjectItemsTable extends ProjectItems
         ),
       );
     }
+    if (data.containsKey('rigging_points_snapshot')) {
+      context.handle(
+        _riggingPointsSnapshotMeta,
+        riggingPointsSnapshot.isAcceptableOrUnknown(
+          data['rigging_points_snapshot']!,
+          _riggingPointsSnapshotMeta,
+        ),
+      );
+    }
     if (data.containsKey('unit')) {
       context.handle(
         _unitMeta,
@@ -1926,6 +1946,10 @@ class $ProjectItemsTable extends ProjectItems
         DriftSqlType.double,
         data['${effectivePrefix}weight_kg_snapshot'],
       )!,
+      riggingPointsSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rigging_points_snapshot'],
+      ),
       unit: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
@@ -1979,6 +2003,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
   final double powerWSnapshot;
   final double currentASnapshot;
   final double weightKgSnapshot;
+  final int? riggingPointsSnapshot;
   final String unit;
   final int sortOrder;
   final DateTime createdAt;
@@ -1999,6 +2024,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     required this.powerWSnapshot,
     required this.currentASnapshot,
     required this.weightKgSnapshot,
+    this.riggingPointsSnapshot,
     required this.unit,
     required this.sortOrder,
     required this.createdAt,
@@ -2026,6 +2052,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     map['power_w_snapshot'] = Variable<double>(powerWSnapshot);
     map['current_a_snapshot'] = Variable<double>(currentASnapshot);
     map['weight_kg_snapshot'] = Variable<double>(weightKgSnapshot);
+    if (!nullToAbsent || riggingPointsSnapshot != null) {
+      map['rigging_points_snapshot'] = Variable<int>(riggingPointsSnapshot);
+    }
     map['unit'] = Variable<String>(unit);
     map['sort_order'] = Variable<int>(sortOrder);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -2058,6 +2087,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       powerWSnapshot: Value(powerWSnapshot),
       currentASnapshot: Value(currentASnapshot),
       weightKgSnapshot: Value(weightKgSnapshot),
+      riggingPointsSnapshot: riggingPointsSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(riggingPointsSnapshot),
       unit: Value(unit),
       sortOrder: Value(sortOrder),
       createdAt: Value(createdAt),
@@ -2092,6 +2124,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       powerWSnapshot: serializer.fromJson<double>(json['powerWSnapshot']),
       currentASnapshot: serializer.fromJson<double>(json['currentASnapshot']),
       weightKgSnapshot: serializer.fromJson<double>(json['weightKgSnapshot']),
+      riggingPointsSnapshot: serializer.fromJson<int?>(
+        json['riggingPointsSnapshot'],
+      ),
       unit: serializer.fromJson<String>(json['unit']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2117,6 +2152,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       'powerWSnapshot': serializer.toJson<double>(powerWSnapshot),
       'currentASnapshot': serializer.toJson<double>(currentASnapshot),
       'weightKgSnapshot': serializer.toJson<double>(weightKgSnapshot),
+      'riggingPointsSnapshot': serializer.toJson<int?>(riggingPointsSnapshot),
       'unit': serializer.toJson<String>(unit),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2140,6 +2176,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     double? powerWSnapshot,
     double? currentASnapshot,
     double? weightKgSnapshot,
+    Value<int?> riggingPointsSnapshot = const Value.absent(),
     String? unit,
     int? sortOrder,
     DateTime? createdAt,
@@ -2164,6 +2201,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     powerWSnapshot: powerWSnapshot ?? this.powerWSnapshot,
     currentASnapshot: currentASnapshot ?? this.currentASnapshot,
     weightKgSnapshot: weightKgSnapshot ?? this.weightKgSnapshot,
+    riggingPointsSnapshot: riggingPointsSnapshot.present
+        ? riggingPointsSnapshot.value
+        : this.riggingPointsSnapshot,
     unit: unit ?? this.unit,
     sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
@@ -2198,6 +2238,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       weightKgSnapshot: data.weightKgSnapshot.present
           ? data.weightKgSnapshot.value
           : this.weightKgSnapshot,
+      riggingPointsSnapshot: data.riggingPointsSnapshot.present
+          ? data.riggingPointsSnapshot.value
+          : this.riggingPointsSnapshot,
       unit: data.unit.present ? data.unit.value : this.unit,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -2225,6 +2268,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           ..write('powerWSnapshot: $powerWSnapshot, ')
           ..write('currentASnapshot: $currentASnapshot, ')
           ..write('weightKgSnapshot: $weightKgSnapshot, ')
+          ..write('riggingPointsSnapshot: $riggingPointsSnapshot, ')
           ..write('unit: $unit, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
@@ -2250,6 +2294,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     powerWSnapshot,
     currentASnapshot,
     weightKgSnapshot,
+    riggingPointsSnapshot,
     unit,
     sortOrder,
     createdAt,
@@ -2274,6 +2319,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           other.powerWSnapshot == this.powerWSnapshot &&
           other.currentASnapshot == this.currentASnapshot &&
           other.weightKgSnapshot == this.weightKgSnapshot &&
+          other.riggingPointsSnapshot == this.riggingPointsSnapshot &&
           other.unit == this.unit &&
           other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
@@ -2296,6 +2342,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
   final Value<double> powerWSnapshot;
   final Value<double> currentASnapshot;
   final Value<double> weightKgSnapshot;
+  final Value<int?> riggingPointsSnapshot;
   final Value<String> unit;
   final Value<int> sortOrder;
   final Value<DateTime> createdAt;
@@ -2317,6 +2364,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     this.powerWSnapshot = const Value.absent(),
     this.currentASnapshot = const Value.absent(),
     this.weightKgSnapshot = const Value.absent(),
+    this.riggingPointsSnapshot = const Value.absent(),
     this.unit = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2339,6 +2387,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     this.powerWSnapshot = const Value.absent(),
     this.currentASnapshot = const Value.absent(),
     this.weightKgSnapshot = const Value.absent(),
+    this.riggingPointsSnapshot = const Value.absent(),
     this.unit = const Value.absent(),
     this.sortOrder = const Value.absent(),
     required DateTime createdAt,
@@ -2367,6 +2416,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     Expression<double>? powerWSnapshot,
     Expression<double>? currentASnapshot,
     Expression<double>? weightKgSnapshot,
+    Expression<int>? riggingPointsSnapshot,
     Expression<String>? unit,
     Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
@@ -2390,6 +2440,8 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
       if (powerWSnapshot != null) 'power_w_snapshot': powerWSnapshot,
       if (currentASnapshot != null) 'current_a_snapshot': currentASnapshot,
       if (weightKgSnapshot != null) 'weight_kg_snapshot': weightKgSnapshot,
+      if (riggingPointsSnapshot != null)
+        'rigging_points_snapshot': riggingPointsSnapshot,
       if (unit != null) 'unit': unit,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
@@ -2414,6 +2466,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     Value<double>? powerWSnapshot,
     Value<double>? currentASnapshot,
     Value<double>? weightKgSnapshot,
+    Value<int?>? riggingPointsSnapshot,
     Value<String>? unit,
     Value<int>? sortOrder,
     Value<DateTime>? createdAt,
@@ -2436,6 +2489,8 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
       powerWSnapshot: powerWSnapshot ?? this.powerWSnapshot,
       currentASnapshot: currentASnapshot ?? this.currentASnapshot,
       weightKgSnapshot: weightKgSnapshot ?? this.weightKgSnapshot,
+      riggingPointsSnapshot:
+          riggingPointsSnapshot ?? this.riggingPointsSnapshot,
       unit: unit ?? this.unit,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
@@ -2486,6 +2541,11 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     if (weightKgSnapshot.present) {
       map['weight_kg_snapshot'] = Variable<double>(weightKgSnapshot.value);
     }
+    if (riggingPointsSnapshot.present) {
+      map['rigging_points_snapshot'] = Variable<int>(
+        riggingPointsSnapshot.value,
+      );
+    }
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
@@ -2530,7 +2590,850 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
           ..write('powerWSnapshot: $powerWSnapshot, ')
           ..write('currentASnapshot: $currentASnapshot, ')
           ..write('weightKgSnapshot: $weightKgSnapshot, ')
+          ..write('riggingPointsSnapshot: $riggingPointsSnapshot, ')
           ..write('unit: $unit, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncState: $syncState, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProjectGroupHookAssignmentsTable extends ProjectGroupHookAssignments
+    with
+        TableInfo<
+          $ProjectGroupHookAssignmentsTable,
+          ProjectGroupHookAssignment
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProjectGroupHookAssignmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES projects (id)',
+    ),
+  );
+  static const VerificationMeta _groupIdMeta = const VerificationMeta(
+    'groupId',
+  );
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES project_groups (id)',
+    ),
+  );
+  static const VerificationMeta _hookCatalogDeviceIdMeta =
+      const VerificationMeta('hookCatalogDeviceId');
+  @override
+  late final GeneratedColumn<String> hookCatalogDeviceId =
+      GeneratedColumn<String>(
+        'hook_catalog_device_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _hookNameSnapshotMeta = const VerificationMeta(
+    'hookNameSnapshot',
+  );
+  @override
+  late final GeneratedColumn<String> hookNameSnapshot = GeneratedColumn<String>(
+    'hook_name_snapshot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hookWeightKgSnapshotMeta =
+      const VerificationMeta('hookWeightKgSnapshot');
+  @override
+  late final GeneratedColumn<double> hookWeightKgSnapshot =
+      GeneratedColumn<double>(
+        'hook_weight_kg_snapshot',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta(
+    'syncState',
+  );
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+    'sync_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('localOnly'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    projectId,
+    groupId,
+    hookCatalogDeviceId,
+    hookNameSnapshot,
+    hookWeightKgSnapshot,
+    quantity,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    revision,
+    syncState,
+    lastSyncedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'project_group_hook_assignments';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProjectGroupHookAssignment> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(
+        _groupIdMeta,
+        groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('hook_catalog_device_id')) {
+      context.handle(
+        _hookCatalogDeviceIdMeta,
+        hookCatalogDeviceId.isAcceptableOrUnknown(
+          data['hook_catalog_device_id']!,
+          _hookCatalogDeviceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hook_name_snapshot')) {
+      context.handle(
+        _hookNameSnapshotMeta,
+        hookNameSnapshot.isAcceptableOrUnknown(
+          data['hook_name_snapshot']!,
+          _hookNameSnapshotMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_hookNameSnapshotMeta);
+    }
+    if (data.containsKey('hook_weight_kg_snapshot')) {
+      context.handle(
+        _hookWeightKgSnapshotMeta,
+        hookWeightKgSnapshot.isAcceptableOrUnknown(
+          data['hook_weight_kg_snapshot']!,
+          _hookWeightKgSnapshotMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(
+        _syncStateMeta,
+        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProjectGroupHookAssignment map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProjectGroupHookAssignment(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      hookCatalogDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hook_catalog_device_id'],
+      ),
+      hookNameSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hook_name_snapshot'],
+      )!,
+      hookWeightKgSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}hook_weight_kg_snapshot'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
+      syncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_state'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+    );
+  }
+
+  @override
+  $ProjectGroupHookAssignmentsTable createAlias(String alias) {
+    return $ProjectGroupHookAssignmentsTable(attachedDatabase, alias);
+  }
+}
+
+class ProjectGroupHookAssignment extends DataClass
+    implements Insertable<ProjectGroupHookAssignment> {
+  final String id;
+  final String projectId;
+  final String groupId;
+  final String? hookCatalogDeviceId;
+  final String hookNameSnapshot;
+  final double hookWeightKgSnapshot;
+  final int quantity;
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final int revision;
+  final String syncState;
+  final DateTime? lastSyncedAt;
+  const ProjectGroupHookAssignment({
+    required this.id,
+    required this.projectId,
+    required this.groupId,
+    this.hookCatalogDeviceId,
+    required this.hookNameSnapshot,
+    required this.hookWeightKgSnapshot,
+    required this.quantity,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.revision,
+    required this.syncState,
+    this.lastSyncedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['project_id'] = Variable<String>(projectId);
+    map['group_id'] = Variable<String>(groupId);
+    if (!nullToAbsent || hookCatalogDeviceId != null) {
+      map['hook_catalog_device_id'] = Variable<String>(hookCatalogDeviceId);
+    }
+    map['hook_name_snapshot'] = Variable<String>(hookNameSnapshot);
+    map['hook_weight_kg_snapshot'] = Variable<double>(hookWeightKgSnapshot);
+    map['quantity'] = Variable<int>(quantity);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['revision'] = Variable<int>(revision);
+    map['sync_state'] = Variable<String>(syncState);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    return map;
+  }
+
+  ProjectGroupHookAssignmentsCompanion toCompanion(bool nullToAbsent) {
+    return ProjectGroupHookAssignmentsCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      groupId: Value(groupId),
+      hookCatalogDeviceId: hookCatalogDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hookCatalogDeviceId),
+      hookNameSnapshot: Value(hookNameSnapshot),
+      hookWeightKgSnapshot: Value(hookWeightKgSnapshot),
+      quantity: Value(quantity),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      revision: Value(revision),
+      syncState: Value(syncState),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+    );
+  }
+
+  factory ProjectGroupHookAssignment.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProjectGroupHookAssignment(
+      id: serializer.fromJson<String>(json['id']),
+      projectId: serializer.fromJson<String>(json['projectId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      hookCatalogDeviceId: serializer.fromJson<String?>(
+        json['hookCatalogDeviceId'],
+      ),
+      hookNameSnapshot: serializer.fromJson<String>(json['hookNameSnapshot']),
+      hookWeightKgSnapshot: serializer.fromJson<double>(
+        json['hookWeightKgSnapshot'],
+      ),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      revision: serializer.fromJson<int>(json['revision']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'projectId': serializer.toJson<String>(projectId),
+      'groupId': serializer.toJson<String>(groupId),
+      'hookCatalogDeviceId': serializer.toJson<String?>(hookCatalogDeviceId),
+      'hookNameSnapshot': serializer.toJson<String>(hookNameSnapshot),
+      'hookWeightKgSnapshot': serializer.toJson<double>(hookWeightKgSnapshot),
+      'quantity': serializer.toJson<int>(quantity),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'revision': serializer.toJson<int>(revision),
+      'syncState': serializer.toJson<String>(syncState),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+    };
+  }
+
+  ProjectGroupHookAssignment copyWith({
+    String? id,
+    String? projectId,
+    String? groupId,
+    Value<String?> hookCatalogDeviceId = const Value.absent(),
+    String? hookNameSnapshot,
+    double? hookWeightKgSnapshot,
+    int? quantity,
+    int? sortOrder,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    int? revision,
+    String? syncState,
+    Value<DateTime?> lastSyncedAt = const Value.absent(),
+  }) => ProjectGroupHookAssignment(
+    id: id ?? this.id,
+    projectId: projectId ?? this.projectId,
+    groupId: groupId ?? this.groupId,
+    hookCatalogDeviceId: hookCatalogDeviceId.present
+        ? hookCatalogDeviceId.value
+        : this.hookCatalogDeviceId,
+    hookNameSnapshot: hookNameSnapshot ?? this.hookNameSnapshot,
+    hookWeightKgSnapshot: hookWeightKgSnapshot ?? this.hookWeightKgSnapshot,
+    quantity: quantity ?? this.quantity,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    revision: revision ?? this.revision,
+    syncState: syncState ?? this.syncState,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+  );
+  ProjectGroupHookAssignment copyWithCompanion(
+    ProjectGroupHookAssignmentsCompanion data,
+  ) {
+    return ProjectGroupHookAssignment(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      hookCatalogDeviceId: data.hookCatalogDeviceId.present
+          ? data.hookCatalogDeviceId.value
+          : this.hookCatalogDeviceId,
+      hookNameSnapshot: data.hookNameSnapshot.present
+          ? data.hookNameSnapshot.value
+          : this.hookNameSnapshot,
+      hookWeightKgSnapshot: data.hookWeightKgSnapshot.present
+          ? data.hookWeightKgSnapshot.value
+          : this.hookWeightKgSnapshot,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectGroupHookAssignment(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('groupId: $groupId, ')
+          ..write('hookCatalogDeviceId: $hookCatalogDeviceId, ')
+          ..write('hookNameSnapshot: $hookNameSnapshot, ')
+          ..write('hookWeightKgSnapshot: $hookWeightKgSnapshot, ')
+          ..write('quantity: $quantity, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('revision: $revision, ')
+          ..write('syncState: $syncState, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    projectId,
+    groupId,
+    hookCatalogDeviceId,
+    hookNameSnapshot,
+    hookWeightKgSnapshot,
+    quantity,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    revision,
+    syncState,
+    lastSyncedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProjectGroupHookAssignment &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.groupId == this.groupId &&
+          other.hookCatalogDeviceId == this.hookCatalogDeviceId &&
+          other.hookNameSnapshot == this.hookNameSnapshot &&
+          other.hookWeightKgSnapshot == this.hookWeightKgSnapshot &&
+          other.quantity == this.quantity &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.revision == this.revision &&
+          other.syncState == this.syncState &&
+          other.lastSyncedAt == this.lastSyncedAt);
+}
+
+class ProjectGroupHookAssignmentsCompanion
+    extends UpdateCompanion<ProjectGroupHookAssignment> {
+  final Value<String> id;
+  final Value<String> projectId;
+  final Value<String> groupId;
+  final Value<String?> hookCatalogDeviceId;
+  final Value<String> hookNameSnapshot;
+  final Value<double> hookWeightKgSnapshot;
+  final Value<int> quantity;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> revision;
+  final Value<String> syncState;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> rowid;
+  const ProjectGroupHookAssignmentsCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.hookCatalogDeviceId = const Value.absent(),
+    this.hookNameSnapshot = const Value.absent(),
+    this.hookWeightKgSnapshot = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProjectGroupHookAssignmentsCompanion.insert({
+    required String id,
+    required String projectId,
+    required String groupId,
+    this.hookCatalogDeviceId = const Value.absent(),
+    required String hookNameSnapshot,
+    this.hookWeightKgSnapshot = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.revision = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       projectId = Value(projectId),
+       groupId = Value(groupId),
+       hookNameSnapshot = Value(hookNameSnapshot),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ProjectGroupHookAssignment> custom({
+    Expression<String>? id,
+    Expression<String>? projectId,
+    Expression<String>? groupId,
+    Expression<String>? hookCatalogDeviceId,
+    Expression<String>? hookNameSnapshot,
+    Expression<double>? hookWeightKgSnapshot,
+    Expression<int>? quantity,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? revision,
+    Expression<String>? syncState,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (groupId != null) 'group_id': groupId,
+      if (hookCatalogDeviceId != null)
+        'hook_catalog_device_id': hookCatalogDeviceId,
+      if (hookNameSnapshot != null) 'hook_name_snapshot': hookNameSnapshot,
+      if (hookWeightKgSnapshot != null)
+        'hook_weight_kg_snapshot': hookWeightKgSnapshot,
+      if (quantity != null) 'quantity': quantity,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (revision != null) 'revision': revision,
+      if (syncState != null) 'sync_state': syncState,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProjectGroupHookAssignmentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? projectId,
+    Value<String>? groupId,
+    Value<String?>? hookCatalogDeviceId,
+    Value<String>? hookNameSnapshot,
+    Value<double>? hookWeightKgSnapshot,
+    Value<int>? quantity,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? revision,
+    Value<String>? syncState,
+    Value<DateTime?>? lastSyncedAt,
+    Value<int>? rowid,
+  }) {
+    return ProjectGroupHookAssignmentsCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      groupId: groupId ?? this.groupId,
+      hookCatalogDeviceId: hookCatalogDeviceId ?? this.hookCatalogDeviceId,
+      hookNameSnapshot: hookNameSnapshot ?? this.hookNameSnapshot,
+      hookWeightKgSnapshot: hookWeightKgSnapshot ?? this.hookWeightKgSnapshot,
+      quantity: quantity ?? this.quantity,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      revision: revision ?? this.revision,
+      syncState: syncState ?? this.syncState,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (hookCatalogDeviceId.present) {
+      map['hook_catalog_device_id'] = Variable<String>(
+        hookCatalogDeviceId.value,
+      );
+    }
+    if (hookNameSnapshot.present) {
+      map['hook_name_snapshot'] = Variable<String>(hookNameSnapshot.value);
+    }
+    if (hookWeightKgSnapshot.present) {
+      map['hook_weight_kg_snapshot'] = Variable<double>(
+        hookWeightKgSnapshot.value,
+      );
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectGroupHookAssignmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('groupId: $groupId, ')
+          ..write('hookCatalogDeviceId: $hookCatalogDeviceId, ')
+          ..write('hookNameSnapshot: $hookNameSnapshot, ')
+          ..write('hookWeightKgSnapshot: $hookWeightKgSnapshot, ')
+          ..write('quantity: $quantity, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6644,6 +7547,17 @@ class $CatalogDevicesTable extends CatalogDevices
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _riggingPointsMeta = const VerificationMeta(
+    'riggingPoints',
+  );
+  @override
+  late final GeneratedColumn<int> riggingPoints = GeneratedColumn<int>(
+    'rigging_points',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _quantityUnitMeta = const VerificationMeta(
     'quantityUnit',
   );
@@ -6736,6 +7650,7 @@ class $CatalogDevicesTable extends CatalogDevices
     currentA,
     weightKg,
     connectorTypeId,
+    riggingPoints,
     quantityUnit,
     createdAt,
     updatedAt,
@@ -6823,6 +7738,15 @@ class $CatalogDevicesTable extends CatalogDevices
         connectorTypeId.isAcceptableOrUnknown(
           data['connector_type_id']!,
           _connectorTypeIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rigging_points')) {
+      context.handle(
+        _riggingPointsMeta,
+        riggingPoints.isAcceptableOrUnknown(
+          data['rigging_points']!,
+          _riggingPointsMeta,
         ),
       );
     }
@@ -6927,6 +7851,10 @@ class $CatalogDevicesTable extends CatalogDevices
         DriftSqlType.string,
         data['${effectivePrefix}connector_type_id'],
       ),
+      riggingPoints: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rigging_points'],
+      ),
       quantityUnit: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}quantity_unit'],
@@ -6975,6 +7903,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   final double currentA;
   final double weightKg;
   final String? connectorTypeId;
+  final int? riggingPoints;
   final String quantityUnit;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -6993,6 +7922,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     required this.currentA,
     required this.weightKg,
     this.connectorTypeId,
+    this.riggingPoints,
     required this.quantityUnit,
     required this.createdAt,
     required this.updatedAt,
@@ -7019,6 +7949,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     map['weight_kg'] = Variable<double>(weightKg);
     if (!nullToAbsent || connectorTypeId != null) {
       map['connector_type_id'] = Variable<String>(connectorTypeId);
+    }
+    if (!nullToAbsent || riggingPoints != null) {
+      map['rigging_points'] = Variable<int>(riggingPoints);
     }
     map['quantity_unit'] = Variable<String>(quantityUnit);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -7052,6 +7985,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       connectorTypeId: connectorTypeId == null && nullToAbsent
           ? const Value.absent()
           : Value(connectorTypeId),
+      riggingPoints: riggingPoints == null && nullToAbsent
+          ? const Value.absent()
+          : Value(riggingPoints),
       quantityUnit: Value(quantityUnit),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -7082,6 +8018,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       currentA: serializer.fromJson<double>(json['currentA']),
       weightKg: serializer.fromJson<double>(json['weightKg']),
       connectorTypeId: serializer.fromJson<String?>(json['connectorTypeId']),
+      riggingPoints: serializer.fromJson<int?>(json['riggingPoints']),
       quantityUnit: serializer.fromJson<String>(json['quantityUnit']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -7105,6 +8042,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       'currentA': serializer.toJson<double>(currentA),
       'weightKg': serializer.toJson<double>(weightKg),
       'connectorTypeId': serializer.toJson<String?>(connectorTypeId),
+      'riggingPoints': serializer.toJson<int?>(riggingPoints),
       'quantityUnit': serializer.toJson<String>(quantityUnit),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -7126,6 +8064,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     double? currentA,
     double? weightKg,
     Value<String?> connectorTypeId = const Value.absent(),
+    Value<int?> riggingPoints = const Value.absent(),
     String? quantityUnit,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -7146,6 +8085,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     connectorTypeId: connectorTypeId.present
         ? connectorTypeId.value
         : this.connectorTypeId,
+    riggingPoints: riggingPoints.present
+        ? riggingPoints.value
+        : this.riggingPoints,
     quantityUnit: quantityUnit ?? this.quantityUnit,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -7172,6 +8114,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       connectorTypeId: data.connectorTypeId.present
           ? data.connectorTypeId.value
           : this.connectorTypeId,
+      riggingPoints: data.riggingPoints.present
+          ? data.riggingPoints.value
+          : this.riggingPoints,
       quantityUnit: data.quantityUnit.present
           ? data.quantityUnit.value
           : this.quantityUnit,
@@ -7199,6 +8144,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ..write('currentA: $currentA, ')
           ..write('weightKg: $weightKg, ')
           ..write('connectorTypeId: $connectorTypeId, ')
+          ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7222,6 +8168,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     currentA,
     weightKg,
     connectorTypeId,
+    riggingPoints,
     quantityUnit,
     createdAt,
     updatedAt,
@@ -7244,6 +8191,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           other.currentA == this.currentA &&
           other.weightKg == this.weightKg &&
           other.connectorTypeId == this.connectorTypeId &&
+          other.riggingPoints == this.riggingPoints &&
           other.quantityUnit == this.quantityUnit &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -7264,6 +8212,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
   final Value<double> currentA;
   final Value<double> weightKg;
   final Value<String?> connectorTypeId;
+  final Value<int?> riggingPoints;
   final Value<String> quantityUnit;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -7283,6 +8232,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.currentA = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.connectorTypeId = const Value.absent(),
+    this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -7303,6 +8253,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.currentA = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.connectorTypeId = const Value.absent(),
+    this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -7326,6 +8277,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Expression<double>? currentA,
     Expression<double>? weightKg,
     Expression<String>? connectorTypeId,
+    Expression<int>? riggingPoints,
     Expression<String>? quantityUnit,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -7346,6 +8298,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       if (currentA != null) 'current_a': currentA,
       if (weightKg != null) 'weight_kg': weightKg,
       if (connectorTypeId != null) 'connector_type_id': connectorTypeId,
+      if (riggingPoints != null) 'rigging_points': riggingPoints,
       if (quantityUnit != null) 'quantity_unit': quantityUnit,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -7368,6 +8321,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Value<double>? currentA,
     Value<double>? weightKg,
     Value<String?>? connectorTypeId,
+    Value<int?>? riggingPoints,
     Value<String>? quantityUnit,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -7388,6 +8342,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       currentA: currentA ?? this.currentA,
       weightKg: weightKg ?? this.weightKg,
       connectorTypeId: connectorTypeId ?? this.connectorTypeId,
+      riggingPoints: riggingPoints ?? this.riggingPoints,
       quantityUnit: quantityUnit ?? this.quantityUnit,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -7432,6 +8387,9 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     if (connectorTypeId.present) {
       map['connector_type_id'] = Variable<String>(connectorTypeId.value);
     }
+    if (riggingPoints.present) {
+      map['rigging_points'] = Variable<int>(riggingPoints.value);
+    }
     if (quantityUnit.present) {
       map['quantity_unit'] = Variable<String>(quantityUnit.value);
     }
@@ -7472,6 +8430,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('currentA: $currentA, ')
           ..write('weightKg: $weightKg, ')
           ..write('connectorTypeId: $connectorTypeId, ')
+          ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -12305,6 +13264,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProjectsTable projects = $ProjectsTable(this);
   late final $ProjectGroupsTable projectGroups = $ProjectGroupsTable(this);
   late final $ProjectItemsTable projectItems = $ProjectItemsTable(this);
+  late final $ProjectGroupHookAssignmentsTable projectGroupHookAssignments =
+      $ProjectGroupHookAssignmentsTable(this);
   late final $ProjectDistrosTable projectDistros = $ProjectDistrosTable(this);
   late final $ProjectOutletsTable projectOutlets = $ProjectOutletsTable(this);
   late final $PowerConnectionsTable powerConnections = $PowerConnectionsTable(
@@ -12330,6 +13291,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     projects,
     projectGroups,
     projectItems,
+    projectGroupHookAssignments,
     projectDistros,
     projectOutlets,
     powerConnections,
@@ -12414,6 +13376,31 @@ final class $$ProjectsTableReferences
     ).filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_projectItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProjectGroupHookAssignmentsTable,
+    List<ProjectGroupHookAssignment>
+  >
+  _projectGroupHookAssignmentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.projectGroupHookAssignments,
+        aliasName: 'projects__id__project_group_hook_assignments__project_id',
+      );
+
+  $$ProjectGroupHookAssignmentsTableProcessedTableManager
+  get projectGroupHookAssignmentsRefs {
+    final manager = $$ProjectGroupHookAssignmentsTableTableManager(
+      $_db,
+      $_db.projectGroupHookAssignments,
+    ).filter((f) => f.projectId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _projectGroupHookAssignmentsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -12615,6 +13602,35 @@ class $$ProjectsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> projectGroupHookAssignmentsRefs(
+    Expression<bool> Function(
+      $$ProjectGroupHookAssignmentsTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$ProjectGroupHookAssignmentsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectGroupHookAssignments,
+          getReferencedColumn: (t) => t.projectId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectGroupHookAssignmentsTableFilterComposer(
+                $db: $db,
+                $table: $db.projectGroupHookAssignments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 
@@ -12898,6 +13914,35 @@ class $$ProjectsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> projectGroupHookAssignmentsRefs<T extends Object>(
+    Expression<T> Function(
+      $$ProjectGroupHookAssignmentsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$ProjectGroupHookAssignmentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectGroupHookAssignments,
+          getReferencedColumn: (t) => t.projectId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectGroupHookAssignmentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.projectGroupHookAssignments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> projectDistrosRefs<T extends Object>(
     Expression<T> Function($$ProjectDistrosTableAnnotationComposer a) f,
   ) {
@@ -13015,6 +14060,7 @@ class $$ProjectsTableTableManager
           PrefetchHooks Function({
             bool projectGroupsRefs,
             bool projectItemsRefs,
+            bool projectGroupHookAssignmentsRefs,
             bool projectDistrosRefs,
             bool projectOutletsRefs,
             bool powerConnectionsRefs,
@@ -13108,6 +14154,7 @@ class $$ProjectsTableTableManager
               ({
                 projectGroupsRefs = false,
                 projectItemsRefs = false,
+                projectGroupHookAssignmentsRefs = false,
                 projectDistrosRefs = false,
                 projectOutletsRefs = false,
                 powerConnectionsRefs = false,
@@ -13118,6 +14165,8 @@ class $$ProjectsTableTableManager
                   explicitlyWatchedTables: [
                     if (projectGroupsRefs) db.projectGroups,
                     if (projectItemsRefs) db.projectItems,
+                    if (projectGroupHookAssignmentsRefs)
+                      db.projectGroupHookAssignments,
                     if (projectDistrosRefs) db.projectDistros,
                     if (projectOutletsRefs) db.projectOutlets,
                     if (powerConnectionsRefs) db.powerConnections,
@@ -13162,6 +14211,27 @@ class $$ProjectsTableTableManager
                                 table,
                                 p0,
                               ).projectItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.projectId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (projectGroupHookAssignmentsRefs)
+                        await $_getPrefetchedData<
+                          Project,
+                          $ProjectsTable,
+                          ProjectGroupHookAssignment
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProjectsTableReferences
+                              ._projectGroupHookAssignmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProjectsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).projectGroupHookAssignmentsRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.projectId == item.id,
@@ -13275,6 +14345,7 @@ typedef $$ProjectsTableProcessedTableManager =
       PrefetchHooks Function({
         bool projectGroupsRefs,
         bool projectItemsRefs,
+        bool projectGroupHookAssignmentsRefs,
         bool projectDistrosRefs,
         bool projectOutletsRefs,
         bool powerConnectionsRefs,
@@ -13352,6 +14423,32 @@ final class $$ProjectGroupsTableReferences
     ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_projectItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProjectGroupHookAssignmentsTable,
+    List<ProjectGroupHookAssignment>
+  >
+  _projectGroupHookAssignmentsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.projectGroupHookAssignments,
+        aliasName:
+            'project_groups__id__project_group_hook_assignments__group_id',
+      );
+
+  $$ProjectGroupHookAssignmentsTableProcessedTableManager
+  get projectGroupHookAssignmentsRefs {
+    final manager = $$ProjectGroupHookAssignmentsTableTableManager(
+      $_db,
+      $_db.projectGroupHookAssignments,
+    ).filter((f) => f.groupId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _projectGroupHookAssignmentsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -13467,6 +14564,35 @@ class $$ProjectGroupsTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> projectGroupHookAssignmentsRefs(
+    Expression<bool> Function(
+      $$ProjectGroupHookAssignmentsTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$ProjectGroupHookAssignmentsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectGroupHookAssignments,
+          getReferencedColumn: (t) => t.groupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectGroupHookAssignmentsTableFilterComposer(
+                $db: $db,
+                $table: $db.projectGroupHookAssignments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -13652,6 +14778,35 @@ class $$ProjectGroupsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> projectGroupHookAssignmentsRefs<T extends Object>(
+    Expression<T> Function(
+      $$ProjectGroupHookAssignmentsTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$ProjectGroupHookAssignmentsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectGroupHookAssignments,
+          getReferencedColumn: (t) => t.groupId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectGroupHookAssignmentsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.projectGroupHookAssignments,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ProjectGroupsTableTableManager
@@ -13667,7 +14822,11 @@ class $$ProjectGroupsTableTableManager
           $$ProjectGroupsTableUpdateCompanionBuilder,
           (ProjectGroup, $$ProjectGroupsTableReferences),
           ProjectGroup,
-          PrefetchHooks Function({bool projectId, bool projectItemsRefs})
+          PrefetchHooks Function({
+            bool projectId,
+            bool projectItemsRefs,
+            bool projectGroupHookAssignmentsRefs,
+          })
         > {
   $$ProjectGroupsTableTableManager(_$AppDatabase db, $ProjectGroupsTable table)
     : super(
@@ -13749,11 +14908,17 @@ class $$ProjectGroupsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({projectId = false, projectItemsRefs = false}) {
+              ({
+                projectId = false,
+                projectItemsRefs = false,
+                projectGroupHookAssignmentsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (projectItemsRefs) db.projectItems,
+                    if (projectGroupHookAssignmentsRefs)
+                      db.projectGroupHookAssignments,
                   ],
                   addJoins:
                       <
@@ -13812,6 +14977,27 @@ class $$ProjectGroupsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (projectGroupHookAssignmentsRefs)
+                        await $_getPrefetchedData<
+                          ProjectGroup,
+                          $ProjectGroupsTable,
+                          ProjectGroupHookAssignment
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProjectGroupsTableReferences
+                              ._projectGroupHookAssignmentsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProjectGroupsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).projectGroupHookAssignmentsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.groupId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -13832,7 +15018,11 @@ typedef $$ProjectGroupsTableProcessedTableManager =
       $$ProjectGroupsTableUpdateCompanionBuilder,
       (ProjectGroup, $$ProjectGroupsTableReferences),
       ProjectGroup,
-      PrefetchHooks Function({bool projectId, bool projectItemsRefs})
+      PrefetchHooks Function({
+        bool projectId,
+        bool projectItemsRefs,
+        bool projectGroupHookAssignmentsRefs,
+      })
     >;
 typedef $$ProjectItemsTableCreateCompanionBuilder =
     ProjectItemsCompanion Function({
@@ -13847,6 +15037,7 @@ typedef $$ProjectItemsTableCreateCompanionBuilder =
       Value<double> powerWSnapshot,
       Value<double> currentASnapshot,
       Value<double> weightKgSnapshot,
+      Value<int?> riggingPointsSnapshot,
       Value<String> unit,
       Value<int> sortOrder,
       required DateTime createdAt,
@@ -13870,6 +15061,7 @@ typedef $$ProjectItemsTableUpdateCompanionBuilder =
       Value<double> powerWSnapshot,
       Value<double> currentASnapshot,
       Value<double> weightKgSnapshot,
+      Value<int?> riggingPointsSnapshot,
       Value<String> unit,
       Value<int> sortOrder,
       Value<DateTime> createdAt,
@@ -13971,6 +15163,11 @@ class $$ProjectItemsTableFilterComposer
 
   ColumnFilters<double> get weightKgSnapshot => $composableBuilder(
     column: $table.weightKgSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get riggingPointsSnapshot => $composableBuilder(
+    column: $table.riggingPointsSnapshot,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14115,6 +15312,11 @@ class $$ProjectItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get riggingPointsSnapshot => $composableBuilder(
+    column: $table.riggingPointsSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get unit => $composableBuilder(
     column: $table.unit,
     builder: (column) => ColumnOrderings(column),
@@ -14250,6 +15452,11 @@ class $$ProjectItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get riggingPointsSnapshot => $composableBuilder(
+    column: $table.riggingPointsSnapshot,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
 
@@ -14362,6 +15569,7 @@ class $$ProjectItemsTableTableManager
                 Value<double> powerWSnapshot = const Value.absent(),
                 Value<double> currentASnapshot = const Value.absent(),
                 Value<double> weightKgSnapshot = const Value.absent(),
+                Value<int?> riggingPointsSnapshot = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -14383,6 +15591,7 @@ class $$ProjectItemsTableTableManager
                 powerWSnapshot: powerWSnapshot,
                 currentASnapshot: currentASnapshot,
                 weightKgSnapshot: weightKgSnapshot,
+                riggingPointsSnapshot: riggingPointsSnapshot,
                 unit: unit,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
@@ -14406,6 +15615,7 @@ class $$ProjectItemsTableTableManager
                 Value<double> powerWSnapshot = const Value.absent(),
                 Value<double> currentASnapshot = const Value.absent(),
                 Value<double> weightKgSnapshot = const Value.absent(),
+                Value<int?> riggingPointsSnapshot = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 required DateTime createdAt,
@@ -14427,6 +15637,7 @@ class $$ProjectItemsTableTableManager
                 powerWSnapshot: powerWSnapshot,
                 currentASnapshot: currentASnapshot,
                 weightKgSnapshot: weightKgSnapshot,
+                riggingPointsSnapshot: riggingPointsSnapshot,
                 unit: unit,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
@@ -14515,6 +15726,623 @@ typedef $$ProjectItemsTableProcessedTableManager =
       $$ProjectItemsTableUpdateCompanionBuilder,
       (ProjectItem, $$ProjectItemsTableReferences),
       ProjectItem,
+      PrefetchHooks Function({bool projectId, bool groupId})
+    >;
+typedef $$ProjectGroupHookAssignmentsTableCreateCompanionBuilder =
+    ProjectGroupHookAssignmentsCompanion Function({
+      required String id,
+      required String projectId,
+      required String groupId,
+      Value<String?> hookCatalogDeviceId,
+      required String hookNameSnapshot,
+      Value<double> hookWeightKgSnapshot,
+      Value<int> quantity,
+      Value<int> sortOrder,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> revision,
+      Value<String> syncState,
+      Value<DateTime?> lastSyncedAt,
+      Value<int> rowid,
+    });
+typedef $$ProjectGroupHookAssignmentsTableUpdateCompanionBuilder =
+    ProjectGroupHookAssignmentsCompanion Function({
+      Value<String> id,
+      Value<String> projectId,
+      Value<String> groupId,
+      Value<String?> hookCatalogDeviceId,
+      Value<String> hookNameSnapshot,
+      Value<double> hookWeightKgSnapshot,
+      Value<int> quantity,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> revision,
+      Value<String> syncState,
+      Value<DateTime?> lastSyncedAt,
+      Value<int> rowid,
+    });
+
+final class $$ProjectGroupHookAssignmentsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ProjectGroupHookAssignmentsTable,
+          ProjectGroupHookAssignment
+        > {
+  $$ProjectGroupHookAssignmentsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) => db.projects
+      .createAlias('project_group_hook_assignments__project_id__projects__id');
+
+  $$ProjectsTableProcessedTableManager get projectId {
+    final $_column = $_itemColumn<String>('project_id')!;
+
+    final manager = $$ProjectsTableTableManager(
+      $_db,
+      $_db.projects,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ProjectGroupsTable _groupIdTable(_$AppDatabase db) =>
+      db.projectGroups.createAlias(
+        'project_group_hook_assignments__group_id__project_groups__id',
+      );
+
+  $$ProjectGroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$ProjectGroupsTableTableManager(
+      $_db,
+      $_db.projectGroups,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ProjectGroupHookAssignmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProjectGroupHookAssignmentsTable> {
+  $$ProjectGroupHookAssignmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hookCatalogDeviceId => $composableBuilder(
+    column: $table.hookCatalogDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hookNameSnapshot => $composableBuilder(
+    column: $table.hookNameSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get hookWeightKgSnapshot => $composableBuilder(
+    column: $table.hookWeightKgSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProjectsTableFilterComposer get projectId {
+    final $$ProjectsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableFilterComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProjectGroupsTableFilterComposer get groupId {
+    final $$ProjectGroupsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.projectGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectGroupsTableFilterComposer(
+            $db: $db,
+            $table: $db.projectGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectGroupHookAssignmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProjectGroupHookAssignmentsTable> {
+  $$ProjectGroupHookAssignmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hookCatalogDeviceId => $composableBuilder(
+    column: $table.hookCatalogDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hookNameSnapshot => $composableBuilder(
+    column: $table.hookNameSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get hookWeightKgSnapshot => $composableBuilder(
+    column: $table.hookWeightKgSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProjectsTableOrderingComposer get projectId {
+    final $$ProjectsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableOrderingComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProjectGroupsTableOrderingComposer get groupId {
+    final $$ProjectGroupsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.projectGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectGroupsTableOrderingComposer(
+            $db: $db,
+            $table: $db.projectGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectGroupHookAssignmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProjectGroupHookAssignmentsTable> {
+  $$ProjectGroupHookAssignmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get hookCatalogDeviceId => $composableBuilder(
+    column: $table.hookCatalogDeviceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get hookNameSnapshot => $composableBuilder(
+    column: $table.hookNameSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get hookWeightKgSnapshot => $composableBuilder(
+    column: $table.hookWeightKgSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  $$ProjectsTableAnnotationComposer get projectId {
+    final $$ProjectsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.projectId,
+      referencedTable: $db.projects,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.projects,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProjectGroupsTableAnnotationComposer get groupId {
+    final $$ProjectGroupsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.groupId,
+      referencedTable: $db.projectGroups,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectGroupsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.projectGroups,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectGroupHookAssignmentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProjectGroupHookAssignmentsTable,
+          ProjectGroupHookAssignment,
+          $$ProjectGroupHookAssignmentsTableFilterComposer,
+          $$ProjectGroupHookAssignmentsTableOrderingComposer,
+          $$ProjectGroupHookAssignmentsTableAnnotationComposer,
+          $$ProjectGroupHookAssignmentsTableCreateCompanionBuilder,
+          $$ProjectGroupHookAssignmentsTableUpdateCompanionBuilder,
+          (
+            ProjectGroupHookAssignment,
+            $$ProjectGroupHookAssignmentsTableReferences,
+          ),
+          ProjectGroupHookAssignment,
+          PrefetchHooks Function({bool projectId, bool groupId})
+        > {
+  $$ProjectGroupHookAssignmentsTableTableManager(
+    _$AppDatabase db,
+    $ProjectGroupHookAssignmentsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProjectGroupHookAssignmentsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ProjectGroupHookAssignmentsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ProjectGroupHookAssignmentsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> projectId = const Value.absent(),
+                Value<String> groupId = const Value.absent(),
+                Value<String?> hookCatalogDeviceId = const Value.absent(),
+                Value<String> hookNameSnapshot = const Value.absent(),
+                Value<double> hookWeightKgSnapshot = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectGroupHookAssignmentsCompanion(
+                id: id,
+                projectId: projectId,
+                groupId: groupId,
+                hookCatalogDeviceId: hookCatalogDeviceId,
+                hookNameSnapshot: hookNameSnapshot,
+                hookWeightKgSnapshot: hookWeightKgSnapshot,
+                quantity: quantity,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                revision: revision,
+                syncState: syncState,
+                lastSyncedAt: lastSyncedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String projectId,
+                required String groupId,
+                Value<String?> hookCatalogDeviceId = const Value.absent(),
+                required String hookNameSnapshot,
+                Value<double> hookWeightKgSnapshot = const Value.absent(),
+                Value<int> quantity = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectGroupHookAssignmentsCompanion.insert(
+                id: id,
+                projectId: projectId,
+                groupId: groupId,
+                hookCatalogDeviceId: hookCatalogDeviceId,
+                hookNameSnapshot: hookNameSnapshot,
+                hookWeightKgSnapshot: hookWeightKgSnapshot,
+                quantity: quantity,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                revision: revision,
+                syncState: syncState,
+                lastSyncedAt: lastSyncedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ProjectGroupHookAssignmentsTable,
+                    ProjectGroupHookAssignment
+                  >(table),
+                  $$ProjectGroupHookAssignmentsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({projectId = false, groupId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (projectId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.projectId,
+                                referencedTable:
+                                    $$ProjectGroupHookAssignmentsTableReferences
+                                        ._projectIdTable(db),
+                                referencedColumn:
+                                    $$ProjectGroupHookAssignmentsTableReferences
+                                        ._projectIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (groupId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.groupId,
+                                referencedTable:
+                                    $$ProjectGroupHookAssignmentsTableReferences
+                                        ._groupIdTable(db),
+                                referencedColumn:
+                                    $$ProjectGroupHookAssignmentsTableReferences
+                                        ._groupIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ProjectGroupHookAssignmentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProjectGroupHookAssignmentsTable,
+      ProjectGroupHookAssignment,
+      $$ProjectGroupHookAssignmentsTableFilterComposer,
+      $$ProjectGroupHookAssignmentsTableOrderingComposer,
+      $$ProjectGroupHookAssignmentsTableAnnotationComposer,
+      $$ProjectGroupHookAssignmentsTableCreateCompanionBuilder,
+      $$ProjectGroupHookAssignmentsTableUpdateCompanionBuilder,
+      (
+        ProjectGroupHookAssignment,
+        $$ProjectGroupHookAssignmentsTableReferences,
+      ),
+      ProjectGroupHookAssignment,
       PrefetchHooks Function({bool projectId, bool groupId})
     >;
 typedef $$ProjectDistrosTableCreateCompanionBuilder =
@@ -17393,6 +19221,7 @@ typedef $$CatalogDevicesTableCreateCompanionBuilder =
       Value<double> currentA,
       Value<double> weightKg,
       Value<String?> connectorTypeId,
+      Value<int?> riggingPoints,
       Value<String> quantityUnit,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -17414,6 +19243,7 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<double> currentA,
       Value<double> weightKg,
       Value<String?> connectorTypeId,
+      Value<int?> riggingPoints,
       Value<String> quantityUnit,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -17480,6 +19310,11 @@ class $$CatalogDevicesTableFilterComposer
 
   ColumnFilters<String> get connectorTypeId => $composableBuilder(
     column: $table.connectorTypeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get riggingPoints => $composableBuilder(
+    column: $table.riggingPoints,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17578,6 +19413,11 @@ class $$CatalogDevicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get riggingPoints => $composableBuilder(
+    column: $table.riggingPoints,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get quantityUnit => $composableBuilder(
     column: $table.quantityUnit,
     builder: (column) => ColumnOrderings(column),
@@ -17659,6 +19499,11 @@ class $$CatalogDevicesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get riggingPoints => $composableBuilder(
+    column: $table.riggingPoints,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get quantityUnit => $composableBuilder(
     column: $table.quantityUnit,
     builder: (column) => column,
@@ -17728,6 +19573,7 @@ class $$CatalogDevicesTableTableManager
                 Value<double> currentA = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<String?> connectorTypeId = const Value.absent(),
+                Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -17747,6 +19593,7 @@ class $$CatalogDevicesTableTableManager
                 currentA: currentA,
                 weightKg: weightKg,
                 connectorTypeId: connectorTypeId,
+                riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -17768,6 +19615,7 @@ class $$CatalogDevicesTableTableManager
                 Value<double> currentA = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<String?> connectorTypeId = const Value.absent(),
+                Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -17787,6 +19635,7 @@ class $$CatalogDevicesTableTableManager
                 currentA: currentA,
                 weightKg: weightKg,
                 connectorTypeId: connectorTypeId,
+                riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -20816,6 +22665,12 @@ class $AppDatabaseManager {
       $$ProjectGroupsTableTableManager(_db, _db.projectGroups);
   $$ProjectItemsTableTableManager get projectItems =>
       $$ProjectItemsTableTableManager(_db, _db.projectItems);
+  $$ProjectGroupHookAssignmentsTableTableManager
+  get projectGroupHookAssignments =>
+      $$ProjectGroupHookAssignmentsTableTableManager(
+        _db,
+        _db.projectGroupHookAssignments,
+      );
   $$ProjectDistrosTableTableManager get projectDistros =>
       $$ProjectDistrosTableTableManager(_db, _db.projectDistros);
   $$ProjectOutletsTableTableManager get projectOutlets =>

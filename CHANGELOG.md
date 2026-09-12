@@ -17,6 +17,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 - Dodano pierwszy eksport raportu projektu (ADR-021): `ProjectReportService.buildTextReport` generuje czytelny raport tekstowy (podsumowanie, grupy z pozycjami, rozdzielnice z obciazeniem faz i ostrzezeniami, kratownice z masa i limitami) uzywajac dokladnie tych samych serwisow domenowych co UI. Dostepny jako ikona w AppBar edytora projektu. Tekst zamiast PDF na razie — `docs/FEATURE_SCOPE.md` dopuszcza to wprost dla MVP; PDF wymagalby osobnej, wiekszej pracy (nowa zaleznosc, uklad, styl GreenCrew). Wydzielono przy okazji wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`), zamiast trzeciej kopii tego samego trojkata native/web/stub co polaczenie z baza (ADR-016) i backup (ADR-018).
 - Dodano `tool/package_release.dart` (ADR-022): `dart run tool/package_release.dart` buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip`, zgodnie z nazewnictwem z ADR-012F. Wersja czytana z `pubspec.yaml`.
 - Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" obok pola sciezki w ekranie "O aplikacji" otwiera natywny wybor pliku (`.json`) zamiast wymagac recznego wklejenia sciezki. Pole recznej sciezki zostaje jako alternatywa. Bez nowych uprawnien Android (SAF/`GET_CONTENT`, zgodnie z ADR-012E).
+- Dodano haki kratownic (ADR-024): `CatalogDevice.riggingPoints` (liczba punktow zaczepienia na urzadzenie, pole w formularzu katalogu) + `ProjectItem.riggingPointsSnapshot` (snapshot per ADR-008) daja wymagana liczbe hakow dla kazdej grupy. Nowa tabela `project_group_hook_assignments` trzyma przypisane haki (wybierane z katalogu, tak jak zwykle pozycje) wraz z ich waga, ktora dolicza sie do masy grupy przy liczeniu obciazenia przypisanej kratownicy (`TrussLoadService.hookRequirement`). Nowa sekcja "Haki grup urzadzen" w widoku Kratownice pokazuje "Wymagane / Przypisane" per grupa (czerwony chip gdy za malo) i pozwala dodawac/usuwac/zmieniac ilosc hakow. Schemat bazy podniesiony do wersji `11`.
 
 ### Naprawiono
 
@@ -169,7 +170,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 ### Znane ograniczenia
 
 - Pełny wizualny patcher (drag&drop) nie jest jeszcze gotowy — obecny patcher działa przez listy i dialogi.
-- Moduł kratownic nie ma jeszcze haków (`riggingPoints`) ani interpolacji tabel nośności producenta — wymaga nowego schematu katalogu (ADR-020).
+- Moduł kratownic ma haki (ADR-024), ale nie ma jeszcze interpolacji tabel nośności producenta — wymaga `trussCatalogDeviceId` na `ProjectTruss` i nowych tabel nośności w katalogu (ADR-020).
 - Eksport PDF nie został jeszcze wdrożony — na razie raport tekstowy (ADR-021).
 - Synchronizacja z bazą hostowaną to na razie tylko jednokierunkowy push bez kolejki i bez obsługi konfliktów (ADR-017).
 - Backup i raport eksportują zawsze do ustalonego katalogu `Documents/StageCalc/...` — file picker (ADR-023) jest na razie tylko po stronie importu.

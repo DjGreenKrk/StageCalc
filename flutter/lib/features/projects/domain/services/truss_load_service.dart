@@ -4,12 +4,12 @@ import 'project_totals_service.dart';
 const _nearLimitLoadFactor = 0.9;
 
 /// Calculates the mass a [ProjectTruss] actually carries from its assigned
-/// groups plus any manual load, and compares it against the truss's own
-/// limits.
+/// groups (including any assigned hooks) plus any manual load, and compares
+/// it against the truss's own limits.
 ///
-/// This intentionally does not yet cover hooks (`riggingPoints`) or
-/// manufacturer load-chart interpolation - neither has a data model in the
-/// app yet (see `docs/DATA_MODEL.md`, "Kratownice"). `maxTotalLoadKg` and
+/// This intentionally does not yet cover manufacturer load-chart
+/// interpolation - trusses have no catalog reference of their own yet (see
+/// `docs/DATA_MODEL.md`, "Kratownice"). `maxTotalLoadKg` and
 /// `maxDistributedLoadKgPerM` are plain user-entered limits for now, not
 /// derived from an interpolated chart.
 class TrussLoadService {
@@ -23,7 +23,10 @@ class TrussLoadService {
         .where((group) => assignedGroupIds.contains(group.id))
         .fold<double>(
           0,
-          (sum, group) => sum + _totalsService.calculateGroup(group).weightKg,
+          (sum, group) =>
+              sum +
+              _totalsService.calculateGroup(group).weightKg +
+              hookRequirement(group).hooksWeightKg,
         );
     final totalMassKg = groupsMassKg + truss.manualLoadKg;
     final distributedLoadKgPerM = truss.lengthM > 0
@@ -40,6 +43,50 @@ class TrussLoadService {
       maxDistributedLoadKgPerM: truss.maxDistributedLoadKgPerM,
     );
   }
+
+  /// How many hooks [group] needs (from `riggingPointsSnapshot` on its
+  /// items) versus how many are actually assigned, and the resulting extra
+  /// weight. This is a property of the group itself, independent of which
+  /// truss (if any) it ends up assigned to - a group keeps the same
+  /// physical hooks regardless.
+  GroupHookRequirement hookRequirement(ProjectGroup group) {
+    final requiredHooks = group.items
+        .fold<double>(
+          0,
+          (sum, item) =>
+              sum + (item.riggingPointsSnapshot ?? 0) * item.quantity,
+        )
+        .ceil();
+    final assignedHooks = group.hookAssignments.fold<int>(
+      0,
+      (sum, assignment) => sum + assignment.quantity,
+    );
+    final hooksWeightKg = group.hookAssignments.fold<double>(
+      0,
+      (sum, assignment) =>
+          sum + assignment.hookWeightKgSnapshot * assignment.quantity,
+    );
+
+    return GroupHookRequirement(
+      requiredHooks: requiredHooks,
+      assignedHooks: assignedHooks,
+      hooksWeightKg: hooksWeightKg,
+    );
+  }
+}
+
+class GroupHookRequirement {
+  const GroupHookRequirement({
+    required this.requiredHooks,
+    required this.assignedHooks,
+    required this.hooksWeightKg,
+  });
+
+  final int requiredHooks;
+  final int assignedHooks;
+  final double hooksWeightKg;
+
+  bool get isSatisfied => assignedHooks >= requiredHooks;
 }
 
 class TrussLoad {

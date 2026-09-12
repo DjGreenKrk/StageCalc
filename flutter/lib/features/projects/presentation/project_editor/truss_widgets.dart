@@ -111,6 +111,105 @@ class _TrussCard extends StatelessWidget {
   }
 }
 
+class _GroupHooksCard extends StatelessWidget {
+  const _GroupHooksCard({
+    required this.group,
+    required this.requirement,
+    required this.onAddHook,
+    required this.onEditQuantity,
+    required this.onRemove,
+  });
+
+  final ProjectGroup group;
+  final GroupHookRequirement requirement;
+  final VoidCallback onAddHook;
+  final void Function(ProjectGroupHookAssignment assignment, int quantity)
+  onEditQuantity;
+  final void Function(ProjectGroupHookAssignment assignment) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GreenCrewCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  group.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              Chip(
+                avatar: const Icon(Icons.anchor, size: 16),
+                label: Text(
+                  'Wymagane: ${requirement.requiredHooks} / '
+                  'Przypisane: ${requirement.assignedHooks}',
+                ),
+                backgroundColor: requirement.isSatisfied
+                    ? null
+                    : colorScheme.errorContainer,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (group.hookAssignments.isEmpty)
+            const Text('Brak przypisanych hakow.')
+          else
+            for (final assignment in group.hookAssignments)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${assignment.hookNameSnapshot} '
+                        '(${assignment.hookWeightKgSnapshot.toStringAsFixed(1)} kg/szt.)',
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Zmniejsz ilosc',
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: assignment.quantity > 1
+                          ? () => onEditQuantity(
+                              assignment,
+                              assignment.quantity - 1,
+                            )
+                          : null,
+                    ),
+                    Text('${assignment.quantity}'),
+                    IconButton(
+                      tooltip: 'Zwieksz ilosc',
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () =>
+                          onEditQuantity(assignment, assignment.quantity + 1),
+                    ),
+                    IconButton(
+                      tooltip: 'Usun hak',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => onRemove(assignment),
+                    ),
+                  ],
+                ),
+              ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onAddHook,
+              icon: const Icon(Icons.add),
+              label: const Text('Dodaj hak'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TrussDialog extends StatefulWidget {
   const _TrussDialog({required this.groups, this.truss});
 

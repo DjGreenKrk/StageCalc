@@ -269,6 +269,35 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
+              const SizedBox(height: 12),
+              const GreenCrewSectionHeader(title: 'Haki grup urzadzen'),
+              const SizedBox(height: 12),
+              if (_groupsNeedingHooks(project).isEmpty)
+                const GreenCrewCard(
+                  child: Text(
+                    'Zadna grupa nie ma jeszcze urzadzen wymagajacych hakow '
+                    '(pole "Punkty zaczepienia" w katalogu).',
+                  ),
+                )
+              else
+                for (final group in _groupsNeedingHooks(project)) ...[
+                  _GroupHooksCard(
+                    group: group,
+                    requirement: _controller.hookRequirement(group),
+                    onAddHook: () => _openAddHookDialog(group),
+                    onEditQuantity: (assignment, quantity) => _runMutation(
+                      () => _controller.editHookAssignmentQuantity(
+                        group,
+                        assignment,
+                        quantity,
+                      ),
+                    ),
+                    onRemove: (assignment) => _runMutation(
+                      () => _controller.deleteHookAssignment(group, assignment),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
             ],
           ],
         ),
@@ -693,5 +722,36 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     }
 
     await _runMutation(() => _controller.deleteTruss(truss));
+  }
+
+  List<ProjectGroup> _groupsNeedingHooks(Project project) {
+    return project.groups
+        .where((group) => _controller.hookRequirement(group).requiredHooks > 0)
+        .toList();
+  }
+
+  Future<void> _openAddHookDialog(ProjectGroup group) async {
+    final devices = await _controller.loadCatalogDevices();
+
+    if (!mounted) {
+      return;
+    }
+
+    final result = await showDialog<_CatalogSelectionResult>(
+      context: context,
+      builder: (context) => _CatalogSelectionDialog(devices: devices),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    await _runMutation(
+      () => _controller.addHookAssignment(
+        group,
+        result.device,
+        result.quantity.round().clamp(1, 1 << 30),
+      ),
+    );
   }
 }

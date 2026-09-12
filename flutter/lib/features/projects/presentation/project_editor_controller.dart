@@ -87,6 +87,9 @@ class ProjectEditorController extends ChangeNotifier {
   TrussLoad trussLoad(ProjectTruss truss) =>
       _trussLoadService.calculateLoad(truss, _project);
 
+  GroupHookRequirement hookRequirement(ProjectGroup group) =>
+      _trussLoadService.hookRequirement(group);
+
   bool get canCreateConnection {
     return (_project.groups.isNotEmpty || _project.distros.length > 1) &&
         _project.distros.any((distro) => distro.outlets.isNotEmpty);
@@ -401,6 +404,7 @@ class ProjectEditorController extends ChangeNotifier {
       powerWSnapshot: device.powerW,
       currentASnapshot: device.currentA,
       weightKgSnapshot: device.weightKg,
+      riggingPointsSnapshot: device.riggingPoints,
       unit: _mapCatalogUnit(device.quantityUnit),
     );
 
@@ -542,6 +546,78 @@ class ProjectEditorController extends ChangeNotifier {
         .toList();
 
     return _persist(_project.copyWith(trusses: trusses, updatedAt: now));
+  }
+
+  Future<void> addHookAssignment(
+    ProjectGroup group,
+    CatalogDevice hookDevice,
+    int quantity,
+  ) {
+    final now = DateTime.now();
+    final assignment = ProjectGroupHookAssignment(
+      id: 'hook_${now.microsecondsSinceEpoch}',
+      hookCatalogDeviceId: hookDevice.id,
+      hookNameSnapshot: hookDevice.name,
+      hookWeightKgSnapshot: hookDevice.weightKg,
+      quantity: quantity,
+    );
+
+    return _updateGroupHookAssignments(
+      group,
+      now,
+      (assignments) => [...assignments, assignment],
+    );
+  }
+
+  Future<void> editHookAssignmentQuantity(
+    ProjectGroup group,
+    ProjectGroupHookAssignment assignment,
+    int quantity,
+  ) {
+    return _updateGroupHookAssignments(
+      group,
+      DateTime.now(),
+      (assignments) => assignments
+          .map(
+            (candidate) => candidate.id == assignment.id
+                ? candidate.copyWith(quantity: quantity)
+                : candidate,
+          )
+          .toList(),
+    );
+  }
+
+  Future<void> deleteHookAssignment(
+    ProjectGroup group,
+    ProjectGroupHookAssignment assignment,
+  ) {
+    return _updateGroupHookAssignments(
+      group,
+      DateTime.now(),
+      (assignments) => assignments
+          .where((candidate) => candidate.id != assignment.id)
+          .toList(),
+    );
+  }
+
+  Future<void> _updateGroupHookAssignments(
+    ProjectGroup group,
+    DateTime now,
+    List<ProjectGroupHookAssignment> Function(
+      List<ProjectGroupHookAssignment> assignments,
+    )
+    update,
+  ) {
+    final groups = _project.groups.map((candidate) {
+      if (candidate.id != group.id) {
+        return candidate;
+      }
+      return candidate.copyWith(
+        hookAssignments: update(candidate.hookAssignments),
+      );
+    }).toList();
+
+    return _persist(_project.copyWith(groups: groups, updatedAt: now));
   }
 
   Future<void> _persist(Project project) async {

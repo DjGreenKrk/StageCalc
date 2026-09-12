@@ -54,7 +54,29 @@ class ProjectItems extends Table {
   RealColumn get powerWSnapshot => real().withDefault(const Constant(0))();
   RealColumn get currentASnapshot => real().withDefault(const Constant(0))();
   RealColumn get weightKgSnapshot => real().withDefault(const Constant(0))();
+  IntColumn get riggingPointsSnapshot => integer().nullable()();
   TextColumn get unit => text().withDefault(const Constant('pcs'))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+  IntColumn get revision => integer().withDefault(const Constant(1))();
+  TextColumn get syncState => text().withDefault(const Constant('localOnly'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class ProjectGroupHookAssignments extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text().references(Projects, #id)();
+  TextColumn get groupId => text().references(ProjectGroups, #id)();
+  TextColumn get hookCatalogDeviceId => text().nullable()();
+  TextColumn get hookNameSnapshot => text()();
+  RealColumn get hookWeightKgSnapshot =>
+      real().withDefault(const Constant(0))();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -174,6 +196,7 @@ class CatalogDevices extends Table {
   RealColumn get currentA => real().withDefault(const Constant(0))();
   RealColumn get weightKg => real().withDefault(const Constant(0))();
   TextColumn get connectorTypeId => text().nullable()();
+  IntColumn get riggingPoints => integer().nullable()();
   TextColumn get quantityUnit => text().withDefault(const Constant('pcs'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -310,6 +333,7 @@ class PowerOutletTemplates extends Table {
     Projects,
     ProjectGroups,
     ProjectItems,
+    ProjectGroupHookAssignments,
     ProjectDistros,
     ProjectOutlets,
     PowerConnections,
@@ -329,7 +353,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -370,6 +394,14 @@ class AppDatabase extends _$AppDatabase {
           projectDistros,
           projectDistros.manualInputMaxCurrentA,
         );
+      }
+      if (from < 11) {
+        await migrator.addColumn(catalogDevices, catalogDevices.riggingPoints);
+        await migrator.addColumn(
+          projectItems,
+          projectItems.riggingPointsSnapshot,
+        );
+        await migrator.createTable(projectGroupHookAssignments);
       }
     },
   );

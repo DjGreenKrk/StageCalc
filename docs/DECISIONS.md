@@ -390,6 +390,35 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-024: Haki kratownic (riggingPoints)
+
+Status: accepted
+
+Kontekst:
+
+- Etap 7 (`docs/MIGRATION_PLAN.md`) zostawil dwie rzeczy poza pierwsza wersja modulu kratownic (ADR-020): haki (`riggingPoints`) i interpolacje tabel nosnosci producenta. Ta ADR realizuje pierwsza z nich; interpolacja zostaje nadal poza zakresem, bo wymaga dodatkowo powiazania `ProjectTruss` z konkretnym urzadzeniem katalogowym (`trussCatalogDeviceId` z `docs/DATA_MODEL.md` tez jeszcze nie istnieje) i tabeli `TrussLoadChartEntry`.
+- Logika w legacy (`legacy/firebase/src/components/truss/truss-calculator.tsx`, `getGroupWeight`): wymagana liczba hakow to suma `device.riggingPoints * item.quantity` po pozycjach grupy z katalogu; przypisane haki to osobna lista `{hookId, quantity}` per grupa, ktorej waga dolicza sie do calkowitej wagi grupy (a wiec i do obciazenia kratownicy, do ktorej grupa jest przypisana).
+
+Decyzja:
+
+- `CatalogDevice.riggingPoints` (`int?`) - liczba punktow zaczepienia potrzebnych na sztuke urzadzenia. Pole w formularzu katalogu, opcjonalne, widoczne jako chip na karcie urzadzenia gdy ustawione.
+- `ProjectItem.riggingPointsSnapshot` (`int?`) - snapshot `riggingPoints` w momencie dodania pozycji z katalogu, zgodnie z ADR-008 (snapshoty katalogowe) - zmiana `riggingPoints` w katalogu pozniej nie zmienia juz policzonych wymagan istniejacych projektow.
+- `ProjectGroupHookAssignment` (nowa tabela `project_group_hook_assignments`, analogiczna do `ProjectItems`): `id`, `hookCatalogDeviceId`, `hookNameSnapshot`, `hookWeightKgSnapshot`, `quantity`. Lista `hookAssignments` na `ProjectGroup`. Hak to zwykle urzadzenie z katalogu (kategoria "Rigging" w praktyce, ale nie wymuszone strukturalnie) wybierane przez ten sam `_CatalogSelectionDialog`, ktorego uzywa dodawanie pozycji do grupy - bez nowego pola "podkategoria" w katalogu, ktorego DATA_MODEL nie definiuje.
+- `TrussLoadService.hookRequirement(ProjectGroup)` liczy `requiredHooks` (suma `riggingPointsSnapshot * quantity`, zaokraglona w gore), `assignedHooks` (suma ilosci przypisanych hakow) i `hooksWeightKg`. `calculateLoad` dolicza `hooksWeightKg` do masy kazdej przypisanej grupy - haki sa wlasnoscia grupy, nie kratownicy, wiec licza sie niezaleznie od tego, do ktorej kratownicy grupa trafi.
+- Nowa sekcja "Haki grup urzadzen" w widoku "Kratownice" edytora projektu: lista grup z `requiredHooks > 0`, chip "Wymagane: X / Przypisane: Y" (czerwony gdy niewystarczajace), lista przypisanych hakow z kontrolkami ilosci i usuwaniem, przycisk "Dodaj hak".
+- Schemat bazy podniesiony do wersji `11`: `catalog_devices.rigging_points`, `project_items.rigging_points_snapshot`, nowa tabela `project_group_hook_assignments`.
+
+Uzasadnienie:
+
+- Snapshot zamiast live-lookup (w odroznieniu od legacy, ktore czytalo `device.riggingPoints` na biezaco z katalogu) jest spojny z reszta aplikacji (ADR-008) i unika niespodziewanej zmiany wymagan istniejacego projektu po edycji katalogu.
+- Reuzycie `_CatalogSelectionDialog` zamiast nowego pickera dla hakow unika duplikacji UI i nie wymaga decyzji o nowym polu "podkategoria" w katalogu, ktorej DATA_MODEL nie przewiduje.
+- Wymagania hakow sa wlasnoscia grupy (fizyczne haki wpiete w urzadzenia), nie kratownicy - stad `hookRequirement` przyjmuje `ProjectGroup`, a nie `ProjectTruss`, i dziala tak samo niezaleznie od przypisania.
+
+Konsekwencje:
+
+- Interpolacja tabel nosnosci producenta i `trussCatalogDeviceId` pozostaja kolejnym, osobnym krokiem Etapu 7.
+- Kazda przyszla zmiana liczaca mase grupy (np. eksport raportu) powinna pamietac, ze `ProjectTotalsService.calculateGroup(...).weightKg` **nie** zawiera wagi hakow - to celowe, bo haki maja sens tylko w kontekscie kratownic, nie w ogolnym sumowaniu projektu; `TrussLoadService` jest jedynym miejscem, ktore je dolicza.
+
 ## ADR-023: File picker dla importu backupu
 
 Status: accepted
