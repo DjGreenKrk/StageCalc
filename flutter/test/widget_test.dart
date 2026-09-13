@@ -260,7 +260,7 @@ void main() {
   testWidgets('creates a JSON backup file from the About screen', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);

@@ -416,22 +416,24 @@ Prace:
 
 Wynik:
 
-- Aplikacja nadal dziala offline, ale model jest gotowy na synchronizacje.
+- Aplikacja nadal dziala offline. Zrealizowano dwukierunkowa synchronizacje (ADR-026) dla wszystkich piecu agregatow: projektow (z pelnym drzewem), katalogu, klientow, lokacji i presetow.
 
 Prace:
 
-- Sync queue. Nie zrealizowano.
-- Rewizje rekordow. Pole `revision` istnieje w schemacie lokalnym od poczatku, ale nic jeszcze go nie inkrementuje ani nie porownuje.
-- Soft delete. Zrealizowano lokalnie (`deletedAt` + diff przy zapisie projektu).
-- Strategia konfliktow. Nie zrealizowano.
+- Sync queue. Nie zrealizowano jako osobna kolejka z retry - kazde uruchomienie synchronizacji (recznie albo automatycznie co 15 minut) po prostu porownuje caly lokalny i zdalny stan od nowa i wysyla/pobiera roznice. Wystarczajace dla obecnej skali (male ilosci danych, siec LAN), ale bez odpornosci na przerwanie w polowie pojedynczego rekordu.
+- Rewizje rekordow. Pole `revision` nadal nic nie inkrementuje - strategia konfliktow "ostatni zapis wygrywa" po `updatedAt` (patrz nizej) go nie potrzebuje.
+- Soft delete. Zrealizowano lokalnie i zdalnie: sync nigdy nie usuwa twardo, po prostu upsertuje kazdy rekord (lokalny i zdalny) razem z jego flaga `deleted`/`deleted_at` (ADR-026).
+- Strategia konfliktow. Zrealizowano (ADR-026): "ostatni zapis wygrywa" po `updatedAt`, decyzja przez czysta funkcje `decideSyncDirection`. Reconciliacja na poziomie calego drzewa agregatu (np. caly projekt z grupami/pozycjami), nie pojedynczych zagniezdzonych rekordow.
 - Statusy synchronizacji:
   - `localOnly`,
   - `pendingSync`,
   - `synced`,
   - `syncError`,
   - `conflict`.
-  Pole istnieje w modelu (`OfflineSyncStatus`), ale nic jeszcze go realnie nie zmienia poza `localOnly`.
-- Spike backendu: PocketBase/Supabase/wlasne API. Rozstrzygnieto na PocketBase (juz postawiony jako infrastruktura, ADR-017): pelny schemat 13 kolekcji odzwierciedlajacy tabele Drift oraz pierwszy, jednokierunkowy, idempotentny push `Project` (`PocketBaseProjectSyncService`). To nie jest jeszcze sync queue ani obsluga konfliktow - to dowod, ze polaczenie i mapowanie modelu dzialaja.
+  Pole `syncState` w bazie (nie `OfflineSyncStatus` w modelu domenowym, ktore nadal nic nie zmienia) jest teraz realnie ustawiane na `synced` + `lastSyncedAt` po kazdym push/pull (ADR-026). `syncError`/`conflict` nie sa uzywane - bledy trafiaja do `SyncSummary.errors`, nie do statusu per-rekord.
+- Spike backendu: PocketBase/Supabase/wlasne API. Rozstrzygnieto na PocketBase (ADR-017), rozwiniete do pelnej dwukierunkowej synchronizacji w ADR-026: piec serwisow synchronizujacych (`PocketBase{Client,Location,PowerPreset,Catalog,Project}SyncService`) + `SyncCoordinator`, migracje schematu PocketBase teraz w repozytorium (`pocketbase/pb_migrations/`).
+- Ustawienia synchronizacji (nowe, ADR-026): tabela `AppSettings`, przelacznik "Automatyczna synchronizacja" + przycisk "Synchronizuj teraz" w ekranie "O aplikacji", automatyczny sync co 15 minut gdy wlaczony.
+- Autoryzacja/reguly dostepu kolekcji PocketBase. Nadal puste/publiczne (ADR-017) - pozostaje przyszlym, osobnym krokiem.
 
 ### Etap 11: Release i dystrybucja
 

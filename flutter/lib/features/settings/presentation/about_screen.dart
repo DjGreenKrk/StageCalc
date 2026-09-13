@@ -5,6 +5,10 @@ import '../../../core/constants/app_metadata.dart';
 import '../../../infrastructure/backup/app_backup_import_service.dart';
 import '../../../infrastructure/backup/app_backup_service.dart';
 import '../../../infrastructure/local_database/app_database_provider.dart';
+import '../../../infrastructure/remote/pocketbase_client_provider.dart';
+import '../../../infrastructure/sync/app_sync_settings.dart';
+import '../../../infrastructure/sync/drift_app_sync_settings_repository.dart';
+import '../../../infrastructure/sync/sync_coordinator.dart';
 import '../../../shared/widgets/greencrew_button.dart';
 import '../../../shared/widgets/greencrew_card.dart';
 import '../../../shared/widgets/stagecalc_mark.dart';
@@ -25,6 +29,15 @@ class _AboutScreenState extends State<AboutScreen> {
   final _importPathController = TextEditingController();
   var _isCreatingBackup = false;
   var _isImportingBackup = false;
+  var _syncSettings = AppSyncSettings.initial;
+  var _isSyncing = false;
+  String? _lastSyncMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSyncSettings();
+  }
 
   @override
   void dispose() {
@@ -72,6 +85,47 @@ class _AboutScreenState extends State<AboutScreen> {
               _InfoRow(label: 'Repozytorium', value: AppMetadata.repository),
               _InfoRow(label: 'Licencja', value: AppMetadata.license),
               _InfoRow(label: 'Pakiet', value: AppMetadata.packageId),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        GreenCrewCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Synchronizacja',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Wysyla i pobiera projekty, katalog, klientow, lokacje i '
+                'presety z serwera PocketBase w sieci lokalnej. Nowszy zapis '
+                '(wedlug czasu ostatniej edycji) zawsze wygrywa.',
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Automatyczna synchronizacja'),
+                value: _syncSettings.autoSyncEnabled,
+                onChanged: _isSyncing ? null : _toggleAutoSync,
+              ),
+              if (!_syncSettings.autoSyncEnabled) ...[
+                const SizedBox(height: 4),
+                GreenCrewButton(
+                  label: _isSyncing
+                      ? 'Synchronizowanie...'
+                      : 'Synchronizuj teraz',
+                  icon: Icons.sync,
+                  secondary: true,
+                  onPressed: _isSyncing ? null : () => _runSync(),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                _syncStatusText(),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),
@@ -161,6 +215,90 @@ class _AboutScreenState extends State<AboutScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadSyncSettings() async {
+    final settings = await _syncSettingsRepository().getSettings();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _syncSettings = settings);
+  }
+
+  Future<void> _toggleAutoSync(bool enabled) async {
+    await _syncSettingsRepository().setAutoSyncEnabled(enabled);
+    if (!mounted) {
+      return;
+    }
+    setState(
+      () => _syncSettings = _syncSettings.copyWith(autoSyncEnabled: enabled),
+    );
+    if (enabled) {
+      await _runSync(showSnackBar: false);
+    }
+  }
+
+  Future<void> _runSync({bool showSnackBar = true}) async {
+    setState(() {
+      _isSyncing = true;
+      _lastSyncMessage = null;
+    });
+
+    try {
+      final summary = await SyncCoordinator(
+        PocketBaseClientProvider.instance,
+        AppDatabaseProvider.instance,
+      ).syncAll();
+      final settings = await _syncSettingsRepository().getSettings();
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _syncSettings = settings;
+        _lastSyncMessage = summary.hasErrors
+            ? 'Zsynchronizowano z bledami (${summary.errors.length}). '
+                  'Wyslano: ${summary.pushed}, pobrano: ${summary.pulled}.'
+            : 'Wyslano: ${summary.pushed}, pobrano: ${summary.pulled}, '
+                  'bez zmian: ${summary.unchanged}.';
+      });
+      if (showSnackBar && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_lastSyncMessage!)));
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(
+        () => _lastSyncMessage = 'Synchronizacja nie powiodla sie: $error',
+      );
+      if (showSnackBar) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_lastSyncMessage!)));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncing = false);
+      }
+    }
+  }
+
+  String _syncStatusText() {
+    if (_lastSyncMessage != null) {
+      return _lastSyncMessage!;
+    }
+    final lastSyncedAt = _syncSettings.lastSyncedAt;
+    if (lastSyncedAt == null) {
+      return 'Jeszcze nie synchronizowano.';
+    }
+    return 'Ostatnia synchronizacja: $lastSyncedAt';
+  }
+
+  DriftAppSyncSettingsRepository _syncSettingsRepository() {
+    return DriftAppSyncSettingsRepository(AppDatabaseProvider.instance);
   }
 
   Future<void> _createBackup() async {

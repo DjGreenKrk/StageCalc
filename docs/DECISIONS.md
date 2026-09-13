@@ -390,6 +390,56 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-026: Dwukierunkowa synchronizacja z PocketBase
+
+Status: accepted
+
+Kontekst:
+
+- ADR-017 dala tylko jednokierunkowy, no-conflict push jednego `Project` - "dowod, ze polaczenie i mapowanie modelu dzialaja", jawnie nie sync engine. Etap 10 (`docs/MIGRATION_PLAN.md`) mial nadal do zrobienia: kolejke synchronizacji, strategie konfliktow, realne statusy sync (`syncState`/`lastSyncedAt` istnialy w schemacie, ale nic ich nie zmienialo poza `localOnly`), i sync dla katalogu/klientow/lokacji/presetow (nie tylko projektu).
+- Zdecydowano wspolnie z uzytkownikiem: konflikty rozwiazuje "ostatni zapis wygrywa" po `updatedAt` (bez UI do recznego scalania), wyzwalacz to ustawienie w "O aplikacji" (automatyczny w tle albo przycisk "Synchronizuj teraz" w trybie recznym), a zakres to wszystkie piec agregatow (projekty, katalog, klienci, lokacje, presety), nie tylko projekty.
+
+Decyzja:
+
+### Silnik synchronizacji
+
+- `decideSyncDirection` (`infrastructure/sync/sync_direction.dart`) - czysta funkcja: porownuje `updatedAt` lokalnego i zdalnego rekordu, zwraca `push`/`pull`/`none`. Rekord istniejacy tylko po jednej stronie zawsze trafia na druga, niezaleznie od kierunku.
+- Piec serwisow (`PocketBase{Client,Location,PowerPreset,Catalog,Project}SyncService`, po jednym per agregat, wzorowane na juz istniejacych repozytoriach Drift) laczy sie z PocketBase i dla kazdego rekordu (dopasowanego po `local_id`) wykonuje `decideSyncDirection`, potem push lub pull. `SyncCoordinator.syncAll()` uruchamia wszystkie piec po kolei (klienci/lokacje/presety/katalog przed projektami, zeby `Project.client`/`location` mialy juz co rozwiazac zdalnie) i zapisuje `lastSyncedAt`.
+- **Reconciliacja na poziomie calego drzewa, nie pojedynczych rekordow potomnych**: tak jak `saveProject`/`saveLocation` itd. juz dzialaja lokalnie (jeden zapis = caly agregat, znaczkowany jednym `updatedAt` korzenia), sync tez traktuje np. cala kratownice grup/pozycji/hakow projektu jako jedna jednostke - wygrywa/przegrywa razem z korzeniem. Bez tego mergowanie pojedynczych zmienionych elementow z obu stron byloby prawdziwym problemem 3-way merge, ktorego ten krok swiadomie unika.
+- **Nic nigdy nie jest twardo usuwane, ani lokalnie, ani zdalnie** (`pocketbase_child_sync.dart`, `upsertRemoteChildren`): appka juz wszedzie soft-deletuje (`deletedAt`, ADR-011), wiec sync po prostu upsertuje kazdy rekord - lokalny czy zdalny - wraz z jego flaga `deleted`/`deleted_at`. To duzo prostsze niz kaskadowe twarde usuwanie (np. usuniecie grupy pociagajace usuniecie jej pozycji i hakow po drugiej stronie) i spojne z reszta architektury.
+- Powiazania `client`/`location` na `Project` (lokalne ID, nie relacje PocketBase) sa rozwiazywane do zdalnego ID przez wyszukanie po `local_id` w danej kolekcji (`_findRemoteId`/`_findLocalId`) - nie sa duplikowane wewnatrz `PocketBaseProjectSyncService`, bo klienci/lokacje maja juz wlasny serwis synchronizujacy.
+- Znane, swiadome ograniczenie: `project_distros.catalog_device`/`preset` (relacje PocketBase) nie sa jeszcze wypelniane przy pushu - nic ich dzis nie czyta z powrotem, wiec rozwiazywanie tych relacji zostaje przyszlym, osobnym krokiem, gdy pojawi sie realny powod.
+
+### Migracja schematu PocketBase
+
+- Brakujace pola/kolekcje z ADR-020/ADR-024/ADR-025 (dodane do lokalnego schematu Drift po tym, jak ADR-017 juz zamrozila zdalny schemat) dopisano do PocketBase na LXC 113 jako pliki migracji w `/opt/pocketbase/pb_migrations/` (dokladnie ten mechanizm, ktorego ADR-017 juz uzywala) i zastosowano restartem uslugi: `catalog_devices.rigging_points`, `project_items.rigging_points_snapshot`, `project_trusses.truss_catalog_device_id`, `project_distros.manual_input_max_current_a`, oraz dwie nowe kolekcje `project_group_hook_assignments` i `truss_load_chart_entries`.
+- Wykonano kopie `pb_data` na serwerze przed migracja (`/root/pb_data_backup_*.tar.gz`) i zweryfikowano kazde nowe pole/kolekcje przez publiczne API (puste `listRule` z ADR-017) zamiast logowania sie jako superuser, zeby nie tworzyc/przekazywac zadnych poswiadczen bez potrzeby.
+- **Wszystkie pliki migracji PocketBase sa teraz w repozytorium** (`pocketbase/pb_migrations/`) - do tej pory caly schemat zdalny istnial tylko na serwerze, bez sladu w repo. To pierwszy krok do tego, zeby historia schematu byla odtwarzalna, a nie tylko pamietana przez serwer.
+
+### Ustawienia i automatyzacja
+
+- Nowa tabela `AppSettings` (pojedynczy wiersz `id='app'`) zamiast generycznego key-value store - `ADR-011` juz odrzucila `shared_preferences` na rzecz jawnego schematu relacyjnego, a appka ma na razie jedno ustawienie (`autoSyncEnabled` + `lastSyncedAt`).
+- Ekran "O aplikacji" ma nowa karte "Synchronizacja": przelacznik "Automatyczna synchronizacja" + (widoczny tylko gdy przelacznik jest wylaczony) przycisk "Synchronizuj teraz" + tekst statusu (czas ostatniej synchronizacji albo wynik ostatniej proby).
+- `StageCalcShell` (nie `AboutScreen`) trzyma `Timer.periodic` (co 15 minut, plus jedno wywolanie od razu przy starcie), bo tylko wybrany ekran nawigacji jest w drzewie widgetow - `AboutScreen` znika przy zmianie zakladki. Timer za kazdym razem na nowo czyta `autoSyncEnabled` z bazy zamiast cache'owac je w pamieci, wiec przelaczenie w Ustawieniach dziala od nastepnego tyknicia bez zadnego dodatkowego kanalu komunikacji miedzy ekranami. Bledy synchronizacji w tle sa celowo ciche (offline-first: nieudana synchronizacja to normalny stan, nie blad przerywajacy prace) - ekran Ustawien pokazuje czas ostatniej udanej synchronizacji dla kogos, kto chce sprawdzic.
+
+### Weryfikacja
+
+- Logika decyzyjna (`decideSyncDirection`) i `AppSyncSettings`/`DriftAppSyncSettingsRepository` sa w pelni pokryte testami jednostkowymi (w tym regresyjnie zweryfikowany blad "czesciowy upsert kasuje pole, ktorego nie ustawiono" w ustawieniach - SQLite `excluded.col` w `ON CONFLICT` odzwierciedla probe insertu, nie istniejacy wiersz).
+- Same wywolania sieciowe do PocketBase nie sa mockowane (jak w ADR-017) - `tool/sync_demo_data.dart` (uruchamiane przez `flutter test tool/sync_demo_data.dart`, nie `dart run`: `AppDatabase` importuje `path_provider`, ktore samo importuje `package:flutter`, wiec zwykla maszyna wirtualna Dart tego nie skompiluje) sieje dane demo do bazy w pamieci i synchronizuje je z prawdziwym serwerem w obie strony: push nowych danych, drugi przebieg pokazujacy pelna idempotentnosc (same "unchanged"), i osobny test pull do zupelnie pustej bazy lokalnej z asercjami na tresc (nazwa klienta, grupy/pozycje projektu) - zweryfikowane realnie dzialajace dla klientow, lokacji, presetow, katalogu i projektow (wraz z zagniezdzonymi grupami/pozycjami).
+- Sciezki dla dystrybutorow/gniazd/polaczen/kratownic/hakow uzywaja dokladnie tego samego wzorca co juz zweryfikowane grupy/pozycje, ale nie sa osobno cwiczone przez dane demo (`DemoProjectFactory` nie ma jeszcze rozdzielnic ani kratownic) - kolejny kandydat do rozszerzenia `tool/sync_demo_data.dart`, jesli okaza sie potrzebne wczesniej niz przy pierwszym realnym uzyciu.
+
+Uzasadnienie:
+
+- "Ostatni zapis wygrywa" jest jedyna strategia, ktora nie wymaga nowego UI do recznego scalania - dokladnie to, o co poprosil uzytkownik, i spojne z tym, ze to nadal male, LAN-owe narzedzie, nie system wieloosobowej edycji w czasie rzeczywistym.
+- Upsert zamiast twardego usuwania po obu stronach oznacza zero nowej logiki kaskadowego kasowania - i tak juz nigdzie w tej appce nic nie jest usuwane na twardo.
+- Migracje PocketBase w repozytorium (zamiast tylko na serwerze) to jedyny sposob, zeby schemat zdalny byl odtwarzalny i przegladalny w code review, tak jak juz jest schemat lokalny (`app_database.dart`).
+
+Konsekwencje:
+
+- Kazda przyszla zmiana lokalnego schematu, ktora ma sie synchronizowac, wymaga rowniez nowego pliku migracji w `pocketbase/pb_migrations/` (lokalnie i wgranego na serwer) - latwo o tym zapomniec, tak jak stalo sie to miedzy ADR-017 a ADR-020/024/025.
+- Reguly dostepu kolekcji PocketBase sa nadal puste/publiczne (ADR-017) - nic w tej ADR tego nie zmienia; prawdziwa autoryzacja zostaje przyszlym, osobnym krokiem.
+- `revision` (pole w kazdej tabeli od ADR-011) nadal nic nie inkrementuje - "ostatni zapis wygrywa" po `updatedAt` nie go potrzebuje. Zostaje nieuzywane, chyba ze pojawi sie powod na bardziej wyrafinowana strategie konfliktow.
+
 ## ADR-025: Interpolacja tabel nosnosci kratownic
 
 Status: accepted

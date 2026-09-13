@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_metadata.dart';
@@ -6,9 +8,18 @@ import '../features/clients/presentation/clients_screen.dart';
 import '../features/locations/presentation/locations_screen.dart';
 import '../features/projects/presentation/list/projects_screen.dart';
 import '../features/settings/presentation/about_screen.dart';
+import '../infrastructure/local_database/app_database_provider.dart';
+import '../infrastructure/remote/pocketbase_client_provider.dart';
+import '../infrastructure/sync/drift_app_sync_settings_repository.dart';
+import '../infrastructure/sync/sync_coordinator.dart';
 import '../shared/widgets/greencrew_offline_banner.dart';
 import '../shared/widgets/stagecalc_mark.dart';
 import 'theme/stagecalc_theme.dart';
+
+/// How often the app checks whether automatic sync (ADR-026) is enabled and,
+/// if so, runs it - deliberately not configurable yet, this is a LAN tool
+/// syncing small amounts of data, not a high-frequency service.
+const _autoSyncCheckInterval = Duration(minutes: 15);
 
 class StageCalcApp extends StatelessWidget {
   const StageCalcApp({super.key});
@@ -33,6 +44,48 @@ class StageCalcShell extends StatefulWidget {
 
 class _StageCalcShellState extends State<StageCalcShell> {
   var _index = 0;
+  Timer? _autoSyncTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_maybeAutoSync());
+    _autoSyncTimer = Timer.periodic(
+      _autoSyncCheckInterval,
+      (_) => _maybeAutoSync(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _autoSyncTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Re-reads the auto-sync setting fresh on every tick instead of caching
+  /// it, so toggling it in "O aplikacji" takes effect on the next tick
+  /// without this widget needing to know about that screen at all.
+  Future<void> _maybeAutoSync() async {
+    final database = AppDatabaseProvider.instance;
+    final settings = await DriftAppSyncSettingsRepository(
+      database,
+    ).getSettings();
+    if (!settings.autoSyncEnabled) {
+      return;
+    }
+
+    try {
+      await SyncCoordinator(
+        PocketBaseClientProvider.instance,
+        database,
+      ).syncAll();
+    } catch (_) {
+      // Background sync failures are silent by design (offline-first: a
+      // failed sync is a normal, expected state, not an error to interrupt
+      // the user with). The "O aplikacji" screen shows the last successful
+      // sync time for anyone who wants to check.
+    }
+  }
 
   static const _destinations = <_StageCalcDestination>[
     _StageCalcDestination(

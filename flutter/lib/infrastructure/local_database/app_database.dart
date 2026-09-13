@@ -347,6 +347,19 @@ class PowerOutletTemplates extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// A single settings row (`id = 'app'`), instead of a generic key-value
+/// store - ADR-011 already rejected `shared_preferences` in favour of an
+/// explicit relational schema, and this app only has one setting so far.
+class AppSettings extends Table {
+  TextColumn get id => text()();
+  BoolColumn get autoSyncEnabled =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Projects,
@@ -365,6 +378,7 @@ class PowerOutletTemplates extends Table {
     LocationContacts,
     PowerPresets,
     PowerOutletTemplates,
+    AppSettings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -373,7 +387,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -429,6 +443,9 @@ class AppDatabase extends _$AppDatabase {
           projectTrusses.trussCatalogDeviceId,
         );
         await migrator.createTable(trussLoadChartEntries);
+      }
+      if (from < 13) {
+        await migrator.createTable(appSettings);
       }
     },
   );
