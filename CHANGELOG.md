@@ -6,6 +6,8 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.0+1 - 2026-09-14
+
 ### Dodano
 
 - Dodano wielokrotny wybor typow zlacz w katalogu urzadzen (ADR-030): pole "Typ zlacza" bylo wolnym tekstem, teraz to siatka `FilterChip` z zamknieta lista 23 typow (zasilanie: Schuko/CEE/Powerlock/powerCON, sygnal: XLR/SpeakON/EtherCON/BNC/Jack/RCA/HDMI/SDI/USB) - urzadzenie moze miec zaznaczonych kilka naraz. Stare wartosci tekstowe (w tym dane demo) migrowane automatycznie tam, gdzie da sie je jednoznacznie rozpoznac; nierozpoznane porzucane, nie zgadywane. Zero zmian schematu PocketBase. Schemat lokalny podniesiony do wersji `15`. `docs/CATALOG_IMPORT_GUIDE.md` zaktualizowany o pelna liste dozwolonych wartosci dla wsadu generowanego przez GPT.
@@ -27,6 +29,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ### Naprawiono
 
+- `AppMetadata.version` (pokazywane jako "Wersja" w ekranie "O aplikacji" i zapisywane w `manifest.appVersion` kazdego backupu) bylo od poczatku zahardkodowane jako `1.0.0`, calkowicie niezalezne od rzeczywistej wersji w `pubspec.yaml`. Zsynchronizowano z wersja release `0.3.0`.
 - Dodano brakujace `android.permission.INTERNET` w `AndroidManifest.xml` (ADR-022). Zweryfikowano w scalonym manifescie release builda, ze uprawnienia nie bylo ani z aplikacji, ani z zadnej biblioteki — `PocketBaseProjectSyncService` (ADR-017) na Androidzie konczylby kazde polaczenie `SecurityException`, niezaleznie od trybu builda. Blad niezauwazony wczesniej, bo sync byl dotychczas testowany tylko z Windows (`tool/push_demo_project.dart`), nie z samej aplikacji na telefonie.
 - Naprawiono bledne przypisanie fazy przy kaskadzie rozdzielnica -> rozdzielnica: `PowerCalculationService` sumowal obciazenie rozdzielnicy podrzednej wprost po jej wewnetrznych etykietach L1/L2/L3, ignorujac faze gniazda rodzica, przez ktore dziecko jest faktycznie podpiete. Rozdzielnica podrzedna o wejsciu 1-fazowym (kazde jej gniazdo wewnetrznie oznaczone jako "L1") podpieta do gniazda L2 lub L3 rodzica pokazywala caly prad na L1 rodzica zamiast na fazie, na ktorej fizycznie jest podpieta - niezgodnie z `docs/DATA_MODEL.md` ("Jesli dziecko podpiete do 1 fazy rodzica: suma wszystkich faz dziecka trafia na te jedna faze rodzica"). Dodano test regresyjny.
 
