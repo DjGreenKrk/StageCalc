@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../../shared/models/offline_sync_status.dart';
 
 class CatalogDevice {
@@ -12,7 +14,7 @@ class CatalogDevice {
     this.powerW = 0,
     this.currentA = 0,
     this.weightKg = 0,
-    this.connectorTypeId,
+    this.connectorTypeIds = const [],
     this.riggingPoints,
     this.loadChart = const [],
     this.syncStatus = OfflineSyncStatus.localOnly,
@@ -25,7 +27,14 @@ class CatalogDevice {
   final double powerW;
   final double currentA;
   final double weightKg;
-  final String? connectorTypeId;
+
+  /// The connector(s) this device itself is fitted with (e.g. a fixture with
+  /// a powerCON input and a 5-pin XLR DMX input) - a multi-select list from
+  /// the fixed [CatalogConnectorType] set. Purely informational/inventory
+  /// metadata today: nothing in the app's calculations reads this. Not to be
+  /// confused with the separate, AC-mains-only `ConnectorTypes` registry
+  /// used for project distro outlets.
+  final List<CatalogConnectorType> connectorTypeIds;
 
   /// Number of rigging points (hook attachment points) this device needs
   /// when it hangs from a truss, e.g. a moving head with two eyebolts. Null
@@ -50,7 +59,7 @@ class CatalogDevice {
     double? powerW,
     double? currentA,
     double? weightKg,
-    String? connectorTypeId,
+    List<CatalogConnectorType>? connectorTypeIds,
     int? riggingPoints,
     List<TrussLoadChartEntry>? loadChart,
     CatalogQuantityUnit? quantityUnit,
@@ -66,7 +75,7 @@ class CatalogDevice {
       powerW: powerW ?? this.powerW,
       currentA: currentA ?? this.currentA,
       weightKg: weightKg ?? this.weightKg,
-      connectorTypeId: connectorTypeId ?? this.connectorTypeId,
+      connectorTypeIds: connectorTypeIds ?? this.connectorTypeIds,
       riggingPoints: riggingPoints ?? this.riggingPoints,
       loadChart: loadChart ?? this.loadChart,
       quantityUnit: quantityUnit ?? this.quantityUnit,
@@ -85,7 +94,9 @@ class CatalogDevice {
       'powerW': powerW,
       'currentA': currentA,
       'weightKg': weightKg,
-      'connectorTypeId': connectorTypeId,
+      'connectorTypeIds': connectorTypeIds
+          .map((type) => type.toJson())
+          .toList(),
       'riggingPoints': riggingPoints,
       'loadChart': loadChart.map((entry) => entry.toJson()).toList(),
       'quantityUnit': quantityUnit.toJson(),
@@ -106,7 +117,7 @@ class CatalogDevice {
       powerW: (json['powerW'] as num? ?? 0).toDouble(),
       currentA: (json['currentA'] as num? ?? 0).toDouble(),
       weightKg: (json['weightKg'] as num? ?? 0).toDouble(),
-      connectorTypeId: json['connectorTypeId'] as String?,
+      connectorTypeIds: CatalogConnectorTypeJson.fromJsonField(json),
       riggingPoints: (json['riggingPoints'] as num?)?.toInt(),
       loadChart: loadChartJson
           .whereType<Map>()
@@ -198,4 +209,167 @@ extension CatalogQuantityUnitJson on CatalogQuantityUnit {
       orElse: () => CatalogQuantityUnit.pcs,
     );
   }
+}
+
+/// Fixed, multi-select list of connectors a catalog device can be fitted
+/// with (power AND signal connectors, since the catalog spans lighting,
+/// sound, multimedia, cabling and rigging - not just power distribution).
+enum CatalogConnectorType {
+  schuko16a,
+  cee16a3p,
+  cee16a5p,
+  cee32a3p,
+  cee32a5p,
+  cee63a5p,
+  cee125a5p,
+  powerlock200a,
+  powerlock400a,
+  powerCon,
+  powerConTrue1,
+  powerConTrue1Top,
+  xlr3,
+  xlr5,
+  speakonNl4,
+  speakonNl8,
+  etherCon,
+  bnc,
+  jack63,
+  rca,
+  hdmi,
+  sdi,
+  usb,
+  other,
+}
+
+extension CatalogConnectorTypeJson on CatalogConnectorType {
+  String toJson() => name;
+
+  String get label => switch (this) {
+    CatalogConnectorType.schuko16a => '16 A Schuko',
+    CatalogConnectorType.cee16a3p => '16 A CEE 3P',
+    CatalogConnectorType.cee16a5p => '16 A CEE 5P',
+    CatalogConnectorType.cee32a3p => '32 A CEE 3P',
+    CatalogConnectorType.cee32a5p => '32 A CEE 5P',
+    CatalogConnectorType.cee63a5p => '63 A CEE 5P',
+    CatalogConnectorType.cee125a5p => '125 A CEE 5P',
+    CatalogConnectorType.powerlock200a => 'Powerlock 200 A',
+    CatalogConnectorType.powerlock400a => 'Powerlock 400 A',
+    CatalogConnectorType.powerCon => 'powerCON',
+    CatalogConnectorType.powerConTrue1 => 'powerCON TRUE1',
+    CatalogConnectorType.powerConTrue1Top => 'powerCON TRUE1 TOP',
+    CatalogConnectorType.xlr3 => 'XLR 3-pin',
+    CatalogConnectorType.xlr5 => 'XLR 5-pin (DMX)',
+    CatalogConnectorType.speakonNl4 => 'SpeakON NL4',
+    CatalogConnectorType.speakonNl8 => 'SpeakON NL8',
+    CatalogConnectorType.etherCon => 'EtherCON (RJ45)',
+    CatalogConnectorType.bnc => 'BNC',
+    CatalogConnectorType.jack63 => 'Jack 6.3 mm',
+    CatalogConnectorType.rca => 'RCA (Cinch)',
+    CatalogConnectorType.hdmi => 'HDMI',
+    CatalogConnectorType.sdi => 'SDI',
+    CatalogConnectorType.usb => 'USB',
+    CatalogConnectorType.other => 'Inne',
+  };
+
+  /// Best-effort match of one raw stored/imported string to a connector
+  /// type: an exact `name` match first, then a normalized (lowercase,
+  /// letters/digits only) alias lookup so older free-text values (e.g. this
+  /// field's pre-multi-select data, or a slightly-off value typed by hand)
+  /// still resolve where reasonably possible. Returns null - dropped by
+  /// callers, never guessed wrong - when nothing matches.
+  static CatalogConnectorType? fromJson(String? value) {
+    if (value == null) {
+      return null;
+    }
+    for (final type in CatalogConnectorType.values) {
+      if (type.name == value) {
+        return type;
+      }
+    }
+    return _aliasesByNormalizedText[_normalize(value)];
+  }
+
+  /// Reads either the current `connectorTypeIds` array or, for a backup
+  /// produced before the multi-select change, the old single
+  /// `connectorTypeId` string field - wrapped into a one-item list via
+  /// [fromJson]'s alias matching, or dropped if it does not resolve.
+  static List<CatalogConnectorType> fromJsonField(Map<String, Object?> json) {
+    final list = json['connectorTypeIds'] as List<Object?>?;
+    if (list != null) {
+      return list
+          .whereType<String>()
+          .map(fromJson)
+          .whereType<CatalogConnectorType>()
+          .toList();
+    }
+    final legacy = fromJson(json['connectorTypeId'] as String?);
+    return legacy == null ? const [] : [legacy];
+  }
+
+  /// Decodes the raw string stored in the Drift/PocketBase text column,
+  /// which is either a JSON-encoded array of ids (current format) or a bare
+  /// legacy free-text value (pre-multi-select rows/records not yet
+  /// resynced) - see `CatalogDevices.connectorTypeIdsJson` in
+  /// `app_database.dart`.
+  static List<CatalogConnectorType> decodeStoredList(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return const [];
+    }
+    List<Object?> items;
+    try {
+      final decoded = jsonDecode(raw);
+      items = decoded is List ? decoded : [raw];
+    } on FormatException {
+      items = [raw];
+    }
+    return items
+        .whereType<String>()
+        .map(fromJson)
+        .whereType<CatalogConnectorType>()
+        .toList();
+  }
+
+  static String encodeStoredList(List<CatalogConnectorType> types) {
+    return jsonEncode(types.map((type) => type.name).toList());
+  }
+
+  static String _normalize(String value) {
+    return value.toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
+  }
+
+  static const _aliasesByNormalizedText = <String, CatalogConnectorType>{
+    'schuko': CatalogConnectorType.schuko16a,
+    'schuko16a': CatalogConnectorType.schuko16a,
+    '16aunischuko': CatalogConnectorType.schuko16a,
+    'cee16a3p': CatalogConnectorType.cee16a3p,
+    'cee16a5p': CatalogConnectorType.cee16a5p,
+    'cee32a3p': CatalogConnectorType.cee32a3p,
+    'cee32a5p': CatalogConnectorType.cee32a5p,
+    'cee63a5p': CatalogConnectorType.cee63a5p,
+    'cee125a5p': CatalogConnectorType.cee125a5p,
+    'powerlock200a': CatalogConnectorType.powerlock200a,
+    'powerlock400a': CatalogConnectorType.powerlock400a,
+    'powercon': CatalogConnectorType.powerCon,
+    'powercontrue1': CatalogConnectorType.powerConTrue1,
+    'powercontrue1top': CatalogConnectorType.powerConTrue1Top,
+    'xlr3': CatalogConnectorType.xlr3,
+    'xlr5': CatalogConnectorType.xlr5,
+    'dmx': CatalogConnectorType.xlr5,
+    'dmx5': CatalogConnectorType.xlr5,
+    'speakonnl4': CatalogConnectorType.speakonNl4,
+    'nl4': CatalogConnectorType.speakonNl4,
+    'speakonnl8': CatalogConnectorType.speakonNl8,
+    'nl8': CatalogConnectorType.speakonNl8,
+    'ethercon': CatalogConnectorType.etherCon,
+    'rj45': CatalogConnectorType.etherCon,
+    'bnc': CatalogConnectorType.bnc,
+    'jack63': CatalogConnectorType.jack63,
+    'jack': CatalogConnectorType.jack63,
+    'trs': CatalogConnectorType.jack63,
+    'rca': CatalogConnectorType.rca,
+    'cinch': CatalogConnectorType.rca,
+    'hdmi': CatalogConnectorType.hdmi,
+    'sdi': CatalogConnectorType.sdi,
+    'usb': CatalogConnectorType.usb,
+  };
 }

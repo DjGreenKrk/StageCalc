@@ -7660,6 +7660,18 @@ class $CatalogDevicesTable extends CatalogDevices
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _connectorTypeIdsJsonMeta =
+      const VerificationMeta('connectorTypeIdsJson');
+  @override
+  late final GeneratedColumn<String> connectorTypeIdsJson =
+      GeneratedColumn<String>(
+        'connector_type_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
   static const VerificationMeta _riggingPointsMeta = const VerificationMeta(
     'riggingPoints',
   );
@@ -7763,6 +7775,7 @@ class $CatalogDevicesTable extends CatalogDevices
     currentA,
     weightKg,
     connectorTypeId,
+    connectorTypeIdsJson,
     riggingPoints,
     quantityUnit,
     createdAt,
@@ -7851,6 +7864,15 @@ class $CatalogDevicesTable extends CatalogDevices
         connectorTypeId.isAcceptableOrUnknown(
           data['connector_type_id']!,
           _connectorTypeIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('connector_type_ids_json')) {
+      context.handle(
+        _connectorTypeIdsJsonMeta,
+        connectorTypeIdsJson.isAcceptableOrUnknown(
+          data['connector_type_ids_json']!,
+          _connectorTypeIdsJsonMeta,
         ),
       );
     }
@@ -7964,6 +7986,10 @@ class $CatalogDevicesTable extends CatalogDevices
         DriftSqlType.string,
         data['${effectivePrefix}connector_type_id'],
       ),
+      connectorTypeIdsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}connector_type_ids_json'],
+      )!,
       riggingPoints: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}rigging_points'],
@@ -8015,7 +8041,16 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   final double powerW;
   final double currentA;
   final double weightKg;
+
+  /// Superseded by [connectorTypeIdsJson] (multi-select connectors, see the
+  /// "Wiele zlacz naraz" decision) - no longer written by the app, kept only
+  /// so the schema-15 migration can read pre-existing values out of it.
   final String? connectorTypeId;
+
+  /// JSON-encoded array of `CatalogConnectorType` ids, e.g. `["powerCon",
+  /// "xlr5"]` - mirrors `PowerConnections.selectedPhasesJson`'s pattern of
+  /// storing a Dart enum list as one text column.
+  final String connectorTypeIdsJson;
   final int? riggingPoints;
   final String quantityUnit;
   final DateTime createdAt;
@@ -8035,6 +8070,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     required this.currentA,
     required this.weightKg,
     this.connectorTypeId,
+    required this.connectorTypeIdsJson,
     this.riggingPoints,
     required this.quantityUnit,
     required this.createdAt,
@@ -8063,6 +8099,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     if (!nullToAbsent || connectorTypeId != null) {
       map['connector_type_id'] = Variable<String>(connectorTypeId);
     }
+    map['connector_type_ids_json'] = Variable<String>(connectorTypeIdsJson);
     if (!nullToAbsent || riggingPoints != null) {
       map['rigging_points'] = Variable<int>(riggingPoints);
     }
@@ -8098,6 +8135,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       connectorTypeId: connectorTypeId == null && nullToAbsent
           ? const Value.absent()
           : Value(connectorTypeId),
+      connectorTypeIdsJson: Value(connectorTypeIdsJson),
       riggingPoints: riggingPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(riggingPoints),
@@ -8131,6 +8169,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       currentA: serializer.fromJson<double>(json['currentA']),
       weightKg: serializer.fromJson<double>(json['weightKg']),
       connectorTypeId: serializer.fromJson<String?>(json['connectorTypeId']),
+      connectorTypeIdsJson: serializer.fromJson<String>(
+        json['connectorTypeIdsJson'],
+      ),
       riggingPoints: serializer.fromJson<int?>(json['riggingPoints']),
       quantityUnit: serializer.fromJson<String>(json['quantityUnit']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -8155,6 +8196,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       'currentA': serializer.toJson<double>(currentA),
       'weightKg': serializer.toJson<double>(weightKg),
       'connectorTypeId': serializer.toJson<String?>(connectorTypeId),
+      'connectorTypeIdsJson': serializer.toJson<String>(connectorTypeIdsJson),
       'riggingPoints': serializer.toJson<int?>(riggingPoints),
       'quantityUnit': serializer.toJson<String>(quantityUnit),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -8177,6 +8219,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     double? currentA,
     double? weightKg,
     Value<String?> connectorTypeId = const Value.absent(),
+    String? connectorTypeIdsJson,
     Value<int?> riggingPoints = const Value.absent(),
     String? quantityUnit,
     DateTime? createdAt,
@@ -8198,6 +8241,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     connectorTypeId: connectorTypeId.present
         ? connectorTypeId.value
         : this.connectorTypeId,
+    connectorTypeIdsJson: connectorTypeIdsJson ?? this.connectorTypeIdsJson,
     riggingPoints: riggingPoints.present
         ? riggingPoints.value
         : this.riggingPoints,
@@ -8227,6 +8271,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       connectorTypeId: data.connectorTypeId.present
           ? data.connectorTypeId.value
           : this.connectorTypeId,
+      connectorTypeIdsJson: data.connectorTypeIdsJson.present
+          ? data.connectorTypeIdsJson.value
+          : this.connectorTypeIdsJson,
       riggingPoints: data.riggingPoints.present
           ? data.riggingPoints.value
           : this.riggingPoints,
@@ -8257,6 +8304,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ..write('currentA: $currentA, ')
           ..write('weightKg: $weightKg, ')
           ..write('connectorTypeId: $connectorTypeId, ')
+          ..write('connectorTypeIdsJson: $connectorTypeIdsJson, ')
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('createdAt: $createdAt, ')
@@ -8281,6 +8329,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     currentA,
     weightKg,
     connectorTypeId,
+    connectorTypeIdsJson,
     riggingPoints,
     quantityUnit,
     createdAt,
@@ -8304,6 +8353,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           other.currentA == this.currentA &&
           other.weightKg == this.weightKg &&
           other.connectorTypeId == this.connectorTypeId &&
+          other.connectorTypeIdsJson == this.connectorTypeIdsJson &&
           other.riggingPoints == this.riggingPoints &&
           other.quantityUnit == this.quantityUnit &&
           other.createdAt == this.createdAt &&
@@ -8325,6 +8375,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
   final Value<double> currentA;
   final Value<double> weightKg;
   final Value<String?> connectorTypeId;
+  final Value<String> connectorTypeIdsJson;
   final Value<int?> riggingPoints;
   final Value<String> quantityUnit;
   final Value<DateTime> createdAt;
@@ -8345,6 +8396,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.currentA = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.connectorTypeId = const Value.absent(),
+    this.connectorTypeIdsJson = const Value.absent(),
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -8366,6 +8418,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.currentA = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.connectorTypeId = const Value.absent(),
+    this.connectorTypeIdsJson = const Value.absent(),
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     required DateTime createdAt,
@@ -8390,6 +8443,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Expression<double>? currentA,
     Expression<double>? weightKg,
     Expression<String>? connectorTypeId,
+    Expression<String>? connectorTypeIdsJson,
     Expression<int>? riggingPoints,
     Expression<String>? quantityUnit,
     Expression<DateTime>? createdAt,
@@ -8411,6 +8465,8 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       if (currentA != null) 'current_a': currentA,
       if (weightKg != null) 'weight_kg': weightKg,
       if (connectorTypeId != null) 'connector_type_id': connectorTypeId,
+      if (connectorTypeIdsJson != null)
+        'connector_type_ids_json': connectorTypeIdsJson,
       if (riggingPoints != null) 'rigging_points': riggingPoints,
       if (quantityUnit != null) 'quantity_unit': quantityUnit,
       if (createdAt != null) 'created_at': createdAt,
@@ -8434,6 +8490,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Value<double>? currentA,
     Value<double>? weightKg,
     Value<String?>? connectorTypeId,
+    Value<String>? connectorTypeIdsJson,
     Value<int?>? riggingPoints,
     Value<String>? quantityUnit,
     Value<DateTime>? createdAt,
@@ -8455,6 +8512,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       currentA: currentA ?? this.currentA,
       weightKg: weightKg ?? this.weightKg,
       connectorTypeId: connectorTypeId ?? this.connectorTypeId,
+      connectorTypeIdsJson: connectorTypeIdsJson ?? this.connectorTypeIdsJson,
       riggingPoints: riggingPoints ?? this.riggingPoints,
       quantityUnit: quantityUnit ?? this.quantityUnit,
       createdAt: createdAt ?? this.createdAt,
@@ -8500,6 +8558,11 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     if (connectorTypeId.present) {
       map['connector_type_id'] = Variable<String>(connectorTypeId.value);
     }
+    if (connectorTypeIdsJson.present) {
+      map['connector_type_ids_json'] = Variable<String>(
+        connectorTypeIdsJson.value,
+      );
+    }
     if (riggingPoints.present) {
       map['rigging_points'] = Variable<int>(riggingPoints.value);
     }
@@ -8543,6 +8606,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('currentA: $currentA, ')
           ..write('weightKg: $weightKg, ')
           ..write('connectorTypeId: $connectorTypeId, ')
+          ..write('connectorTypeIdsJson: $connectorTypeIdsJson, ')
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('createdAt: $createdAt, ')
@@ -20508,6 +20572,7 @@ typedef $$CatalogDevicesTableCreateCompanionBuilder =
       Value<double> currentA,
       Value<double> weightKg,
       Value<String?> connectorTypeId,
+      Value<String> connectorTypeIdsJson,
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
       required DateTime createdAt,
@@ -20530,6 +20595,7 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<double> currentA,
       Value<double> weightKg,
       Value<String?> connectorTypeId,
+      Value<String> connectorTypeIdsJson,
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
       Value<DateTime> createdAt,
@@ -20635,6 +20701,11 @@ class $$CatalogDevicesTableFilterComposer
 
   ColumnFilters<String> get connectorTypeId => $composableBuilder(
     column: $table.connectorTypeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get connectorTypeIdsJson => $composableBuilder(
+    column: $table.connectorTypeIdsJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20764,6 +20835,11 @@ class $$CatalogDevicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get connectorTypeIdsJson => $composableBuilder(
+    column: $table.connectorTypeIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get riggingPoints => $composableBuilder(
     column: $table.riggingPoints,
     builder: (column) => ColumnOrderings(column),
@@ -20847,6 +20923,11 @@ class $$CatalogDevicesTableAnnotationComposer
 
   GeneratedColumn<String> get connectorTypeId => $composableBuilder(
     column: $table.connectorTypeId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get connectorTypeIdsJson => $composableBuilder(
+    column: $table.connectorTypeIdsJson,
     builder: (column) => column,
   );
 
@@ -20947,6 +21028,7 @@ class $$CatalogDevicesTableTableManager
                 Value<double> currentA = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<String?> connectorTypeId = const Value.absent(),
+                Value<String> connectorTypeIdsJson = const Value.absent(),
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -20967,6 +21049,7 @@ class $$CatalogDevicesTableTableManager
                 currentA: currentA,
                 weightKg: weightKg,
                 connectorTypeId: connectorTypeId,
+                connectorTypeIdsJson: connectorTypeIdsJson,
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 createdAt: createdAt,
@@ -20989,6 +21072,7 @@ class $$CatalogDevicesTableTableManager
                 Value<double> currentA = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<String?> connectorTypeId = const Value.absent(),
+                Value<String> connectorTypeIdsJson = const Value.absent(),
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 required DateTime createdAt,
@@ -21009,6 +21093,7 @@ class $$CatalogDevicesTableTableManager
                 currentA: currentA,
                 weightKg: weightKg,
                 connectorTypeId: connectorTypeId,
+                connectorTypeIdsJson: connectorTypeIdsJson,
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 createdAt: createdAt,

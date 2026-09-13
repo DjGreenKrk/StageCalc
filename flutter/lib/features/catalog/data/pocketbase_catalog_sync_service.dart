@@ -79,7 +79,7 @@ class PocketBaseCatalogSyncService {
       'power_w': local.powerW,
       'current_a': local.currentA,
       'weight_kg': local.weightKg,
-      'connector_type_id': local.connectorTypeId,
+      'connector_type_id': local.connectorTypeIdsJson,
       'rigging_points': local.riggingPoints,
       'quantity_unit': local.quantityUnit,
       'created_at': toRemoteIso(local.createdAt),
@@ -149,7 +149,9 @@ class PocketBaseCatalogSyncService {
               powerW: Value(remote.getDoubleValue('power_w')),
               currentA: Value(remote.getDoubleValue('current_a')),
               weightKg: Value(remote.getDoubleValue('weight_kg')),
-              connectorTypeId: Value(_nullable(remote, 'connector_type_id')),
+              connectorTypeIdsJson: Value(
+                remote.getStringValue('connector_type_id', '[]'),
+              ),
               riggingPoints: Value(
                 remote.data['rigging_points'] == null
                     ? null

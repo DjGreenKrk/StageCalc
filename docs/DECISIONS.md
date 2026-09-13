@@ -390,6 +390,37 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-030: Wielokrotny wybor typow zlacz w katalogu urzadzen
+
+Status: accepted
+
+Kontekst:
+
+- Pole `CatalogDevice.connectorTypeId` bylo od poczatku wolnym tekstem (`TextField` w formularzu katalogu, `String?` w schemacie) - `docs/CATALOG_IMPORT_GUIDE.md` (przygotowany na potrzeby generowania wsadu katalogu przez GPT) wprost to udokumentowal, wraz z ostrzezeniem, ze to inne pojecie niz zamkniety slownik `ConnectorTypes` (Schuko/CEE/Powerlock) uzywany dla gniazd rozdzielnic w projekcie.
+- Uzytkownik okreslil to jako blad i poprosil o zamiane na liste wielokrotnego wyboru. Zapytany, czy urzadzenie ma miec dokladnie jedno zlacze z listy, czy moze ich miec wiecej naraz jednoczesnie, wybral **prawdziwy multi-select** - jedno urzadzenie moze miec zaznaczonych kilka typow zlacz rownoczesnie (np. fixture z wejsciem `powerCON` i osobnym wejsciem DMX `XLR 5-pin`).
+
+Decyzja:
+
+- Nowy enum `CatalogConnectorType` (`features/catalog/domain/entities/catalog_device.dart`) - 23 wartosci obejmujace zarowno zlacza zasilania (Schuko, CEE 16/32/63/125A, Powerlock 200/400A, powerCON/TRUE1/TRUE1 TOP) jak i sygnalowe (XLR3/5, SpeakON NL4/NL8, EtherCON, BNC, Jack 6.3mm, RCA, HDMI, SDI, USB) plus `other` - szerszy niz `ConnectorTypes` (uzywany tylko dla gniazd rozdzielnic), bo katalog obejmuje oswietlenie/dzwiek/multimedia/okablowanie/rigging, nie tylko zasilanie.
+- `CatalogDevice.connectorTypeId` (`String?`) zastapione przez `connectorTypeIds` (`List<CatalogConnectorType>`, domyslnie puste) - w formularzu katalogu (`catalog_screen.dart`) wolne pole tekstowe zastapiono siatka `FilterChip` (ten sam wzorzec co selektor faz w dialogu polaczenia) z etykieta kazdej wartosci enuma.
+- **Nic nigdy nie jest zgadywane przy odczycie**: `CatalogConnectorTypeJson.fromJson` probuje dokladnego dopasowania do nazwy enuma, potem znormalizowanego (male litery, tylko litery/cyfry) dopasowania do tabeli aliasow pokrywajacej stare dane demo (`powercon_true1`, `powercon`, `cee_32a_5p`) i typowe warianty zapisu (`RJ45`->`etherCon`, `DMX`->`xlr5`, `cinch`->`rca` itd.) - wartosc, ktora niczego nie dopasuje, jest **po cichu pomijana**, nigdy zgadywana na sile. Ta sama funkcja obsluguje: odczyt starego pojedynczego pola `connectorTypeId` z backupu sprzed tej decyzji, odczyt kolumny Drift/PocketBase (patrz nizej) i walidacje wsadu z `docs/CATALOG_IMPORT_GUIDE.md`.
+- Schemat lokalny: nowa kolumna `CatalogDevices.connectorTypeIdsJson` (TEXT, JSON-owa tablica id-kow enuma, dokladnie ten sam wzorzec co `PowerConnections.selectedPhasesJson` z ADR-026) - podniesiono schemat bazy do wersji `15`. Stara kolumna `connectorTypeId` **zostaje w schemacie, ale nie jest juz nigdzie zapisywana** - migracja `if (from < 15)` dodaje nowa kolumne i dla kazdego istniejacego wiersza z niepustym starym polem zapisuje je jako jednoelementowa tablice JSON w nowej kolumnie (bez proby walidacji na tym poziomie - schemat lokalny celowo nie zna domeny/enumow, zgodnie z jego dotychczasowa architektura); to `CatalogConnectorTypeJson.decodeStoredList` (warstwa repozytorium) dopiero interpretuje ten surowy tekst na liste enumow, odrzucajac to, czego nie rozpozna.
+- PocketBase: **zero zmian schematu**. `catalog_devices.connector_type_id` byl juz zwyklym polem `text` (bez ograniczen), wiec dalej przechowuje ten sam tekst co lokalna kolumna `connectorTypeIdsJson` (teraz tablica JSON zamiast pojedynczej wartosci) - push/pull w `PocketBaseCatalogSyncService` po prostu przekazuja ten string 1:1 miedzy lokalna kolumna a zdalnym polem, bez zadnej interpretacji enumow po stronie synchronizacji.
+- `docs/CATALOG_IMPORT_GUIDE.md` zaktualizowany: `connectorTypeId` (string) -> `connectorTypeIds` (tablica), z pelna tabela 23 dozwolonych wartosci i jawnym ostrzezeniem, ze nierozpoznana wartosc zostanie po cichu odrzucona przy imporcie.
+
+Uzasadnienie:
+
+- Multi-select (a nie jeden wybor z listy) odzwierciedla realny sprzet: wiele urzadzen ma jednoczesnie zlacze zasilania i osobne zlacze sygnalowe/danych, i uzytkownik jawnie potwierdzil, ze o to chodzi.
+- Zachowanie surowego tekstu w kolumnie Drift/PocketBase (zamiast np. osobnej tabeli relacyjnej) unika jakiejkolwiek migracji schematu po stronie PocketBase - dokladnie ten sam kompromis co `selectedPhasesJson` w ADR-026, teraz konsekwentnie zastosowany drugi raz.
+- Rozdzielenie "surowy tekst w warstwie Drift" od "interpretacja na enum w warstwie repozytorium" (zamiast probowac zwalidowac/zaimportowac enum juz w pliku migracji) utrzymuje `app_database.dart` wolny od zaleznosci domenowych - zgodnie z juz istniejaca, celowa architektura tego pliku (zaden inny plik w `infrastructure/local_database` nie importuje enumow z `features/`).
+- "Po cichu odrzuc niepasujaca wartosc" (zamiast rzucic wyjatek albo zgadywac najblizsza) jest spojne z tym, jak `CatalogDeviceCategoryJson.fromJson`/`CatalogQuantityUnitJson.fromJson` juz dzialaja w tym samym pliku (fallback na wartosc domyslna) - ale tutaj "domyslna wartosc" dla listy to po prostu pominiecie elementu, nie zgadywanie jednego z 23 zlacz.
+
+Konsekwencje:
+
+- Urzadzenia z (jakimkolwiek) wolnym tekstem w starym polu `connectorTypeId`, ktory nie pasuje do zadnego z 23 nowych id ani ich aliasow, **traca to zlacze po migracji** (staja sie widoczne jako urzadzenie bez zaznaczonych zlacz) - jednorazowy koszt uporzadkowania nieograniczonego pola. Surowy tekst nie ginie calkowicie: stara kolumna `connectorTypeId` zostaje w bazie nietkniete, wiec teoretycznie odzyskiwalny recznie (SQL), ale appka go juz nigdzie nie pokazuje ani nie czyta.
+- Zamkniete 23 wartosci moga z czasem okazac sie niewystarczajace dla rzadszego sprzetu (np. Speakon NL2, XLR4) - dodanie kolejnej wartosci enuma jest jednak tania, addytywna zmiana (nowy element `CatalogConnectorType`, nowa etykieta, opcjonalnie nowy alias), nie wymaga kolejnej migracji schematu.
+- Pole nadal nie jest uzywane w zadnych obliczeniach mocy/faz/obciazenia - to czysto informacyjna/inwentarzowa etykieta, jak przed ta decyzja.
+
 ## ADR-029: Wizualny uklad patchera (kafelki gniazd)
 
 Status: accepted

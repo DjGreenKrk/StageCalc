@@ -15,6 +15,7 @@ import 'package:stagecalc/features/clients/data/drift_client_repository.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
 import 'package:stagecalc/features/settings/presentation/about_screen.dart';
 import 'package:stagecalc/shared/widgets/greencrew_button.dart';
+import 'package:stagecalc/shared/widgets/greencrew_card.dart';
 import 'package:stagecalc/features/projects/domain/entities/power_models.dart';
 import 'package:stagecalc/features/projects/domain/entities/project_models.dart';
 import 'package:stagecalc/infrastructure/local_database/app_database.dart'
@@ -166,6 +167,82 @@ void main() {
 
     expect(find.text('LED Par RGBW'), findsOneWidget);
     expect(find.text('Generic / 4 szt.'), findsOneWidget);
+  });
+
+  testWidgets('picks multiple connector types for a catalog device', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Dodaj urzadzenie'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nazwa'),
+      'Testowy fixture',
+    );
+
+    final powerConChip = find.widgetWithText(FilterChip, 'powerCON');
+    await tester.ensureVisible(powerConChip);
+    await tester.pumpAndSettle();
+    await tester.tap(powerConChip);
+    await tester.pumpAndSettle();
+
+    final xlr5Chip = find.widgetWithText(FilterChip, 'XLR 5-pin (DMX)');
+    await tester.ensureVisible(xlr5Chip);
+    await tester.pumpAndSettle();
+    await tester.tap(xlr5Chip);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FilterChip>(powerConChip).selected, isTrue);
+    expect(tester.widget<FilterChip>(xlr5Chip).selected, isTrue);
+
+    await tester.tap(find.text('Dodaj').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Testowy fixture'), findsOneWidget);
+
+    final newDeviceCard = find.ancestor(
+      of: find.text('Testowy fixture'),
+      matching: find.byType(GreenCrewCard),
+    );
+    await tester.tap(
+      find.descendant(
+        of: newDeviceCard,
+        matching: find.byTooltip('Edytuj urzadzenie'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilterChip>(find.widgetWithText(FilterChip, 'powerCON'))
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<FilterChip>(
+            find.widgetWithText(FilterChip, 'XLR 5-pin (DMX)'),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<FilterChip>(find.widgetWithText(FilterChip, 'HDMI'))
+          .selected,
+      isFalse,
+    );
   });
 
   testWidgets('switches project editor to patcher view', (tester) async {

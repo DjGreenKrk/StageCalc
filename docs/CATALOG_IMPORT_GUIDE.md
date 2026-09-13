@@ -65,7 +65,7 @@ Minimalny szkielet:
 | `powerW` | liczba | nie | `0` | Moc pobierana w watach, przy zalozeniu 230 V (1 faza). Dla urzadzen bez poboru mocy (rozdzielnice, kable, akcesoria riggingowe) wpisz `0`. |
 | `currentA` | liczba | nie | `0` | Prad w amperach. Aplikacja normalnie przelicza to automatycznie z `powerW` przy 230 V (`A = W / 230`) - **przelicz to samodzielnie w wygenerowanych danych**, zeby oba pola byly spojne: `currentA = powerW / 230`, zaokraglone do 1 miejsca po przecinku. |
 | `weightKg` | liczba | nie | `0` | Masa w kg. Uzywana m.in. do liczenia obciazenia kratownic. |
-| `connectorTypeId` | string lub `null` | nie | `null` | **Wolny tekst opisujacy zlacze urzadzenia** (np. `"powercon_true1"`, `"powercon"`, `"XLR5"`, `"schuko"`). To pole NIE jest ograniczone do zamknietej listy i nie jest dzis uzywane w zadnych obliczeniach - traktuj je jako informacyjna etykiete, spojna nazewniczo z innymi wpisami w tym samym wsadzie. Nie mylic z typami zlacz zasilania rozdzielnic w projekcie (`schuko_16a`, `cee_16a_3p`, `cee_16a_5p`, `cee_32a_5p`, `cee_63a_5p`, `cee_125a_5p`, `powerlock_200a`, `powerlock_400a`) - to osobny, zamkniety slownik uzywany tylko przy gniazdach rozdzielnic w projektach, nie w katalogu urzadzen. |
+| `connectorTypeIds` | tablica stringow (enum) | nie | `[]` | **Lista zlacz urzadzenia - urzadzenie moze miec ich kilka naraz** (np. fixture z wejsciem powerCON i wejsciem DMX XLR5 ma obie wartosci). Kazdy element musi byc jedna z wartosci z tabeli "Typy zlacz" nizej - to zamknieta lista wielokrotnego wyboru, NIE wolny tekst. Nie mylic z typami zlacz zasilania rozdzielnic w projekcie (`schuko_16a`, `cee_16a_3p`, `cee_16a_5p`, `cee_32a_5p`, `cee_63a_5p`, `cee_125a_5p`, `powerlock_200a`, `powerlock_400a` jako osobne, pojedyncze pole `connectorTypeId` gdzie indziej w aplikacji) - to inny, wiekszy slownik obejmujacy tez zlacza sygnalowe, uzywany tylko w katalogu urzadzen. |
 | `riggingPoints` | liczba calkowita lub `null` | nie | `null` | Liczba punktow zaczepienia (hakow) potrzebnych, gdy urzadzenie wisi na kratownicy, np. `2` dla ruchomej glowy z dwoma oczkami. Zostaw puste/`null`, jesli nieznane lub nie dotyczy (wiekszosc urzadzen). |
 | `loadChart` | tablica obiektow | nie | `[]` | **Tylko dla `category: "rigging"` reprezentujacych model kratownicy** (nie akcesoria typu zacisk). Kazdy wpis: `{ "id": string, "lengthM": liczba, "pointLoadKg": liczba, "distributedLoadKgPerM": liczba }` - punkt tabeli nosnosci producenta dla danej dlugosci przesla. Dla urzadzen niebedacych kratownica zostaw pusta tablice `[]` lub pomin pole. |
 | `quantityUnit` | string (enum) | nie | `"pcs"` | `"pcs"` (sztuki) albo `"meters"` (metry, np. dla kabli sprzedawanych/liczonych na metry). |
@@ -83,6 +83,44 @@ Minimalny szkielet:
 | `rigging` | Rigging | Konstrukcje wsporcze, zaciski, kratownice (kratownice moga dodatkowo miec `loadChart`). |
 | `other` | Inne | Wszystko, co nie pasuje do powyzszych. |
 
+### Typy zlacz (`connectorTypeIds[]`)
+
+Zamknieta lista - kazdy element `connectorTypeIds` musi byc dokladnie jedna z
+tych wartosci (pisownia ma znaczenie):
+
+| Wartosc | Etykieta w UI |
+|---|---|
+| `schuko16a` | 16 A Schuko |
+| `cee16a3p` | 16 A CEE 3P |
+| `cee16a5p` | 16 A CEE 5P |
+| `cee32a3p` | 32 A CEE 3P |
+| `cee32a5p` | 32 A CEE 5P |
+| `cee63a5p` | 63 A CEE 5P |
+| `cee125a5p` | 125 A CEE 5P |
+| `powerlock200a` | Powerlock 200 A |
+| `powerlock400a` | Powerlock 400 A |
+| `powerCon` | powerCON |
+| `powerConTrue1` | powerCON TRUE1 |
+| `powerConTrue1Top` | powerCON TRUE1 TOP |
+| `xlr3` | XLR 3-pin |
+| `xlr5` | XLR 5-pin (DMX) |
+| `speakonNl4` | SpeakON NL4 |
+| `speakonNl8` | SpeakON NL8 |
+| `etherCon` | EtherCON (RJ45) |
+| `bnc` | BNC |
+| `jack63` | Jack 6.3 mm |
+| `rca` | RCA (Cinch) |
+| `hdmi` | HDMI |
+| `sdi` | SDI |
+| `usb` | USB |
+| `other` | Inne |
+
+Jesli urzadzenie faktycznie nie ma zadnego istotnego zlacza do zaznaczenia
+(albo nieznane), zostaw `connectorTypeIds` jako pusta tablice `[]` zamiast
+zgadywac - wartosc, ktora nie jest z tej listy, zostanie **po cichu
+pominieta** przy imporcie, wiec lepiej nie dodawac zlacza w ogole niz dodac
+zle nazwane.
+
 ## Przykladowe pelne wpisy
 
 ```json
@@ -98,7 +136,7 @@ Minimalny szkielet:
         "powerW": 2000,
         "currentA": 8.7,
         "weightKg": 36,
-        "connectorTypeId": "powercon_true1",
+        "connectorTypeIds": ["powerConTrue1", "xlr5"],
         "riggingPoints": 2,
         "quantityUnit": "pcs",
         "createdAt": "2026-09-13T12:00:00.000Z",
@@ -112,7 +150,7 @@ Minimalny szkielet:
         "powerW": 0,
         "currentA": 0,
         "weightKg": 0.4,
-        "connectorTypeId": "XLR5",
+        "connectorTypeIds": ["xlr5"],
         "quantityUnit": "meters",
         "createdAt": "2026-09-13T12:00:00.000Z",
         "updatedAt": "2026-09-13T12:00:00.000Z"
@@ -145,8 +183,10 @@ Minimalny szkielet:
 2. Kazdy obiekt w `data.catalogDevices` ma unikalne `id` w obrebie calego
    pliku.
 3. Kazdy obiekt ma `name`, `createdAt`, `updatedAt` (te trzy sa wymagane).
-4. `category` i `quantityUnit` (jesli podane) uzywaja wylacznie wartosci z
-   tabel powyzej - nic innego, nie po polsku.
+4. `category`, `quantityUnit` i kazdy element `connectorTypeIds` (jesli
+   podane) uzywaja wylacznie wartosci z tabel powyzej - nic innego, nie po
+   polsku, dokladnie taka pisownia (wielkosc liter ma znaczenie dla
+   `connectorTypeIds`).
 5. `currentA` jest spojne z `powerW` (`currentA = powerW / 230`), chyba ze
    uzytkownik podal inna wartosc wprost.
 6. `loadChart` wystepuje tylko przy urzadzeniach `category: "rigging"`,
@@ -157,10 +197,10 @@ Minimalny szkielet:
 
 ## Czego nie robic
 
-- Nie wymyslac wartosci `connectorTypeId` z zamknietego slownika typow
-  zlacz rozdzielnic (`cee_32a_5p` itp.) dla zwyklych urzadzen - to pole jest
-  wolnym tekstem specyficznym dla katalogu, nie ma zwiazku z tamtym
-  slownikiem.
+- Nie wpisywac do `connectorTypeIds` niczego spoza tabeli "Typy zlacz"
+  powyzej (np. wolnego tekstu jak dawniej, albo wartosci wymyslonej na
+  poczekaniu) - taka wartosc zostanie po cichu odrzucona przy imporcie, wiec
+  lepiej pominac zlacze niz podac zle nazwane.
 - Nie zmieniac ani nie zgadywac `id` juz istniejacych w katalogu
   uzytkownika, chyba ze celowo ma to byc aktualizacja tego konkretnego
   wpisu (import nadpisuje po `id`).

@@ -51,7 +51,11 @@ class DriftCatalogRepository implements CatalogRepository {
               powerW: Value(device.powerW),
               currentA: Value(device.currentA),
               weightKg: Value(device.weightKg),
-              connectorTypeId: Value(device.connectorTypeId),
+              connectorTypeIdsJson: Value(
+                CatalogConnectorTypeJson.encodeStoredList(
+                  device.connectorTypeIds,
+                ),
+              ),
               riggingPoints: Value(device.riggingPoints),
               quantityUnit: Value(device.quantityUnit.toJson()),
               createdAt: Value(device.createdAt),
@@ -149,7 +153,9 @@ class DriftCatalogRepository implements CatalogRepository {
       powerW: row.powerW,
       currentA: row.currentA,
       weightKg: row.weightKg,
-      connectorTypeId: row.connectorTypeId,
+      connectorTypeIds: CatalogConnectorTypeJson.decodeStoredList(
+        row.connectorTypeIdsJson,
+      ),
       riggingPoints: row.riggingPoints,
       loadChart: loadChartRows.map(_mapLoadChartEntry).toList(),
       quantityUnit: CatalogQuantityUnitJson.fromJson(row.quantityUnit),
@@ -177,7 +183,9 @@ class DriftCatalogRepository implements CatalogRepository {
       powerW: Value(device.powerW),
       currentA: Value(device.currentA),
       weightKg: Value(device.weightKg),
-      connectorTypeId: Value(device.connectorTypeId),
+      connectorTypeIdsJson: Value(
+        CatalogConnectorTypeJson.encodeStoredList(device.connectorTypeIds),
+      ),
       riggingPoints: Value(device.riggingPoints),
       quantityUnit: Value(device.quantityUnit.toJson()),
       createdAt: Value(device.createdAt),

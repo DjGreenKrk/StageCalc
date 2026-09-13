@@ -64,6 +64,43 @@ void main() {
   );
 
   test(
+    'saves and loads multiple connector types on one device (multi-select)',
+    () async {
+      final now = DateTime(2026, 9, 13);
+      const deviceId = 'multi_connector_fixture';
+      await repository.saveDevice(
+        CatalogDevice(
+          id: deviceId,
+          name: 'Multi-connector fixture',
+          quantityUnit: CatalogQuantityUnit.pcs,
+          connectorTypeIds: const [
+            CatalogConnectorType.powerConTrue1,
+            CatalogConnectorType.xlr5,
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final loaded = await repository.getDevices();
+      final loadedDevice = loaded.singleWhere((d) => d.id == deviceId);
+
+      expect(loadedDevice.connectorTypeIds, [
+        CatalogConnectorType.powerConTrue1,
+        CatalogConnectorType.xlr5,
+      ]);
+
+      await repository.saveDevice(
+        loadedDevice.copyWith(connectorTypeIds: const []),
+      );
+      final afterClearing = (await repository.getDevices()).singleWhere(
+        (d) => d.id == deviceId,
+      );
+      expect(afterClearing.connectorTypeIds, isEmpty);
+    },
+  );
+
+  test(
     'saves, loads, and soft deletes a truss load chart with its device',
     () async {
       final now = DateTime(2026, 7, 5);

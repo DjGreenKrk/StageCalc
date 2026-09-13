@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import 'connection/connection.dart';
@@ -200,7 +202,17 @@ class CatalogDevices extends Table {
   RealColumn get powerW => real().withDefault(const Constant(0))();
   RealColumn get currentA => real().withDefault(const Constant(0))();
   RealColumn get weightKg => real().withDefault(const Constant(0))();
+
+  /// Superseded by [connectorTypeIdsJson] (multi-select connectors, see the
+  /// "Wiele zlacz naraz" decision) - no longer written by the app, kept only
+  /// so the schema-15 migration can read pre-existing values out of it.
   TextColumn get connectorTypeId => text().nullable()();
+
+  /// JSON-encoded array of `CatalogConnectorType` ids, e.g. `["powerCon",
+  /// "xlr5"]` - mirrors `PowerConnections.selectedPhasesJson`'s pattern of
+  /// storing a Dart enum list as one text column.
+  TextColumn get connectorTypeIdsJson =>
+      text().withDefault(const Constant('[]'))();
   IntColumn get riggingPoints => integer().nullable()();
   TextColumn get quantityUnit => text().withDefault(const Constant('pcs'))();
   DateTimeColumn get createdAt => dateTime()();
@@ -406,7 +418,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -470,6 +482,32 @@ class AppDatabase extends _$AppDatabase {
         await migrator.addColumn(clients, clients.ownerId);
         await migrator.addColumn(projects, projects.ownerId);
         await migrator.addColumn(appSettings, appSettings.authSessionData);
+      }
+      if (from < 15) {
+        await migrator.addColumn(
+          catalogDevices,
+          catalogDevices.connectorTypeIdsJson,
+        );
+        // Carries each device's old single free-text connector value
+        // forward as a one-item JSON array, verbatim - `CatalogDevice`'s
+        // `CatalogConnectorTypeJson.decodeStoredList` (not this
+        // domain-agnostic schema file) is what turns that raw text into a
+        // real `CatalogConnectorType`, dropping it if it does not match any
+        // known id or alias.
+        final rows = await select(catalogDevices).get();
+        for (final row in rows) {
+          final legacy = row.connectorTypeId;
+          if (legacy == null || legacy.trim().isEmpty) {
+            continue;
+          }
+          await (update(
+            catalogDevices,
+          )..where((table) => table.id.equals(row.id))).write(
+            CatalogDevicesCompanion(
+              connectorTypeIdsJson: Value(jsonEncode([legacy])),
+            ),
+          );
+        }
       }
     },
   );

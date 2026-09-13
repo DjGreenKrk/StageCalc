@@ -189,7 +189,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       powerW: result.powerW,
       currentA: result.currentA,
       weightKg: result.weightKg,
-      connectorTypeId: result.connectorTypeId,
+      connectorTypeIds: result.connectorTypeIds,
       riggingPoints: result.riggingPoints,
       loadChart: result.loadChart,
       quantityUnit: result.quantityUnit,
@@ -347,7 +347,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   late final TextEditingController _powerController;
   late final TextEditingController _currentController;
   late final TextEditingController _weightController;
-  late final TextEditingController _connectorController;
+  late final Set<CatalogConnectorType> _connectorTypes;
   late final TextEditingController _riggingPointsController;
   late List<_LoadChartRowControllers> _loadChartRows;
   late CatalogDeviceCategory _category;
@@ -371,9 +371,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _weightController = TextEditingController(
       text: (device?.weightKg ?? 0).toStringAsFixed(1),
     );
-    _connectorController = TextEditingController(
-      text: device?.connectorTypeId ?? '',
-    );
+    _connectorTypes = {...?device?.connectorTypeIds};
     _riggingPointsController = TextEditingController(
       text: device?.riggingPoints?.toString() ?? '',
     );
@@ -394,7 +392,6 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _powerController.dispose();
     _currentController.dispose();
     _weightController.dispose();
-    _connectorController.dispose();
     _riggingPointsController.dispose();
     for (final row in _loadChartRows) {
       row.dispose();
@@ -470,9 +467,33 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _connectorController,
-              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Typy zlacz (mozna wybrac kilka)',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final type in CatalogConnectorType.values)
+                  FilterChip(
+                    label: Text(type.label),
+                    selected: _connectorTypes.contains(type),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _connectorTypes.add(type);
+                        } else {
+                          _connectorTypes.remove(type);
+                        }
+                      });
+                    },
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
             TextField(
@@ -607,7 +628,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
         powerW: _parseNumber(_powerController.text),
         currentA: _parseNumber(_currentController.text),
         weightKg: _parseNumber(_weightController.text),
-        connectorTypeId: _emptyToNull(_connectorController.text),
+        connectorTypeIds: _connectorTypes.toList(),
         riggingPoints: int.tryParse(_riggingPointsController.text.trim()),
         loadChart: _category == CatalogDeviceCategory.rigging
             ? _loadChartRows
@@ -703,7 +724,7 @@ class _CatalogDeviceFormResult {
     required this.weightKg,
     required this.quantityUnit,
     this.manufacturer,
-    this.connectorTypeId,
+    this.connectorTypeIds = const [],
     this.riggingPoints,
     this.loadChart = const [],
   });
@@ -714,7 +735,7 @@ class _CatalogDeviceFormResult {
   final double powerW;
   final double currentA;
   final double weightKg;
-  final String? connectorTypeId;
+  final List<CatalogConnectorType> connectorTypeIds;
   final int? riggingPoints;
   final List<TrussLoadChartEntry> loadChart;
   final CatalogQuantityUnit quantityUnit;
