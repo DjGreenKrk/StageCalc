@@ -335,8 +335,8 @@ Prace:
 
 Wynik:
 
-- Funkcjonalny odpowiednik obecnego wizualnego patchera.
-- Obecny stan przejsciowy: edytor projektu ma osobne widoki `Sprzet` i `Patcher`; mozna dodac rozdzielnice w projekcie z presetu, polaczyc grupe z gniazdem, zobaczyc podstawowe obciazenia faz/gniazd i ostrzezenie o wielokrotnym uzyciu gniazda. Ponowne uzycie zajetego gniazda wymaga swiadomego wlaczenia tej opcji.
+- Funkcjonalny odpowiednik obecnego wizualnego patchera, a od ADR-029 tez wizualny: gniazda sa klikalna siatka kafelkow, nie tylko informacyjnymi pigulkami.
+- Obecny stan: edytor projektu ma osobne widoki `Sprzet` i `Patcher`; mozna dodac rozdzielnice w projekcie z presetu, polaczyc grupe z gniazdem (dotykajac kafelka gniazda albo zbiorowym dialogiem "Polacz"), zobaczyc podstawowe obciazenia faz/gniazd i ostrzezenie o wielokrotnym uzyciu gniazda, edytowac notatki polaczen. Ponowne uzycie zajetego gniazda wymaga swiadomego wlaczenia tej opcji.
 
 Prace:
 

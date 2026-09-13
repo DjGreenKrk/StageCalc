@@ -390,6 +390,36 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-029: Wizualny uklad patchera (kafelki gniazd)
+
+Status: accepted
+
+Kontekst:
+
+- `docs/FEATURE_SCOPE.md` od poczatku definiowal "Wizualny patcher": pokazuje gniazda rozdzielnicy, laczy gniazdo z grupa lub inna rozdzielnica, wybiera fazy dla grup 1F podlaczanych do gniazda "All", wykrywa zajetosc faz, pozwala dodawac notatki do polaczen. Etap 6 (`docs/MIGRATION_PLAN.md`) dostarczyl "funkcjonalny odpowiednik" tej specyfikacji (mozna laczyc, widac obciazenia, ostrzezenia), ale bez wizualnej, klikalnej reprezentacji gniazd - byly to czysto informacyjne pigulki (`Chip`), a jedynym sposobem laczenia byl osobny przycisk "Polacz" otwierajacy zbiorowy dialog (wybierz cel, potem gniazda). Notatki do polaczen (`PowerConnection.notes`, juz w schemacie od ADR-017) nigdy nie mialy zadnego UI do wpisania czy odczytania.
+- Backlog (`docs/IMPLEMENTATION_STATUS.md`, "Nastepny krok") mial to jako pozycje nr 1: "Przygotowac bardziej wizualny uklad patchera".
+- Uzytkownik potwierdzil kierunek: gniazda staja sie wieksza, klikalna siatka kafelkow, a dotychczasowy zbiorowy dialog "Polacz" i lista "Polaczenia" zostaja bez zmian jako opcja do podlaczenia jednej grupy do wielu gniazd naraz.
+
+Decyzja:
+
+- `_OutletTile` (`presentation/project_editor/distro_widgets.dart`) zastepuje dawny `_OutletLoadChip`: kafelek ok. 140px szerokosci pokazujacy etykiete fazy, kropki zajetosci L1/L2/L3 dla gniazd fazy "All" (wyliczane z `PowerConnection.selectedPhases`, a dla polaczen z rozdzielnica podrzedna - jako zajmujace wszystkie trzy fazy), ikone stanu (plus/blyskawica/ostrzezenie/rozlaczony-duplikat), nazwe podlaczonego celu (lub "Wolne"), nazwe gniazda i odczyt A/max A. Kolor tla/obwodki reuzywaja tej samej hierarchii stanow co poprzednio (bezpieczny/ostrzezenie/blad/zajete), tylko na wiekszym, klikalnym `InkWell`.
+- Dotkniecie pustego gniazda otwiera nowy `_QuickConnectDialog` (`connection_widgets.dart`) - lzejszy odpowiednik `_ConnectionDialog` z JUZ USTALONYM zrodlem (ta rozdzielnica/to gniazdo): trzeba wybrac tylko cel (grupa albo pasujaca rozdzielnica podrzedna, filtrowana po zgodnosci `inputConnectorTypeId`), opcjonalnie fazy dla gniazd "All" (pomijajac fazy juz zajete) i notatke poczatkowa.
+- Dotkniecie juz podlaczonego gniazda otwiera `_OutletDetailsDialog`: lista wszystkich polaczen na tym gniezdzie (zwykle jedno, wiecej dla wspoldzielonego gniazda "All"), kazde z nazwa celu, fazami, edytowalnym polem notatek (przycisk zapisu przy kazdym) i przyciskiem "Rozlacz". Gdy gniazdo nie jest jeszcze pelne (wolna faza na "All"), dodatkowy przycisk "Dodaj kolejne" otwiera `_QuickConnectDialog` z juz zajetymi fazami wykluczonymi z wyboru.
+- `PowerConnection.notes` dostaje wreszcie UI do zapisu i odczytu (nowa metoda `ProjectEditorController.editConnectionNotes`) - wypelnia luke z oryginalnej specyfikacji "Wizualny patcher", ktora nigdy wczesniej nie miala zadnego pola notatek w interfejsie.
+- Istniejacy przycisk "Polacz" + `_ConnectionDialog` (zbiorowe podlaczenie jednej grupy do wielu wolnych gniazd naraz, z przelacznikiem "Pokaz uzyte zlacza") oraz lista "Polaczenia" ponizej pozostaja bez zmian - dwie sciezki do tego samego efektu koincydujace w jednym ekranie: kafelki gniazd do szybkiego, pojedynczego podlaczenia/podgladu, zbiorowy dialog do hurtowego przypisania.
+
+Uzasadnienie:
+
+- Zachowanie zbiorowego dialogu bez zmian (zamiast probowac przerobic go pod jeden ustalony outlet) unika ryzykownej zmiany w juz dzialajacym, przetestowanym kodzie i utrzymuje jego unikalna, wygodna funkcje (jedna grupa -> wiele gniazd jednym kliknieciem), ktorej model "kliknij gniazdo" nie odtwarza naturalnie.
+- Osobny `_QuickConnectDialog` zamiast parametryzowania `_ConnectionDialog` dodatkowym "ustalonym zrodlem" jest prostszy: `_ConnectionDialog` filtruje gniazda po celu, `_QuickConnectDialog` filtruje cele po (ustalonym) gniezdzie - odwrotny kierunek dopasowania, ktory jako jeden dialog z trybami bylby trudniejszy do zrozumienia niz dwa male, jednoznaczne dialogi.
+- Model "tap pusty = polacz, tap zajety = szczegoly" (zamiast jednego trybu z przelacznikiem) odzwierciedla naturalne oczekiwanie uzytkownika patrzacego na diagram patch bay - kafelek juz pokazuje, czy jest zajety, wiec dotkniecie go powinno pokazac to, co juz jest podlaczone, a nie od razu proponowac nadpisanie.
+
+Konsekwencje:
+
+- To nadal siatka kafelkow, nie prawdziwy diagram z liniami laczacymi gniazdo z grupa/rozdzielnica (jak np. edytor patch bay z liniami polaczen) - `docs/FEATURE_SCOPE.md` tego nie wymagal wprost, a rysowanie polaczen na canvasie miedzy odleglymi kartami rozdzielnic byloby duzo wiekszym, osobnym projektem UI.
+- `PatchValidationService.isOutletDuplicated` nadal traktuje kazde gniazdo z wiecej niz jednym polaczeniem jednolicie jako ostrzezenie "uzyte wiele razy", niezaleznie od tego, czy to legalne wspoldzielenie faz gniazda "All", czy przypadkowy duplikat - `_OutletDetailsDialog` pokazuje wszystkie polaczenia niezaleznie od tego ostrzezenia, wiec uzytkownik i tak widzi pelny obraz, ale sama etykieta ostrzezenia nie rozroznia tych dwoch przypadkow (ten sam, juz istniejacy uproszczony model sprzed tej decyzji).
+- Nowy test widgetowy (`test/widget_test.dart`, "tapping an outlet tile connects and disconnects it") pokrywa pelny cykl: pusty kafelek -> quick connect z notatka -> szczegoly pokazujace notatke -> rozlaczenie -> pusty kafelek ponownie.
+
 ## ADR-028: Prawdziwa autoryzacja PocketBase (konta osobiste, wlasciciel danych)
 
 Status: accepted

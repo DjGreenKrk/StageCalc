@@ -257,6 +257,92 @@ void main() {
     expect(reloaded.connections, isEmpty);
   });
 
+  testWidgets('tapping an outlet tile connects and disconnects it (visual '
+      'patcher)', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final repository = DriftProjectRepository(database);
+    final now = DateTime(2026, 9, 13);
+    await repository.saveProject(
+      Project(
+        id: 'outlet_tile_test_project',
+        name: 'Projekt kafelkow gniazd',
+        createdAt: now,
+        updatedAt: now,
+        groups: const [ProjectGroup(id: 'group_1', name: 'Front', items: [])],
+        distros: const [
+          ProjectDistro(
+            id: 'distro_1',
+            name: 'Rozdzielnia testowa',
+            outlets: [
+              ProjectOutlet(
+                id: 'outlet_1',
+                name: 'Schuko L1.1',
+                connectorTypeId: 'schuko_16a',
+                phase: PowerPhase.l1,
+                maxCurrentA: 16,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Projekt kafelkow gniazd'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Patcher'));
+    await tester.pumpAndSettle();
+
+    final outletTile = find.byKey(const ValueKey('outlet_tile_outlet_1'));
+    expect(outletTile, findsOneWidget);
+    expect(find.text('Wolne'), findsOneWidget);
+
+    // Tap the empty outlet tile - opens the quick-connect dialog instead of
+    // the bulk "Polacz" dialog.
+    await tester.tap(outletTile);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Polacz Schuko L1.1'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Notatki (opcjonalnie)'),
+      'DMX kanal 12',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Polacz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wolne'), findsNothing);
+    expect(
+      find.descendant(of: outletTile, matching: find.text('Front')),
+      findsOneWidget,
+    );
+
+    // Tap the now-patched outlet tile - opens connection details instead of
+    // quick-connect again.
+    await tester.tap(outletTile);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gniazdo Schuko L1.1'), findsOneWidget);
+    expect(find.text('DMX kanal 12'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Rozlacz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wolne'), findsOneWidget);
+
+    final reloaded = (await repository.getProjects()).firstWhere(
+      (project) => project.id == 'outlet_tile_test_project',
+    );
+    expect(reloaded.connections, isEmpty);
+  });
+
   testWidgets('creates a JSON backup file from the About screen', (
     tester,
   ) async {

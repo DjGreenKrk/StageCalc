@@ -254,6 +254,7 @@ class ProjectEditorController extends ChangeNotifier {
     String? targetDistroId,
     required List<ProjectConnectionSource> sources,
     List<PowerPhase> selectedPhases = const [],
+    String? notes,
   }) {
     final now = DateTime.now();
     final connections = [
@@ -267,6 +268,7 @@ class ProjectEditorController extends ChangeNotifier {
           targetGroupId: targetGroupId,
           targetDistroId: targetDistroId,
           selectedPhases: selectedPhases,
+          notes: notes,
         ),
     ];
 
@@ -296,6 +298,39 @@ class ProjectEditorController extends ChangeNotifier {
             .toList(),
         updatedAt: now,
       ),
+    );
+  }
+
+  Future<void> editConnectionNotes(PowerConnection connection, String? notes) {
+    final now = DateTime.now();
+    return _persist(
+      _project.copyWith(
+        connections: _project.connections
+            .map(
+              (candidate) => candidate.id == connection.id
+                  ? _connectionWithNotes(candidate, notes)
+                  : candidate,
+            )
+            .toList(),
+        updatedAt: now,
+      ),
+    );
+  }
+
+  PowerConnection _connectionWithNotes(
+    PowerConnection connection,
+    String? notes,
+  ) {
+    return PowerConnection(
+      id: connection.id,
+      phaseId: connection.phaseId,
+      sourceDistroId: connection.sourceDistroId,
+      sourceOutletId: connection.sourceOutletId,
+      targetType: connection.targetType,
+      targetGroupId: connection.targetGroupId,
+      targetDistroId: connection.targetDistroId,
+      selectedPhases: connection.selectedPhases,
+      notes: notes,
     );
   }
 

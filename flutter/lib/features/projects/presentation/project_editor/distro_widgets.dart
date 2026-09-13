@@ -3,16 +3,19 @@ part of '../project_editor_screen.dart';
 class _DistroCard extends StatelessWidget {
   const _DistroCard({
     required this.distro,
+    required this.project,
     required this.isPowerSource,
     required this.outletLoads,
     required this.patchValidation,
     required this.onEdit,
     required this.onDelete,
+    required this.onOutletTap,
     this.phaseLoad,
     this.distroLoad,
   });
 
   final ProjectDistro distro;
+  final Project project;
   final bool isPowerSource;
   final PowerPhaseLoad? phaseLoad;
   final DistroPowerLoad? distroLoad;
@@ -20,6 +23,48 @@ class _DistroCard extends StatelessWidget {
   final PatchValidationResult patchValidation;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final void Function(ProjectOutlet outlet, List<PowerConnection> connections)
+  onOutletTap;
+
+  List<PowerConnection> _connectionsForOutlet(String outletId) {
+    return project.connections
+        .where((connection) => connection.sourceOutletId == outletId)
+        .toList();
+  }
+
+  List<String> _targetNamesFor(List<PowerConnection> connections) {
+    return [
+      for (final connection in connections)
+        if (connection.targetType == PowerConnectionTargetType.distro)
+          project.distros
+                  .where(
+                    (candidate) => candidate.id == connection.targetDistroId,
+                  )
+                  .firstOrNull
+                  ?.name ??
+              'Nieznana rozdzielnica'
+        else
+          project.groups
+                  .where(
+                    (candidate) => candidate.id == connection.targetGroupId,
+                  )
+                  .firstOrNull
+                  ?.name ??
+              'Nieznana grupa',
+    ];
+  }
+
+  Widget _buildOutletTile(ProjectOutlet outlet) {
+    final connections = _connectionsForOutlet(outlet.id);
+    return _OutletTile(
+      outlet: outlet,
+      connections: connections,
+      targetNames: _targetNamesFor(connections),
+      load: outletLoads[outlet.id],
+      isDuplicated: patchValidation.isOutletDuplicated(outlet.id),
+      onTap: () => onOutletTap(outlet, connections),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,12 +171,7 @@ class _DistroCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final outlet in distro.outlets)
-                _OutletLoadChip(
-                  outlet: outlet,
-                  load: outletLoads[outlet.id],
-                  isDuplicated: patchValidation.isOutletDuplicated(outlet.id),
-                ),
+              for (final outlet in distro.outlets) _buildOutletTile(outlet),
             ],
           ),
         ],
@@ -204,47 +244,155 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _OutletLoadChip extends StatelessWidget {
-  const _OutletLoadChip({
+/// Tappable "patch point" for a single outlet (visual patcher, backlog item
+/// "bardziej wizualny uklad patchera") - a bigger, more diagram-like tile
+/// than a plain chip, mirroring `docs/FEATURE_SCOPE.md`'s original "Wizualny
+/// patcher" spec: shows the outlet's phase, occupancy, load and (if
+/// connected) its target at a glance, and reacts to taps instead of only
+/// being informational.
+class _OutletTile extends StatelessWidget {
+  const _OutletTile({
     required this.outlet,
+    required this.connections,
+    required this.targetNames,
     required this.isDuplicated,
+    required this.onTap,
     this.load,
   });
 
   final ProjectOutlet outlet;
+  final List<PowerConnection> connections;
+  final List<String> targetNames;
   final bool isDuplicated;
+  final VoidCallback onTap;
   final OutletPowerLoad? load;
+
+  Set<PowerPhase> get _occupiedPhases {
+    final phases = <PowerPhase>{};
+    for (final connection in connections) {
+      if (connection.targetType == PowerConnectionTargetType.distro) {
+        phases.addAll(const [PowerPhase.l1, PowerPhase.l2, PowerPhase.l3]);
+      } else {
+        phases.addAll(connection.selectedPhases);
+      }
+    }
+    return phases;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final outletLoad = load;
-    final isOverloaded = outletLoad?.isOverloaded ?? false;
-    final isNearLimit = outletLoad?.isNearLimit ?? false;
-    final hasLoad = outletLoad?.hasLoad ?? false;
     final colorScheme = Theme.of(context).colorScheme;
-    final phaseLoad = outletLoad?.maxLoadedPhaseA ?? 0;
+    final isPatched = connections.isNotEmpty;
+    final isOverloaded = load?.isOverloaded ?? false;
+    final isNearLimit = load?.isNearLimit ?? false;
+    final phaseLoad = load?.maxLoadedPhaseA ?? 0;
+    final showPhaseDots = outlet.phase == PowerPhase.all;
 
-    return Chip(
-      avatar: Icon(
-        isDuplicated
-            ? Icons.link_off
-            : isOverloaded || isNearLimit
-            ? Icons.warning_amber
-            : hasLoad
-            ? Icons.bolt
-            : Icons.power_outlined,
-        size: 16,
-      ),
-      backgroundColor: isDuplicated || isOverloaded
-          ? colorScheme.errorContainer
-          : isNearLimit
-          ? Colors.amber.shade700
-          : hasLoad
-          ? colorScheme.primaryContainer
-          : null,
-      label: Text(
-        '${outlet.name} ${_phaseLabel(outlet.phase)} '
-        '${phaseLoad.toStringAsFixed(1)}/${outlet.maxCurrentA.toStringAsFixed(0)} A',
+    final Color backgroundColor;
+    final Color borderColor;
+    if (isDuplicated || isOverloaded) {
+      backgroundColor = colorScheme.errorContainer;
+      borderColor = colorScheme.error;
+    } else if (isNearLimit) {
+      backgroundColor = Colors.amber.shade700.withValues(alpha: 0.2);
+      borderColor = Colors.amber.shade700;
+    } else if (isPatched) {
+      backgroundColor = colorScheme.primaryContainer;
+      borderColor = colorScheme.primary;
+    } else {
+      backgroundColor = Colors.transparent;
+      borderColor = colorScheme.outlineVariant;
+    }
+
+    return Material(
+      key: ValueKey('outlet_tile_${outlet.id}'),
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          width: 140,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _phaseLabel(outlet.phase),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  if (showPhaseDots)
+                    Row(
+                      children: [
+                        for (final phase in const [
+                          PowerPhase.l1,
+                          PowerPhase.l2,
+                          PowerPhase.l3,
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(left: 2),
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _occupiedPhases.contains(phase)
+                                    ? colorScheme.primary
+                                    : colorScheme.outlineVariant,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Icon(
+                isDuplicated
+                    ? Icons.link_off
+                    : isOverloaded || isNearLimit
+                    ? Icons.warning_amber
+                    : isPatched
+                    ? Icons.bolt
+                    : Icons.add_circle_outline,
+                size: 18,
+                color: isDuplicated || isOverloaded ? colorScheme.error : null,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isPatched ? targetNames.join(', ') : 'Wolne',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                outlet.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                '${phaseLoad.toStringAsFixed(1)}/${outlet.maxCurrentA.toStringAsFixed(0)} A',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(fontSize: 9),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

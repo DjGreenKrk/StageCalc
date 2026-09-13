@@ -485,6 +485,7 @@ class _ConnectionResult {
     required this.selectedPhases,
     this.targetGroupId,
     this.targetDistroId,
+    this.notes,
   });
 
   final PowerConnectionTargetType targetType;
@@ -492,6 +493,7 @@ class _ConnectionResult {
   final String? targetDistroId;
   final List<_ConnectionSourceResult> sources;
   final List<PowerPhase> selectedPhases;
+  final String? notes;
 }
 
 class _ConnectionSourceResult {
@@ -502,4 +504,401 @@ class _ConnectionSourceResult {
 
   final String sourceDistroId;
   final String sourceOutletId;
+}
+
+/// Single-outlet counterpart to [_ConnectionDialog] (visual patcher): opened
+/// by tapping one outlet tile directly, so the source is already fixed -
+/// only the target (and, for "All"-phase outlets, which free phases) needs
+/// picking. [occupiedPhases] excludes phases already used by another
+/// connection on the same outlet when adding a second/third 1F load to it.
+class _QuickConnectDialog extends StatefulWidget {
+  const _QuickConnectDialog({
+    required this.project,
+    required this.sourceDistro,
+    required this.outlet,
+    required this.occupiedPhases,
+  });
+
+  final Project project;
+  final ProjectDistro sourceDistro;
+  final ProjectOutlet outlet;
+  final Set<PowerPhase> occupiedPhases;
+
+  @override
+  State<_QuickConnectDialog> createState() => _QuickConnectDialogState();
+}
+
+class _QuickConnectDialogState extends State<_QuickConnectDialog> {
+  late PowerConnectionTargetType _targetType;
+  String? _groupId;
+  String? _targetDistroId;
+  final Set<PowerPhase> _selectedPhases = {};
+  final _notesController = TextEditingController();
+
+  List<ProjectDistro> get _availableTargetDistros {
+    return widget.project.distros
+        .where(
+          (distro) =>
+              distro.id != widget.sourceDistro.id &&
+              distro.inputConnectorTypeId == widget.outlet.connectorTypeId,
+        )
+        .toList();
+  }
+
+  bool get _showPhaseSelector =>
+      widget.outlet.phase == PowerPhase.all &&
+      _targetType == PowerConnectionTargetType.group;
+
+  @override
+  void initState() {
+    super.initState();
+    _targetType = widget.project.groups.isNotEmpty
+        ? PowerConnectionTargetType.group
+        : PowerConnectionTargetType.distro;
+    _groupId = widget.project.groups.firstOrNull?.id;
+    _targetDistroId = _availableTargetDistros.firstOrNull?.id;
+    _selectFirstFreePhase();
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _selectFirstFreePhase() {
+    _selectedPhases.clear();
+    for (final phase in const [PowerPhase.l1, PowerPhase.l2, PowerPhase.l3]) {
+      if (!widget.occupiedPhases.contains(phase)) {
+        _selectedPhases.add(phase);
+        return;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasGroups = widget.project.groups.isNotEmpty;
+    final availableTargetDistros = _availableTargetDistros;
+    final canSubmit = _targetType == PowerConnectionTargetType.group
+        ? _groupId != null &&
+              (!_showPhaseSelector || _selectedPhases.isNotEmpty)
+        : _targetDistroId != null;
+
+    return AlertDialog(
+      title: Text('Polacz ${widget.outlet.name}'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasGroups && availableTargetDistros.isNotEmpty) ...[
+              SegmentedButton<PowerConnectionTargetType>(
+                segments: const [
+                  ButtonSegment(
+                    value: PowerConnectionTargetType.group,
+                    icon: Icon(Icons.view_module_outlined),
+                    label: Text('Grupa'),
+                  ),
+                  ButtonSegment(
+                    value: PowerConnectionTargetType.distro,
+                    icon: Icon(Icons.electrical_services),
+                    label: Text('Rozdzielnica'),
+                  ),
+                ],
+                selected: {_targetType},
+                onSelectionChanged: (selection) {
+                  setState(() => _targetType = selection.single);
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (_targetType == PowerConnectionTargetType.group)
+              if (!hasGroups)
+                const Text('Brak grup urzadzen w projekcie.')
+              else
+                DropdownButtonFormField<String>(
+                  initialValue: _groupId,
+                  decoration: const InputDecoration(labelText: 'Grupa'),
+                  items: widget.project.groups
+                      .map(
+                        (group) => DropdownMenuItem(
+                          value: group.id,
+                          child: Text(group.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => _groupId = value),
+                )
+            else if (availableTargetDistros.isEmpty)
+              const Text('Brak pasujacych rozdzielnic (niezgodne wejscie).')
+            else
+              DropdownButtonFormField<String>(
+                initialValue: _targetDistroId,
+                decoration: const InputDecoration(
+                  labelText: 'Rozdzielnica podrzedna',
+                ),
+                items: availableTargetDistros
+                    .map(
+                      (distro) => DropdownMenuItem(
+                        value: distro.id,
+                        child: Text(distro.name),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) => setState(() => _targetDistroId = value),
+              ),
+            if (_showPhaseSelector) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final phase in const [
+                    PowerPhase.l1,
+                    PowerPhase.l2,
+                    PowerPhase.l3,
+                  ])
+                    FilterChip(
+                      label: Text(_phaseLabel(phase)),
+                      selected: _selectedPhases.contains(phase),
+                      onSelected: widget.occupiedPhases.contains(phase)
+                          ? null
+                          : (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedPhases.add(phase);
+                                } else if (_selectedPhases.length > 1) {
+                                  _selectedPhases.remove(phase);
+                                }
+                              });
+                            },
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _notesController,
+              decoration: const InputDecoration(
+                labelText: 'Notatki (opcjonalnie)',
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Anuluj'),
+        ),
+        FilledButton(
+          onPressed: canSubmit ? _submit : null,
+          child: const Text('Polacz'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    final notes = _notesController.text.trim();
+    Navigator.of(context).pop(
+      _ConnectionResult(
+        targetType: _targetType,
+        targetGroupId: _targetType == PowerConnectionTargetType.group
+            ? _groupId
+            : null,
+        targetDistroId: _targetType == PowerConnectionTargetType.distro
+            ? _targetDistroId
+            : null,
+        sources: [
+          _ConnectionSourceResult(
+            sourceDistroId: widget.sourceDistro.id,
+            sourceOutletId: widget.outlet.id,
+          ),
+        ],
+        selectedPhases: _showPhaseSelector
+            ? _selectedPhases.toList()
+            : const [],
+        notes: notes.isEmpty ? null : notes,
+      ),
+    );
+  }
+}
+
+enum _OutletDetailsAction { addAnother }
+
+/// Details view for an already-patched outlet tile (visual patcher): shows
+/// every connection on that outlet (normally one, more if it is a shared
+/// "All"-phase outlet), lets notes be edited and each connection
+/// disconnected, and offers "Dodaj kolejne" when the outlet still has a free
+/// phase.
+class _OutletDetailsDialog extends StatefulWidget {
+  const _OutletDetailsDialog({
+    required this.project,
+    required this.outlet,
+    required this.connections,
+    required this.onSaveNotes,
+    required this.onDisconnect,
+  });
+
+  final Project project;
+  final ProjectOutlet outlet;
+  final List<PowerConnection> connections;
+  final Future<void> Function(PowerConnection connection, String? notes)
+  onSaveNotes;
+  final Future<void> Function(PowerConnection connection) onDisconnect;
+
+  @override
+  State<_OutletDetailsDialog> createState() => _OutletDetailsDialogState();
+}
+
+class _OutletDetailsDialogState extends State<_OutletDetailsDialog> {
+  late List<PowerConnection> _connections;
+  late final Map<String, TextEditingController> _notesControllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _connections = List.of(widget.connections);
+    _notesControllers = {
+      for (final connection in _connections)
+        connection.id: TextEditingController(text: connection.notes ?? ''),
+    };
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _notesControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  bool get _isFull {
+    if (widget.outlet.phase != PowerPhase.all) {
+      return _connections.isNotEmpty;
+    }
+    final occupied = <PowerPhase>{};
+    for (final connection in _connections) {
+      if (connection.targetType == PowerConnectionTargetType.distro) {
+        return true;
+      }
+      occupied.addAll(connection.selectedPhases);
+    }
+    return occupied.length >= 3;
+  }
+
+  String _targetName(PowerConnection connection) {
+    if (connection.targetType == PowerConnectionTargetType.distro) {
+      return widget.project.distros
+              .where((distro) => distro.id == connection.targetDistroId)
+              .firstOrNull
+              ?.name ??
+          'Nieznana rozdzielnica';
+    }
+    return widget.project.groups
+            .where((group) => group.id == connection.targetGroupId)
+            .firstOrNull
+            ?.name ??
+        'Nieznana grupa';
+  }
+
+  Future<void> _disconnect(PowerConnection connection) async {
+    await widget.onDisconnect(connection);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _connections.removeWhere((candidate) => candidate.id == connection.id);
+    });
+    if (_connections.isEmpty && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _saveNotes(PowerConnection connection) async {
+    final text = _notesControllers[connection.id]?.text.trim();
+    await widget.onSaveNotes(
+      connection,
+      (text == null || text.isEmpty) ? null : text,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Gniazdo ${widget.outlet.name}'),
+      content: SizedBox(
+        width: 360,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final connection in _connections) ...[
+                Row(
+                  children: [
+                    Icon(
+                      connection.targetType == PowerConnectionTargetType.distro
+                          ? Icons.electrical_services
+                          : Icons.view_module_outlined,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _targetName(connection),
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Rozlacz',
+                      icon: const Icon(Icons.link_off),
+                      onPressed: () => _disconnect(connection),
+                    ),
+                  ],
+                ),
+                if (connection.selectedPhases.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 8),
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final phase in connection.selectedPhases)
+                          Chip(label: Text(_phaseLabel(phase))),
+                      ],
+                    ),
+                  ),
+                TextField(
+                  controller: _notesControllers[connection.id],
+                  decoration: InputDecoration(
+                    labelText: 'Notatki',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.save_outlined),
+                      tooltip: 'Zapisz notatke',
+                      onPressed: () => _saveNotes(connection),
+                    ),
+                  ),
+                  maxLines: 2,
+                ),
+                const Divider(height: 24),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        if (!_isFull)
+          TextButton(
+            onPressed: () =>
+                Navigator.of(context).pop(_OutletDetailsAction.addAnother),
+            child: const Text('Dodaj kolejne'),
+          ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Zamknij'),
+        ),
+      ],
+    );
+  }
 }

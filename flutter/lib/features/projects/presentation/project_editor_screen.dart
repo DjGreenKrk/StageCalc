@@ -210,6 +210,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                 for (final distro in project.distros) ...[
                   _DistroCard(
                     distro: distro,
+                    project: project,
                     isPowerSource: !project.connections.any(
                       (connection) =>
                           connection.targetType ==
@@ -222,6 +223,8 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                     patchValidation: patchValidation,
                     onEdit: () => _openEditDistroDialog(distro),
                     onDelete: () => _deleteDistro(distro),
+                    onOutletTap: (outlet, connections) =>
+                        _openOutletTap(distro, outlet, connections),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -516,7 +519,11 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       return;
     }
 
-    await _runMutation(
+    await _addConnectionsFromResult(result);
+  }
+
+  Future<void> _addConnectionsFromResult(_ConnectionResult result) {
+    return _runMutation(
       () => _controller.addConnections(
         targetType: result.targetType,
         targetGroupId: result.targetGroupId,
@@ -529,12 +536,94 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
             ),
         ],
         selectedPhases: result.selectedPhases,
+        notes: result.notes,
       ),
     );
   }
 
   Future<void> _deleteConnection(PowerConnection connection) async {
     await _runMutation(() => _controller.deleteConnection(connection));
+  }
+
+  /// Tapping a "patch point" outlet tile (visual patcher): an empty outlet
+  /// opens a quick single-outlet connect dialog, an already-patched one
+  /// opens its details (target, notes, disconnect) instead of the bulk
+  /// "Polacz" dialog used for the "Polaczenia" list below.
+  void _openOutletTap(
+    ProjectDistro distro,
+    ProjectOutlet outlet,
+    List<PowerConnection> connections,
+  ) {
+    if (connections.isEmpty) {
+      _openQuickConnectDialog(distro, outlet, occupiedPhases: const {});
+    } else {
+      _openOutletDetailsDialog(distro, outlet, connections);
+    }
+  }
+
+  Future<void> _openQuickConnectDialog(
+    ProjectDistro distro,
+    ProjectOutlet outlet, {
+    required Set<PowerPhase> occupiedPhases,
+  }) async {
+    final result = await showDialog<_ConnectionResult>(
+      context: context,
+      builder: (context) => _QuickConnectDialog(
+        project: _controller.project,
+        sourceDistro: distro,
+        outlet: outlet,
+        occupiedPhases: occupiedPhases,
+      ),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    await _addConnectionsFromResult(result);
+  }
+
+  Future<void> _openOutletDetailsDialog(
+    ProjectDistro distro,
+    ProjectOutlet outlet,
+    List<PowerConnection> connections,
+  ) async {
+    final action = await showDialog<_OutletDetailsAction>(
+      context: context,
+      builder: (context) => _OutletDetailsDialog(
+        project: _controller.project,
+        outlet: outlet,
+        connections: connections,
+        onSaveNotes: (connection, notes) => _runMutation(
+          () => _controller.editConnectionNotes(connection, notes),
+        ),
+        onDisconnect: (connection) =>
+            _runMutation(() => _controller.deleteConnection(connection)),
+      ),
+    );
+
+    if (!mounted || action != _OutletDetailsAction.addAnother) {
+      return;
+    }
+
+    final occupiedPhases = <PowerPhase>{};
+    for (final connection in connections) {
+      if (connection.targetType == PowerConnectionTargetType.distro) {
+        occupiedPhases.addAll(const [
+          PowerPhase.l1,
+          PowerPhase.l2,
+          PowerPhase.l3,
+        ]);
+      } else {
+        occupiedPhases.addAll(connection.selectedPhases);
+      }
+    }
+
+    await _openQuickConnectDialog(
+      distro,
+      outlet,
+      occupiedPhases: occupiedPhases,
+    );
   }
 
   Future<void> _openAddGroupDialog() async {
