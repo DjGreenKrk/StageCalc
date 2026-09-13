@@ -13,6 +13,7 @@ import '../domain/entities/project_models.dart';
 import '../../../infrastructure/files/local_file_writer/local_file_writer.dart';
 import '../domain/services/patch_validation_service.dart';
 import '../domain/services/power_calculation_service.dart';
+import '../domain/services/project_pdf_report_service.dart';
 import '../domain/services/project_report_service.dart';
 import '../domain/services/project_totals_service.dart';
 import '../domain/services/truss_load_service.dart';
@@ -49,6 +50,7 @@ class ProjectEditorScreen extends StatefulWidget {
 class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   late final ProjectEditorController _controller;
   static const _reportService = ProjectReportService();
+  static const _pdfReportService = ProjectPdfReportService();
 
   @override
   void initState() {
@@ -98,6 +100,11 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
               tooltip: 'Eksportuj raport tekstowy',
               onPressed: _exportReport,
               icon: const Icon(Icons.summarize_outlined),
+            ),
+            IconButton(
+              tooltip: 'Eksportuj raport PDF',
+              onPressed: _exportPdfReport,
+              icon: const Icon(Icons.picture_as_pdf_outlined),
             ),
           ],
         ),
@@ -354,6 +361,49 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Nie udalo sie wyeksportowac raportu: $error')),
+      );
+    }
+  }
+
+  Future<void> _exportPdfReport() async {
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .split('.')
+        .first;
+
+    try {
+      final bytes = await _pdfReportService.buildPdfReport(_controller.project);
+      final path = await writeLocalBytesFile(
+        subfolder: 'reports',
+        fileName: 'stagecalc_raport_$timestamp.pdf',
+        bytes: bytes,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Raport PDF wyeksportowany'),
+          content: SelectableText(path),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Zamknij'),
+            ),
+          ],
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nie udalo sie wyeksportowac raportu PDF: $error'),
+        ),
       );
     }
   }

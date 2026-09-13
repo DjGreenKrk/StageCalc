@@ -390,6 +390,32 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-027: Eksport raportu do PDF
+
+Status: accepted
+
+Kontekst:
+
+- ADR-021 swiadomie wybrala raport tekstowy zamiast PDF dla MVP - `docs/FEATURE_SCOPE.md` wprost dopuszcza "eksport danych... w prostszej formie", a PDF wymagal nowej zaleznosci i realnej pracy nad ukladem. Ten dlug zostal teraz splacony jako dodatkowa opcja eksportu, nie zamiennik raportu tekstowego.
+
+Decyzja:
+
+- `ProjectPdfReportService` (`features/projects/domain/services/project_pdf_report_service.dart`) generuje PDF przez pakiet `pdf` (widgets API), uzywajac dokladnie tych samych serwisow domenowych co `ProjectReportService` i UI (`ProjectTotalsService`, `PowerCalculationService`, `PatchValidationService`, `TrussLoadService`) - ta sama zasada ADR-014, ze raport nie powiela logiki obliczen.
+- Uklad: naglowek z nazwa projektu i akcentem GreenCrew (`#00C853`), sekcje Podsumowanie/Grupy urzadzen/Rozdzielnice/Kratownice jako tabele (`pw.TableHelper.fromTextArray`), stopka z numeracja stron. Tresc sekcji 1:1 odpowiada raportowi tekstowemu (te same ostrzezenia: gniazdo uzyte wielokrotnie, przeciazone wejscie/gniazdo, cykl polaczen, przekroczony limit kratownicy).
+- Domyslne fonty PDF (Helvetica przez baze 14 fontow standardu PDF) zamiast wlasnego pliku Roboto - PDF jest dodatkowa opcja eksportu, nie glownym UI aplikacji, wiec brak pelnego brandingu typograficznego jest akceptowalny na start; pakiet `pdf` ostrzega w konsoli, ze te fonty nie maja pelnego wsparcia Unicode, ale caly tekst w aplikacji jest juz pisany bez polskich znakow diakrytycznych, wiec w praktyce nie ma to znaczenia.
+- Zapis do pliku przez rozszerzenie wspolnego `local_file_writer` (ADR-021) o `writeLocalBytesFile` - PDF to pierwszy binarny plik do zapisania lokalnie, wiec funkcja przyjmujaca `String content` nie wystarczala; dodano siostrzana funkcje zamiast zmieniac istniejacy, juz uzywany podpis.
+- Ikona "Eksportuj raport PDF" w AppBar edytora projektu, obok istniejacej "Eksportuj raport tekstowy" - obie opcje dostepne rownolegle.
+
+Uzasadnienie:
+
+- Ta sama tresc co juz sprawdzony raport tekstowy (te same dane, te same ostrzezenia) minimalizuje ryzyko rozjazdu miedzy formatami i pozwala poddac PDF tej samej weryfikacji regresyjnej co reszte projektu.
+- Pakiet `pdf` jest czystym Dartem (dziala na Windows/Android/Web bez natywnych zaleznosci), spojnie z reszta stosu (Drift, PocketBase - zadnych platformowych pluginow ponad juz istniejace).
+
+Konsekwencje:
+
+- Testy PDF (`project_pdf_report_service_test.dart`) nie moga sprawdzac tresci - pakiet `pdf` nie ma API do odczytu z powrotem - wiec asercje ograniczaja sie do poprawnosci pliku (niepusty, zaczyna sie od sygnatury `%PDF-`) dla tych samych ksztaltow projektu, ktore sprawdza test raportu tekstowego (duplikat gniazda, przeciazona kratownica, pusty projekt, projekt wielostronicowy).
+- Jesli w przyszlosci pojawi sie realna potrzeba pelnego brandingu PDF (font Roboto, logo StageCalc), to osobny, nastepny krok - nie zablokowal tego pierwszego dzialajacego eksportu.
+
 ## ADR-026: Dwukierunkowa synchronizacja z PocketBase
 
 Status: accepted

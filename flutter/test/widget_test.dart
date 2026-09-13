@@ -598,6 +598,45 @@ void main() {
 
     reportFile.parent.deleteSync(recursive: true);
   });
+
+  testWidgets('exports a PDF report from the project editor', (tester) async {
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Demo techniczne'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Eksportuj raport PDF'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Raport PDF wyeksportowany').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Raport PDF wyeksportowany'), findsOneWidget);
+
+    final pathFinder = find.byType(SelectableText);
+    expect(pathFinder, findsOneWidget);
+    final path = tester.widget<SelectableText>(pathFinder).data!;
+    final reportFile = File(path);
+    expect(reportFile.existsSync(), isTrue);
+    expect(path, endsWith('.pdf'));
+
+    final bytes = reportFile.readAsBytesSync();
+    expect(
+      String.fromCharCodes(bytes.take(5)),
+      '%PDF-',
+      reason: 'exported file does not start with the PDF file signature',
+    );
+
+    reportFile.parent.deleteSync(recursive: true);
+  });
 }
 
 class _FakeFilePickerPlatform extends FilePickerPlatform {
