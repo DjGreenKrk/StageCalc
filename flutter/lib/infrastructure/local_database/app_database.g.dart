@@ -40,6 +40,17 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -156,6 +167,7 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     id,
     workspaceId,
     remoteId,
+    ownerId,
     name,
     phaseId,
     clientId,
@@ -197,6 +209,12 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
       context.handle(
         _remoteIdMeta,
         remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
       );
     }
     if (data.containsKey('name')) {
@@ -289,6 +307,10 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
         DriftSqlType.string,
         data['${effectivePrefix}remote_id'],
       ),
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      ),
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
@@ -342,6 +364,10 @@ class Project extends DataClass implements Insertable<Project> {
   final String id;
   final String workspaceId;
   final String? remoteId;
+
+  /// PocketBase `users` record id of whoever owns this project (ADR-028) -
+  /// see `Clients.ownerId` for why this is not a "local id".
+  final String? ownerId;
   final String name;
   final String phaseId;
   final String? clientId;
@@ -356,6 +382,7 @@ class Project extends DataClass implements Insertable<Project> {
     required this.id,
     required this.workspaceId,
     this.remoteId,
+    this.ownerId,
     required this.name,
     required this.phaseId,
     this.clientId,
@@ -374,6 +401,9 @@ class Project extends DataClass implements Insertable<Project> {
     map['workspace_id'] = Variable<String>(workspaceId);
     if (!nullToAbsent || remoteId != null) {
       map['remote_id'] = Variable<String>(remoteId);
+    }
+    if (!nullToAbsent || ownerId != null) {
+      map['owner_id'] = Variable<String>(ownerId);
     }
     map['name'] = Variable<String>(name);
     map['phase_id'] = Variable<String>(phaseId);
@@ -403,6 +433,9 @@ class Project extends DataClass implements Insertable<Project> {
       remoteId: remoteId == null && nullToAbsent
           ? const Value.absent()
           : Value(remoteId),
+      ownerId: ownerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ownerId),
       name: Value(name),
       phaseId: Value(phaseId),
       clientId: clientId == null && nullToAbsent
@@ -433,6 +466,7 @@ class Project extends DataClass implements Insertable<Project> {
       id: serializer.fromJson<String>(json['id']),
       workspaceId: serializer.fromJson<String>(json['workspaceId']),
       remoteId: serializer.fromJson<String?>(json['remoteId']),
+      ownerId: serializer.fromJson<String?>(json['ownerId']),
       name: serializer.fromJson<String>(json['name']),
       phaseId: serializer.fromJson<String>(json['phaseId']),
       clientId: serializer.fromJson<String?>(json['clientId']),
@@ -452,6 +486,7 @@ class Project extends DataClass implements Insertable<Project> {
       'id': serializer.toJson<String>(id),
       'workspaceId': serializer.toJson<String>(workspaceId),
       'remoteId': serializer.toJson<String?>(remoteId),
+      'ownerId': serializer.toJson<String?>(ownerId),
       'name': serializer.toJson<String>(name),
       'phaseId': serializer.toJson<String>(phaseId),
       'clientId': serializer.toJson<String?>(clientId),
@@ -469,6 +504,7 @@ class Project extends DataClass implements Insertable<Project> {
     String? id,
     String? workspaceId,
     Value<String?> remoteId = const Value.absent(),
+    Value<String?> ownerId = const Value.absent(),
     String? name,
     String? phaseId,
     Value<String?> clientId = const Value.absent(),
@@ -483,6 +519,7 @@ class Project extends DataClass implements Insertable<Project> {
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    ownerId: ownerId.present ? ownerId.value : this.ownerId,
     name: name ?? this.name,
     phaseId: phaseId ?? this.phaseId,
     clientId: clientId.present ? clientId.value : this.clientId,
@@ -501,6 +538,7 @@ class Project extends DataClass implements Insertable<Project> {
           ? data.workspaceId.value
           : this.workspaceId,
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       name: data.name.present ? data.name.value : this.name,
       phaseId: data.phaseId.present ? data.phaseId.value : this.phaseId,
       clientId: data.clientId.present ? data.clientId.value : this.clientId,
@@ -524,6 +562,7 @@ class Project extends DataClass implements Insertable<Project> {
           ..write('id: $id, ')
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
+          ..write('ownerId: $ownerId, ')
           ..write('name: $name, ')
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
@@ -543,6 +582,7 @@ class Project extends DataClass implements Insertable<Project> {
     id,
     workspaceId,
     remoteId,
+    ownerId,
     name,
     phaseId,
     clientId,
@@ -561,6 +601,7 @@ class Project extends DataClass implements Insertable<Project> {
           other.id == this.id &&
           other.workspaceId == this.workspaceId &&
           other.remoteId == this.remoteId &&
+          other.ownerId == this.ownerId &&
           other.name == this.name &&
           other.phaseId == this.phaseId &&
           other.clientId == this.clientId &&
@@ -577,6 +618,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   final Value<String> id;
   final Value<String> workspaceId;
   final Value<String?> remoteId;
+  final Value<String?> ownerId;
   final Value<String> name;
   final Value<String> phaseId;
   final Value<String?> clientId;
@@ -592,6 +634,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.id = const Value.absent(),
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
+    this.ownerId = const Value.absent(),
     this.name = const Value.absent(),
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
@@ -608,6 +651,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     required String id,
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
+    this.ownerId = const Value.absent(),
     required String name,
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
@@ -627,6 +671,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Expression<String>? id,
     Expression<String>? workspaceId,
     Expression<String>? remoteId,
+    Expression<String>? ownerId,
     Expression<String>? name,
     Expression<String>? phaseId,
     Expression<String>? clientId,
@@ -643,6 +688,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       if (id != null) 'id': id,
       if (workspaceId != null) 'workspace_id': workspaceId,
       if (remoteId != null) 'remote_id': remoteId,
+      if (ownerId != null) 'owner_id': ownerId,
       if (name != null) 'name': name,
       if (phaseId != null) 'phase_id': phaseId,
       if (clientId != null) 'client_id': clientId,
@@ -661,6 +707,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Value<String>? id,
     Value<String>? workspaceId,
     Value<String?>? remoteId,
+    Value<String?>? ownerId,
     Value<String>? name,
     Value<String>? phaseId,
     Value<String?>? clientId,
@@ -677,6 +724,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       id: id ?? this.id,
       workspaceId: workspaceId ?? this.workspaceId,
       remoteId: remoteId ?? this.remoteId,
+      ownerId: ownerId ?? this.ownerId,
       name: name ?? this.name,
       phaseId: phaseId ?? this.phaseId,
       clientId: clientId ?? this.clientId,
@@ -702,6 +750,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     }
     if (remoteId.present) {
       map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -745,6 +796,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
           ..write('id: $id, ')
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
+          ..write('ownerId: $ownerId, ')
           ..write('name: $name, ')
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
@@ -9273,6 +9325,17 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -9413,6 +9476,7 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
     id,
     workspaceId,
     remoteId,
+    ownerId,
     name,
     contactPerson,
     email,
@@ -9457,6 +9521,12 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
       context.handle(
         _remoteIdMeta,
         remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
       );
     }
     if (data.containsKey('name')) {
@@ -9570,6 +9640,10 @@ class $ClientsTable extends Clients with TableInfo<$ClientsTable, Client> {
         DriftSqlType.string,
         data['${effectivePrefix}remote_id'],
       ),
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      ),
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
@@ -9635,6 +9709,13 @@ class Client extends DataClass implements Insertable<Client> {
   final String id;
   final String workspaceId;
   final String? remoteId;
+
+  /// PocketBase `users` record id of whoever owns this client (ADR-028) -
+  /// clients are private per-user, not shared like the catalog/locations.
+  /// Not a "local id" needing translation like every other cross-reference
+  /// in this schema: `users` records only ever exist remotely, so this is
+  /// already the id to push straight into the `owner` relation.
+  final String? ownerId;
   final String name;
   final String? contactPerson;
   final String? email;
@@ -9652,6 +9733,7 @@ class Client extends DataClass implements Insertable<Client> {
     required this.id,
     required this.workspaceId,
     this.remoteId,
+    this.ownerId,
     required this.name,
     this.contactPerson,
     this.email,
@@ -9673,6 +9755,9 @@ class Client extends DataClass implements Insertable<Client> {
     map['workspace_id'] = Variable<String>(workspaceId);
     if (!nullToAbsent || remoteId != null) {
       map['remote_id'] = Variable<String>(remoteId);
+    }
+    if (!nullToAbsent || ownerId != null) {
+      map['owner_id'] = Variable<String>(ownerId);
     }
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || contactPerson != null) {
@@ -9713,6 +9798,9 @@ class Client extends DataClass implements Insertable<Client> {
       remoteId: remoteId == null && nullToAbsent
           ? const Value.absent()
           : Value(remoteId),
+      ownerId: ownerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ownerId),
       name: Value(name),
       contactPerson: contactPerson == null && nullToAbsent
           ? const Value.absent()
@@ -9752,6 +9840,7 @@ class Client extends DataClass implements Insertable<Client> {
       id: serializer.fromJson<String>(json['id']),
       workspaceId: serializer.fromJson<String>(json['workspaceId']),
       remoteId: serializer.fromJson<String?>(json['remoteId']),
+      ownerId: serializer.fromJson<String?>(json['ownerId']),
       name: serializer.fromJson<String>(json['name']),
       contactPerson: serializer.fromJson<String?>(json['contactPerson']),
       email: serializer.fromJson<String?>(json['email']),
@@ -9774,6 +9863,7 @@ class Client extends DataClass implements Insertable<Client> {
       'id': serializer.toJson<String>(id),
       'workspaceId': serializer.toJson<String>(workspaceId),
       'remoteId': serializer.toJson<String?>(remoteId),
+      'ownerId': serializer.toJson<String?>(ownerId),
       'name': serializer.toJson<String>(name),
       'contactPerson': serializer.toJson<String?>(contactPerson),
       'email': serializer.toJson<String?>(email),
@@ -9794,6 +9884,7 @@ class Client extends DataClass implements Insertable<Client> {
     String? id,
     String? workspaceId,
     Value<String?> remoteId = const Value.absent(),
+    Value<String?> ownerId = const Value.absent(),
     String? name,
     Value<String?> contactPerson = const Value.absent(),
     Value<String?> email = const Value.absent(),
@@ -9811,6 +9902,7 @@ class Client extends DataClass implements Insertable<Client> {
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    ownerId: ownerId.present ? ownerId.value : this.ownerId,
     name: name ?? this.name,
     contactPerson: contactPerson.present
         ? contactPerson.value
@@ -9834,6 +9926,7 @@ class Client extends DataClass implements Insertable<Client> {
           ? data.workspaceId.value
           : this.workspaceId,
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       name: data.name.present ? data.name.value : this.name,
       contactPerson: data.contactPerson.present
           ? data.contactPerson.value
@@ -9860,6 +9953,7 @@ class Client extends DataClass implements Insertable<Client> {
           ..write('id: $id, ')
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
+          ..write('ownerId: $ownerId, ')
           ..write('name: $name, ')
           ..write('contactPerson: $contactPerson, ')
           ..write('email: $email, ')
@@ -9882,6 +9976,7 @@ class Client extends DataClass implements Insertable<Client> {
     id,
     workspaceId,
     remoteId,
+    ownerId,
     name,
     contactPerson,
     email,
@@ -9903,6 +9998,7 @@ class Client extends DataClass implements Insertable<Client> {
           other.id == this.id &&
           other.workspaceId == this.workspaceId &&
           other.remoteId == this.remoteId &&
+          other.ownerId == this.ownerId &&
           other.name == this.name &&
           other.contactPerson == this.contactPerson &&
           other.email == this.email &&
@@ -9922,6 +10018,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
   final Value<String> id;
   final Value<String> workspaceId;
   final Value<String?> remoteId;
+  final Value<String?> ownerId;
   final Value<String> name;
   final Value<String?> contactPerson;
   final Value<String?> email;
@@ -9940,6 +10037,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     this.id = const Value.absent(),
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
+    this.ownerId = const Value.absent(),
     this.name = const Value.absent(),
     this.contactPerson = const Value.absent(),
     this.email = const Value.absent(),
@@ -9959,6 +10057,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     required String id,
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
+    this.ownerId = const Value.absent(),
     required String name,
     this.contactPerson = const Value.absent(),
     this.email = const Value.absent(),
@@ -9981,6 +10080,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     Expression<String>? id,
     Expression<String>? workspaceId,
     Expression<String>? remoteId,
+    Expression<String>? ownerId,
     Expression<String>? name,
     Expression<String>? contactPerson,
     Expression<String>? email,
@@ -10000,6 +10100,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
       if (id != null) 'id': id,
       if (workspaceId != null) 'workspace_id': workspaceId,
       if (remoteId != null) 'remote_id': remoteId,
+      if (ownerId != null) 'owner_id': ownerId,
       if (name != null) 'name': name,
       if (contactPerson != null) 'contact_person': contactPerson,
       if (email != null) 'email': email,
@@ -10021,6 +10122,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     Value<String>? id,
     Value<String>? workspaceId,
     Value<String?>? remoteId,
+    Value<String?>? ownerId,
     Value<String>? name,
     Value<String?>? contactPerson,
     Value<String?>? email,
@@ -10040,6 +10142,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
       id: id ?? this.id,
       workspaceId: workspaceId ?? this.workspaceId,
       remoteId: remoteId ?? this.remoteId,
+      ownerId: ownerId ?? this.ownerId,
       name: name ?? this.name,
       contactPerson: contactPerson ?? this.contactPerson,
       email: email ?? this.email,
@@ -10068,6 +10171,9 @@ class ClientsCompanion extends UpdateCompanion<Client> {
     }
     if (remoteId.present) {
       map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -10120,6 +10226,7 @@ class ClientsCompanion extends UpdateCompanion<Client> {
           ..write('id: $id, ')
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
+          ..write('ownerId: $ownerId, ')
           ..write('name: $name, ')
           ..write('contactPerson: $contactPerson, ')
           ..write('email: $email, ')
@@ -14091,8 +14198,24 @@ class $AppSettingsTable extends AppSettings
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _authSessionDataMeta = const VerificationMeta(
+    'authSessionData',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, autoSyncEnabled, lastSyncedAt];
+  late final GeneratedColumn<String> authSessionData = GeneratedColumn<String>(
+    'auth_session_data',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    autoSyncEnabled,
+    lastSyncedAt,
+    authSessionData,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -14128,6 +14251,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('auth_session_data')) {
+      context.handle(
+        _authSessionDataMeta,
+        authSessionData.isAcceptableOrUnknown(
+          data['auth_session_data']!,
+          _authSessionDataMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14149,6 +14281,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_synced_at'],
       ),
+      authSessionData: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}auth_session_data'],
+      ),
     );
   }
 
@@ -14162,10 +14298,19 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   final String id;
   final bool autoSyncEnabled;
   final DateTime? lastSyncedAt;
+
+  /// Raw JSON blob `package:pocketbase`'s own `AsyncAuthStore` manages
+  /// (ADR-028) - token plus the logged-in user's full record - so the user
+  /// does not have to log in again every app start. Stored as one opaque
+  /// column rather than separate token/id/email columns: `AsyncAuthStore`
+  /// already owns the encoding, and the live `authStore` (not this column)
+  /// is the source of truth for "who is logged in" while the app is running.
+  final String? authSessionData;
   const AppSetting({
     required this.id,
     required this.autoSyncEnabled,
     this.lastSyncedAt,
+    this.authSessionData,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14174,6 +14319,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     map['auto_sync_enabled'] = Variable<bool>(autoSyncEnabled);
     if (!nullToAbsent || lastSyncedAt != null) {
       map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    if (!nullToAbsent || authSessionData != null) {
+      map['auth_session_data'] = Variable<String>(authSessionData);
     }
     return map;
   }
@@ -14185,6 +14333,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       lastSyncedAt: lastSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncedAt),
+      authSessionData: authSessionData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authSessionData),
     );
   }
 
@@ -14197,6 +14348,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       id: serializer.fromJson<String>(json['id']),
       autoSyncEnabled: serializer.fromJson<bool>(json['autoSyncEnabled']),
       lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      authSessionData: serializer.fromJson<String?>(json['authSessionData']),
     );
   }
   @override
@@ -14206,6 +14358,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'id': serializer.toJson<String>(id),
       'autoSyncEnabled': serializer.toJson<bool>(autoSyncEnabled),
       'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'authSessionData': serializer.toJson<String?>(authSessionData),
     };
   }
 
@@ -14213,10 +14366,14 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     String? id,
     bool? autoSyncEnabled,
     Value<DateTime?> lastSyncedAt = const Value.absent(),
+    Value<String?> authSessionData = const Value.absent(),
   }) => AppSetting(
     id: id ?? this.id,
     autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    authSessionData: authSessionData.present
+        ? authSessionData.value
+        : this.authSessionData,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -14227,6 +14384,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       lastSyncedAt: data.lastSyncedAt.present
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
+      authSessionData: data.authSessionData.present
+          ? data.authSessionData.value
+          : this.authSessionData,
     );
   }
 
@@ -14235,49 +14395,57 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     return (StringBuffer('AppSetting(')
           ..write('id: $id, ')
           ..write('autoSyncEnabled: $autoSyncEnabled, ')
-          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('authSessionData: $authSessionData')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, autoSyncEnabled, lastSyncedAt);
+  int get hashCode =>
+      Object.hash(id, autoSyncEnabled, lastSyncedAt, authSessionData);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AppSetting &&
           other.id == this.id &&
           other.autoSyncEnabled == this.autoSyncEnabled &&
-          other.lastSyncedAt == this.lastSyncedAt);
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.authSessionData == this.authSessionData);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<String> id;
   final Value<bool> autoSyncEnabled;
   final Value<DateTime?> lastSyncedAt;
+  final Value<String?> authSessionData;
   final Value<int> rowid;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.autoSyncEnabled = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.authSessionData = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AppSettingsCompanion.insert({
     required String id,
     this.autoSyncEnabled = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.authSessionData = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<AppSetting> custom({
     Expression<String>? id,
     Expression<bool>? autoSyncEnabled,
     Expression<DateTime>? lastSyncedAt,
+    Expression<String>? authSessionData,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (autoSyncEnabled != null) 'auto_sync_enabled': autoSyncEnabled,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (authSessionData != null) 'auth_session_data': authSessionData,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -14286,12 +14454,14 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<String>? id,
     Value<bool>? autoSyncEnabled,
     Value<DateTime?>? lastSyncedAt,
+    Value<String?>? authSessionData,
     Value<int>? rowid,
   }) {
     return AppSettingsCompanion(
       id: id ?? this.id,
       autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      authSessionData: authSessionData ?? this.authSessionData,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -14308,6 +14478,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (lastSyncedAt.present) {
       map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
     }
+    if (authSessionData.present) {
+      map['auth_session_data'] = Variable<String>(authSessionData.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -14320,6 +14493,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('id: $id, ')
           ..write('autoSyncEnabled: $autoSyncEnabled, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('authSessionData: $authSessionData, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -14384,6 +14558,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
       required String id,
       Value<String> workspaceId,
       Value<String?> remoteId,
+      Value<String?> ownerId,
       required String name,
       Value<String> phaseId,
       Value<String?> clientId,
@@ -14401,6 +14576,7 @@ typedef $$ProjectsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> workspaceId,
       Value<String?> remoteId,
+      Value<String?> ownerId,
       Value<String> name,
       Value<String> phaseId,
       Value<String?> clientId,
@@ -14575,6 +14751,11 @@ class $$ProjectsTableFilterComposer
 
   ColumnFilters<String> get remoteId => $composableBuilder(
     column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14832,6 +15013,11 @@ class $$ProjectsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
     builder: (column) => ColumnOrderings(column),
@@ -14902,6 +15088,9 @@ class $$ProjectsTableAnnotationComposer
 
   GeneratedColumn<String> get remoteId =>
       $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -15156,6 +15345,7 @@ class $$ProjectsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
@@ -15171,6 +15361,7 @@ class $$ProjectsTableTableManager
                 id: id,
                 workspaceId: workspaceId,
                 remoteId: remoteId,
+                ownerId: ownerId,
                 name: name,
                 phaseId: phaseId,
                 clientId: clientId,
@@ -15188,6 +15379,7 @@ class $$ProjectsTableTableManager
                 required String id,
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 required String name,
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
@@ -15203,6 +15395,7 @@ class $$ProjectsTableTableManager
                 id: id,
                 workspaceId: workspaceId,
                 remoteId: remoteId,
+                ownerId: ownerId,
                 name: name,
                 phaseId: phaseId,
                 clientId: clientId,
@@ -21373,6 +21566,7 @@ typedef $$ClientsTableCreateCompanionBuilder =
       required String id,
       Value<String> workspaceId,
       Value<String?> remoteId,
+      Value<String?> ownerId,
       required String name,
       Value<String?> contactPerson,
       Value<String?> email,
@@ -21393,6 +21587,7 @@ typedef $$ClientsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> workspaceId,
       Value<String?> remoteId,
+      Value<String?> ownerId,
       Value<String> name,
       Value<String?> contactPerson,
       Value<String?> email,
@@ -21430,6 +21625,11 @@ class $$ClientsTableFilterComposer
 
   ColumnFilters<String> get remoteId => $composableBuilder(
     column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21523,6 +21723,11 @@ class $$ClientsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
     builder: (column) => ColumnOrderings(column),
@@ -21609,6 +21814,9 @@ class $$ClientsTableAnnotationComposer
   GeneratedColumn<String> get remoteId =>
       $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
@@ -21684,6 +21892,7 @@ class $$ClientsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> contactPerson = const Value.absent(),
                 Value<String?> email = const Value.absent(),
@@ -21702,6 +21911,7 @@ class $$ClientsTableTableManager
                 id: id,
                 workspaceId: workspaceId,
                 remoteId: remoteId,
+                ownerId: ownerId,
                 name: name,
                 contactPerson: contactPerson,
                 email: email,
@@ -21722,6 +21932,7 @@ class $$ClientsTableTableManager
                 required String id,
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 required String name,
                 Value<String?> contactPerson = const Value.absent(),
                 Value<String?> email = const Value.absent(),
@@ -21740,6 +21951,7 @@ class $$ClientsTableTableManager
                 id: id,
                 workspaceId: workspaceId,
                 remoteId: remoteId,
+                ownerId: ownerId,
                 name: name,
                 contactPerson: contactPerson,
                 email: email,
@@ -24349,6 +24561,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       required String id,
       Value<bool> autoSyncEnabled,
       Value<DateTime?> lastSyncedAt,
+      Value<String?> authSessionData,
       Value<int> rowid,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
@@ -24356,6 +24569,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<bool> autoSyncEnabled,
       Value<DateTime?> lastSyncedAt,
+      Value<String?> authSessionData,
       Value<int> rowid,
     });
 
@@ -24380,6 +24594,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
     column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authSessionData => $composableBuilder(
+    column: $table.authSessionData,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -24407,6 +24626,11 @@ class $$AppSettingsTableOrderingComposer
     column: $table.lastSyncedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get authSessionData => $composableBuilder(
+    column: $table.authSessionData,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -24428,6 +24652,11 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
     column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get authSessionData => $composableBuilder(
+    column: $table.authSessionData,
     builder: (column) => column,
   );
 }
@@ -24466,11 +24695,13 @@ class $$AppSettingsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<bool> autoSyncEnabled = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<String?> authSessionData = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 autoSyncEnabled: autoSyncEnabled,
                 lastSyncedAt: lastSyncedAt,
+                authSessionData: authSessionData,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -24478,11 +24709,13 @@ class $$AppSettingsTableTableManager
                 required String id,
                 Value<bool> autoSyncEnabled = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<String?> authSessionData = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 autoSyncEnabled: autoSyncEnabled,
                 lastSyncedAt: lastSyncedAt,
+                authSessionData: authSessionData,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

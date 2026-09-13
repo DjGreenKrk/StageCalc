@@ -390,6 +390,62 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-028: Prawdziwa autoryzacja PocketBase (konta osobiste, wlasciciel danych)
+
+Status: accepted
+
+Kontekst:
+
+- ADR-017 zostawila reguly dostepu wszystkich kolekcji PocketBase puste (publiczne) jako swiadome, tymczasowe ryzyko, akceptowalne tylko w prywatnej sieci LAN - "do czasu zaprojektowania prawdziwego modelu autoryzacji". ADR-026 dodala pelny dwukierunkowy sync dla piedu agregatow, ale nie zmienila regul dostepu - kazdy z dostepem do serwera nadal mogl czytac/edytowac/usuwac dowolny rekord bez logowania.
+- Uzytkownik potwierdzil, ze czas to zaadresowac, i wspolnie ustalono model: **konta osobne dla kazdej osoby** (nie jedno wspolne konto zespolu) - uzytkownik moglby tez uzyc jednego konta i je udostepnic, ale wybral osobne konta i poprosil o polozenie prawdziwych podwalin pod wieloosobowosc, skoro takie bylo pierwotne zalozenie projektu.
+- Zapytany o zachowanie synchronizacji bez zalogowania: **praca lokalna dziala normalnie, synchronizacja po prostu czeka** - appka nigdy nie blokuje uzytkownika przed zalogowaniem, tylko przycisk/timer "Synchronizuj teraz" nic nie robi, dopoki nikt nie jest zalogowany.
+- Zapytany, co ma byc wspolne, a co prywatne: **klienci i projekty prywatne** (widoczne tylko dla wlasciciela), katalog urzadzen, lokacje i presety zasilania **wspolne** dla kazdego zalogowanego czlonka zespolu - to odzwierciedla realny podzial pracy (katalog sprzetu i lokacje sa wspolna wiedza ekipy, ale konkretny projekt/klient danej osoby nie musi byc widoczny dla innych).
+
+Decyzja:
+
+### Model danych i reguly dostepu (PocketBase)
+
+- Ponownie uzyto domyslnej kolekcji `users` (auth), ktora PocketBase tworzy automatycznie przy pierwszym starcie - **nie** utworzono nowej kolekcji o tej samej nazwie (pierwsza proba wlasnie to zrobila i wywolala petle restartow uslugi: "Collection name must be unique (case insensitive)"). `listRule`/`viewRule`/`updateRule` = `"id = @request.auth.id"` (kazdy widzi/edytuje tylko wlasne konto), `createRule`/`deleteRule` = `null` (zakladanie/usuwanie kont tylko przez superusera - swiadomie brak samodzielnej rejestracji, bo to nadal male, zamkniete narzedzie dla jednej ekipy).
+- Nowe pole relacyjne `owner` (-> `users`, `maxSelect: 1`) na `clients` i `projects`.
+- Trzy poziomy regul dostepu na 16 juz istniejacych kolekcjach:
+  - `authRule` (`@request.auth.id != ''`) - na 7 kolekcjach **wspolnych**: `catalog_devices`, `truss_load_chart_entries`, `locations`, `location_contacts`, `location_power_connectors`, `power_presets`, `power_outlet_templates`. Kazdy zalogowany widzi i edytuje wszystko - to wspolna wiedza ekipy, nie dane jednej osoby.
+  - `ownerRule` (`@request.auth.id != '' && owner = @request.auth.id`) - na `clients` i `projects`. Tylko wlasciciel widzi/edytuje swoj rekord.
+  - `projectOwnerRule` (`@request.auth.id != '' && project.owner = @request.auth.id`) - na 7 kolekcjach zagniezdzonych pod projektem (`project_groups`, `project_items`, `project_group_hook_assignments`, `project_distros`, `project_outlets`, `power_connections`, `project_trusses`), sprawdzajac wlasciciela **rodzica** przez relacje `project`, nie wlasne, nieistniejace pole `owner`.
+  - Wszystkie migracje maja pelna funkcje `down` przywracajaca puste reguly z ADR-017.
+- Migracje w `pocketbase/pb_migrations/` (i zastosowane na LXC 113): `1789300210_updated_users.js`, `1789300220_updated_clients_projects_owner.js`, `1789300230_updated_access_rules.js`. Przed zmiana schematu wykonano kopie `pb_data` na serwerze, tak jak w ADR-026.
+
+### Lokalny schemat i sesja logowania
+
+- `Clients.ownerId`/`Projects.ownerId` (`String?`) - id rekordu `users` w PocketBase (uzywane bezposrednio, bez tlumaczenia przez `local_id` - konta uzytkownikow istnieja tylko zdalnie, w przeciwienstwie do kazdego innego odwolania krzyzowego w tym schemacie). `null`, dopoki rekord nie zostanie po raz pierwszy wypchniety przez zalogowanego uzytkownika (patrz "Stemplowanie wlasciciela" nizej) - klient/projekt mozna wiec nadal tworzyc offline, przed zalogowaniem.
+- `AppSettings.authSessionData` (`String?`) - jeden nieprzezroczysty blob JSON, ktorym samodzielnie zarzadza `AsyncAuthStore` z `package:pocketbase` (token + model uzytkownika w jednym polu) - zamiast trzech osobnych kolumn (`authToken`/`authUserId`/`authUserEmail`), ktore wymagalyby recznego utrzymywania spojnosci z wewnetrznym formatem SDK.
+- Schemat lokalny podniesiony do wersji `14` (dodanie `Clients.ownerId`, `Projects.ownerId`, `AppSettings.authSessionData`).
+- `PocketBaseClientProvider.initialize()` (wywolywane raz w `main()`, przed `runApp`) tworzy globalna instancje `PocketBase` z `AsyncAuthStore` podpiete pod `DriftAppSyncSettingsRepository.setAuthSessionData`/`getSettings().authSessionData` - sesja logowania przezywa restart aplikacji dokladnie tak samo jak reszta lokalnych danych.
+- `PocketBaseAuthService` (`infrastructure/remote/pocketbase_auth_service.dart`) - cienka warstwa nad `PocketBase.authStore`: `isLoggedIn`, `currentUserEmail`, `currentUserId`, `login(email, password)` (`authWithPassword`), `logout()` (`authStore.clear()`). Nie trzyma wlasnego stanu - zawsze czyta ten sam `authStore`, ktorego uzywaja serwisy synchronizacji.
+
+### UI logowania
+
+- Nowa karta "Konto" na ekranie "O aplikacji" (przed juz istniejaca karta "Synchronizacja"): pola e-mail/haslo i przycisk "Zaloguj sie", gdy nikt nie jest zalogowany; e-mail zalogowanego uzytkownika i przycisk "Wyloguj", gdy jest.
+
+### Stemplowanie wlasciciela i blokada synchronizacji
+
+- Przy pushu `Client`/`Project` (`_push` w odpowiednim serwisie synchronizacji): jesli lokalny rekord nie ma jeszcze `ownerId`, zostaje on ustawiony na `PocketBase.authStore.record?.id` (aktualnie zalogowany uzytkownik), zapisany lokalnie (targetowany update Companion), i dopiero potem wyslany w ciele requestu jako pole `owner`. Rekord utworzony offline, zanim ktokolwiek sie zalogowal, staje sie wiec wlasnoscia tego, kto pierwszy go zsynchronizuje.
+- `SyncCoordinator.syncAll()` sprawdza `PocketBase.authStore.isValid` **przed** wywolaniem ktoregokolwiek z pieciu serwisow synchronizacji - brak logowania zwraca od razu `SyncSummary(errors: ['Zaloguj sie, aby zsynchronizowac dane.'])` zamiast piedu serwisow zwracajacych po kolei zaglos bledow 403 z tym samym, mniej czytelnym efektem. To realizuje decyzje "praca lokalna dziala normalnie, sync po prostu czeka" - appka sama w sobie nigdy nie sprawdza stanu logowania poza tym jednym miejscem.
+
+Uzasadnienie:
+
+- Reuzycie domyslnej kolekcji `users` zamiast tworzenia nowej unika duplikatu i jest zgodne z tym, jak PocketBase faktycznie dziala od pierwszego startu - nowy programista czytajacy migracje "updated_users" od razu wie, ze kolekcja juz istniala.
+- Podzial wspolne/prywatne (katalog/lokacje/presety kontra klienci/projekty) odzwierciedla rzeczywisty podzial pracy ekipy, ktory uzytkownik jawnie okreslil, zamiast arbitralnej decyzji "wszystko prywatne" albo "wszystko wspolne".
+- `AsyncAuthStore` zamiast recznego zarzadzania tokenem: SDK juz rozwiazuje serializacje, wygasanie (`isValid` sprawdza `exp` w JWT) i normalizacje base64 - odtwarzanie tego recznie byloby zbednym, podatnym na bledy duplikatem.
+- Stemplowanie wlasciciela dopiero przy pushu (nie przy tworzeniu rekordu) pozwala nadal tworzyc klientow/projekty offline, przed pierwszym logowaniem - zgodnie z ADR-002 (offline-first od pierwszego dnia), ktore ta decyzja w pelni respektuje.
+
+Konsekwencje:
+
+- **Rekordy `clients`/`projects` utworzone przed ta decyzja (bez `owner`) staja sie niedostepne do edycji/synchronizacji przez kogokolwiek** - `ownerRule` wymaga scislej zgodnosci `owner = @request.auth.id`, a pusty `owner` nie jest rowny zadnemu zalogowanemu uzytkownikowi. Zweryfikowano to bezposrednio: probe push takich rekordow (stare dane demo z ADR-026, `sync_demo_client`/`demo_project`) konczy sie bledem 403, podczas gdy nowy rekord z tym samym uzytkownikiem synchronizuje sie poprawnie. To jednorazowy koszt migracji - kazdy realny klient/projekt sprzed tej decyzji wymaga recznego przypisania `owner` przez superusera (przez API albo panel admina PocketBase) zanim bedzie znow synchronizowalny; appka lokalnie nadal ma te dane bez zmian, tylko przestaja sie synchronizowac.
+- `tool/sync_demo_data.dart` wymaga teraz zmiennych srodowiskowych `SYNC_DEMO_EMAIL`/`SYNC_DEMO_PASSWORD` (istniejace konto) przed uruchomieniem - narzedzie samo w sobie nie zaklada kont (`createRule` jest superuser-only).
+- Zweryfikowano recznie pelny przeplyw logowanie -> push (ze stemplowaniem wlasciciela) -> pull do nowej, pustej bazy lokalnej -> odmowa dostepu dla niezalogowanego klienta, na tymczasowym koncie testowym utworzonym i usunietym wylacznie na czas tej weryfikacji.
+- `revision` nadal nie jest uzywane (patrz ADR-026) - ta decyzja tego nie zmienia.
+- Zalozenia pod wieloosobowosc sa teraz realne (osobne konta, wlasciciel na rekordzie), ale nadal brak: UI do zarzadzania kontami (zaklada je superuser recznie), przenoszenia wlasnosci miedzy uzytkownikami, i jakiegokolwiek podgladu "kto jest zalogowany na innym urzadzeniu" - zaden z tych scenariuszy nie zostal poproszony, wiec zostaja przyszlym, osobnym krokiem, gdy pojawi sie realna potrzeba.
+
 ## ADR-027: Eksport raportu do PDF
 
 Status: accepted
@@ -450,7 +506,7 @@ Decyzja:
 
 ### Weryfikacja
 
-- Logika decyzyjna (`decideSyncDirection`) i `AppSyncSettings`/`DriftAppSyncSettingsRepository` sa w pelni pokryte testami jednostkowymi (w tym regresyjnie zweryfikowany blad "czesciowy upsert kasuje pole, ktorego nie ustawiono" w ustawieniach - SQLite `excluded.col` w `ON CONFLICT` odzwierciedla probe insertu, nie istniejacy wiersz).
+- Logika decyzyjna (`decideSyncDirection`) i `AppSyncSettings`/`DriftAppSyncSettingsRepository` sa w pelni pokryte testami jednostkowymi. Sprostowanie: pierwsza wersja tego ADR twierdzila, ze `insertOnConflictUpdate` z czesciowym companionem resetuje pominiete kolumny (rzekomo przez `excluded.col` w SQLite) - to nieprawda, Drift jawnie dokumentuje, ze kolumny nieobecne w companionie zostaja niezmienione przy konflikcie. Prawdziwy blad zlapany przez test byl inny: `AppSyncSettings.copyWith` uzywa `??`, wiec jawne przekazanie `null` (np. przy czyszczeniu sesji logowania) jest nieodrozniane od "nic nie zmieniaj" i po prostu zachowuje stara wartosc zamiast ja wyczyscic - std. `withAuthSessionData`/`withAuthSession`-owe metody nie-scalajace, zamiast `copyWith`, tam gdzie trzeba faktycznie wyczyscic pole do `null`.
 - Same wywolania sieciowe do PocketBase nie sa mockowane (jak w ADR-017) - `tool/sync_demo_data.dart` (uruchamiane przez `flutter test tool/sync_demo_data.dart`, nie `dart run`: `AppDatabase` importuje `path_provider`, ktore samo importuje `package:flutter`, wiec zwykla maszyna wirtualna Dart tego nie skompiluje) sieje dane demo do bazy w pamieci i synchronizuje je z prawdziwym serwerem w obie strony: push nowych danych, drugi przebieg pokazujacy pelna idempotentnosc (same "unchanged"), i osobny test pull do zupelnie pustej bazy lokalnej z asercjami na tresc (nazwa klienta, grupy/pozycje projektu) - zweryfikowane realnie dzialajace dla klientow, lokacji, presetow, katalogu i projektow (wraz z zagniezdzonymi grupami/pozycjami).
 - Sciezki dla dystrybutorow/gniazd/polaczen/kratownic/hakow uzywaja dokladnie tego samego wzorca co juz zweryfikowane grupy/pozycje, ale nie sa osobno cwiczone przez dane demo (`DemoProjectFactory` nie ma jeszcze rozdzielnic ani kratownic) - kolejny kandydat do rozszerzenia `tool/sync_demo_data.dart`, jesli okaza sie potrzebne wczesniej niz przy pierwszym realnym uzyciu.
 
@@ -463,7 +519,7 @@ Uzasadnienie:
 Konsekwencje:
 
 - Kazda przyszla zmiana lokalnego schematu, ktora ma sie synchronizowac, wymaga rowniez nowego pliku migracji w `pocketbase/pb_migrations/` (lokalnie i wgranego na serwer) - latwo o tym zapomniec, tak jak stalo sie to miedzy ADR-017 a ADR-020/024/025.
-- Reguly dostepu kolekcji PocketBase sa nadal puste/publiczne (ADR-017) - nic w tej ADR tego nie zmienia; prawdziwa autoryzacja zostaje przyszlym, osobnym krokiem.
+- Reguly dostepu kolekcji PocketBase sa nadal puste/publiczne (ADR-017) - nic w tej ADR tego nie zmienia; prawdziwa autoryzacja zostaje przyszlym, osobnym krokiem (zaadresowane w ADR-028).
 - `revision` (pole w kazdej tabeli od ADR-011) nadal nic nie inkrementuje - "ostatni zapis wygrywa" po `updatedAt` nie go potrzebuje. Zostaje nieuzywane, chyba ze pojawi sie powod na bardziej wyrafinowana strategie konfliktow.
 
 ## ADR-025: Interpolacja tabel nosnosci kratownic

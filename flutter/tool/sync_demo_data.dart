@@ -14,6 +14,14 @@
 // `AppDatabase`, whose native connection (ADR-016) imports `path_provider`,
 // which transitively imports `package:flutter` - a plain Dart VM (`dart
 // run`) cannot compile that, only the Flutter-aware test/app runners can.
+//
+// Since ADR-028, every collection requires a logged-in PocketBase user, so
+// this needs an existing account's credentials passed via environment
+// variables (never hardcode real credentials here):
+//   SYNC_DEMO_EMAIL=crew@example.com SYNC_DEMO_PASSWORD=secret \
+//     flutter test tool/sync_demo_data.dart
+import 'dart:io';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -36,9 +44,23 @@ import 'package:stagecalc/infrastructure/local_database/app_database.dart'
     as db;
 import 'package:stagecalc/infrastructure/sync/sync_summary.dart';
 
+Future<void> _login(PocketBase pb) async {
+  final email = Platform.environment['SYNC_DEMO_EMAIL'];
+  final password = Platform.environment['SYNC_DEMO_PASSWORD'];
+  if (email == null || password == null) {
+    throw StateError(
+      'Set SYNC_DEMO_EMAIL and SYNC_DEMO_PASSWORD to an existing '
+      'PocketBase user account before running this tool (ADR-028: every '
+      'collection now requires a logged-in user).',
+    );
+  }
+  await pb.collection('users').authWithPassword(email, password);
+}
+
 void main() {
   test('syncs demo data against the real PocketBase server', () async {
     final pb = PocketBase('http://192.168.0.113');
+    await _login(pb);
     final database = db.AppDatabase.forTesting(NativeDatabase.memory());
 
     final catalogRepository = DriftCatalogRepository(database);
@@ -114,6 +136,7 @@ void main() {
 
   test('pulls existing remote data into a brand new local database', () async {
     final pb = PocketBase('http://192.168.0.113');
+    await _login(pb);
     final database = db.AppDatabase.forTesting(NativeDatabase.memory());
 
     final services = <String, Future<SyncSummary> Function()>{

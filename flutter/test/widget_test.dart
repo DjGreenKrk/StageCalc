@@ -425,7 +425,9 @@ void main() {
     await tester.tap(find.byTooltip('Wybierz plik'));
     await tester.pumpAndSettle();
 
-    final field = tester.widget<TextField>(find.byType(TextField));
+    final field = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'Sciezka do pliku kopii zapasowej'),
+    );
     expect(field.controller!.text, r'C:\fake\stagecalc_backup.json');
   });
 

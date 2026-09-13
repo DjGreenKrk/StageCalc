@@ -8,6 +8,10 @@ class Projects extends Table {
   TextColumn get id => text()();
   TextColumn get workspaceId => text().withDefault(const Constant('local'))();
   TextColumn get remoteId => text().nullable()();
+
+  /// PocketBase `users` record id of whoever owns this project (ADR-028) -
+  /// see `Clients.ownerId` for why this is not a "local id".
+  TextColumn get ownerId => text().nullable()();
   TextColumn get name => text()();
   TextColumn get phaseId => text().withDefault(const Constant('default'))();
   TextColumn get clientId => text().nullable()();
@@ -232,6 +236,13 @@ class Clients extends Table {
   TextColumn get id => text()();
   TextColumn get workspaceId => text().withDefault(const Constant('local'))();
   TextColumn get remoteId => text().nullable()();
+
+  /// PocketBase `users` record id of whoever owns this client (ADR-028) -
+  /// clients are private per-user, not shared like the catalog/locations.
+  /// Not a "local id" needing translation like every other cross-reference
+  /// in this schema: `users` records only ever exist remotely, so this is
+  /// already the id to push straight into the `owner` relation.
+  TextColumn get ownerId => text().nullable()();
   TextColumn get name => text()();
   TextColumn get contactPerson => text().nullable()();
   TextColumn get email => text().nullable()();
@@ -356,6 +367,14 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
 
+  /// Raw JSON blob `package:pocketbase`'s own `AsyncAuthStore` manages
+  /// (ADR-028) - token plus the logged-in user's full record - so the user
+  /// does not have to log in again every app start. Stored as one opaque
+  /// column rather than separate token/id/email columns: `AsyncAuthStore`
+  /// already owns the encoding, and the live `authStore` (not this column)
+  /// is the source of truth for "who is logged in" while the app is running.
+  TextColumn get authSessionData => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -387,7 +406,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -446,6 +465,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 13) {
         await migrator.createTable(appSettings);
+      }
+      if (from < 14) {
+        await migrator.addColumn(clients, clients.ownerId);
+        await migrator.addColumn(projects, projects.ownerId);
+        await migrator.addColumn(appSettings, appSettings.authSessionData);
       }
     },
   );

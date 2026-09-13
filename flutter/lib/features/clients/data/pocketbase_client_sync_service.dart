@@ -70,9 +70,21 @@ class PocketBaseClientSyncService {
   }
 
   Future<void> _push(db.Client local, RecordModel? remote) async {
+    // Clients are private per-owner (ADR-028) - a client created before
+    // anyone logged in has no owner yet, so stamp it with whoever is
+    // syncing now rather than leaving `owner` empty (which the collection's
+    // access rules would reject outright).
+    final ownerId = local.ownerId ?? _pb.authStore.record?.id;
+    if (ownerId != null && ownerId != local.ownerId) {
+      await (_database.update(_database.clients)
+            ..where((row) => row.id.equals(local.id)))
+          .write(db.ClientsCompanion(ownerId: Value(ownerId)));
+    }
+
     final body = <String, Object?>{
       'local_id': local.id,
       'workspace_id': local.workspaceId,
+      'owner': ownerId,
       'name': local.name,
       'contact_person': local.contactPerson,
       'email': local.email,
@@ -111,6 +123,7 @@ class PocketBaseClientSyncService {
             id: Value(localId),
             remoteId: Value(remote.id),
             workspaceId: Value(remote.getStringValue('workspace_id', 'local')),
+            ownerId: Value(_nullable(remote, 'owner')),
             name: Value(remote.getStringValue('name')),
             contactPerson: Value(_nullable(remote, 'contact_person')),
             email: Value(_nullable(remote, 'email')),

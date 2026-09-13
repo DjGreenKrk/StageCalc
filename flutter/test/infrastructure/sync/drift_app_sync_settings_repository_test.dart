@@ -56,4 +56,37 @@ void main() {
       expect(settings.lastSyncedAt, now);
     },
   );
+
+  test('persists the auth session data (ADR-028)', () async {
+    await repository.setAuthSessionData('{"token":"abc"}');
+
+    expect((await repository.getSettings()).authSessionData, '{"token":"abc"}');
+  });
+
+  test('setting the auth session does not reset sync settings', () async {
+    await repository.setAutoSyncEnabled(true);
+    final now = DateTime(2026, 7, 5, 12);
+    await repository.setLastSyncedAt(now);
+
+    await repository.setAuthSessionData('{"token":"abc"}');
+
+    final settings = await repository.getSettings();
+    expect(settings.autoSyncEnabled, isTrue);
+    expect(settings.lastSyncedAt, now);
+    expect(settings.authSessionData, '{"token":"abc"}');
+  });
+
+  test(
+    'clearing the auth session (logout) does not reset sync settings',
+    () async {
+      await repository.setAutoSyncEnabled(true);
+      await repository.setAuthSessionData('{"token":"abc"}');
+
+      await repository.setAuthSessionData(null);
+
+      final settings = await repository.getSettings();
+      expect(settings.authSessionData, isNull);
+      expect(settings.autoSyncEnabled, isTrue);
+    },
+  );
 }

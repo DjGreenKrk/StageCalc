@@ -94,9 +94,19 @@ class PocketBaseProjectSyncService {
         ? null
         : await _findRemoteId('locations', local.locationId!);
 
+    // Projects are private per-owner (ADR-028) - see the identical comment
+    // in PocketBaseClientSyncService._push.
+    final ownerId = local.ownerId ?? _pb.authStore.record?.id;
+    if (ownerId != null && ownerId != local.ownerId) {
+      await (_database.update(_database.projects)
+            ..where((row) => row.id.equals(local.id)))
+          .write(db.ProjectsCompanion(ownerId: Value(ownerId)));
+    }
+
     final body = <String, Object?>{
       'local_id': local.id,
       'workspace_id': local.workspaceId,
+      'owner': ownerId,
       'name': local.name,
       'phase_id': local.phaseId,
       'client': clientRemoteId,
@@ -445,6 +455,7 @@ class PocketBaseProjectSyncService {
               workspaceId: Value(
                 remote.getStringValue('workspace_id', 'local'),
               ),
+              ownerId: Value(_nullable(remote, 'owner')),
               name: Value(remote.getStringValue('name')),
               phaseId: Value(remote.getStringValue('phase_id', 'default')),
               clientId: Value(clientLocalId),

@@ -14,6 +14,11 @@ import 'sync_summary.dart';
 /// presets/catalog devices go first so that by the time projects sync,
 /// their `client`/`location` relations can already be resolved to a remote
 /// record (see `PocketBaseProjectSyncService._findRemoteId`).
+///
+/// Requires being logged in (ADR-028): every collection's access rules now
+/// require `@request.auth.id != ''`, so an unauthenticated run would just
+/// fail on all five services with confusing per-record errors - this checks
+/// once, up front, and reports one clear message instead.
 class SyncCoordinator {
   const SyncCoordinator(this._pb, this._database);
 
@@ -21,6 +26,12 @@ class SyncCoordinator {
   final db.AppDatabase _database;
 
   Future<SyncSummary> syncAll() async {
+    if (!_pb.authStore.isValid) {
+      return const SyncSummary(
+        errors: ['Zaloguj sie, aby zsynchronizowac dane.'],
+      );
+    }
+
     final summary =
         await PocketBaseClientSyncService(_pb, _database).sync() +
         await PocketBaseLocationSyncService(_pb, _database).sync() +

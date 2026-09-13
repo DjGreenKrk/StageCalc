@@ -416,7 +416,7 @@ Prace:
 
 Wynik:
 
-- Aplikacja nadal dziala offline. Zrealizowano dwukierunkowa synchronizacje (ADR-026) dla wszystkich piecu agregatow: projektow (z pelnym drzewem), katalogu, klientow, lokacji i presetow.
+- Aplikacja nadal dziala offline. Zrealizowano dwukierunkowa synchronizacje (ADR-026) dla wszystkich piecu agregatow: projektow (z pelnym drzewem), katalogu, klientow, lokacji i presetow. Zrealizowano tez prawdziwa autoryzacje (ADR-028): konta osobiste, synchronizacja wymaga logowania, klienci/projekty prywatne, reszta wspolna dla zespolu.
 
 Prace:
 
@@ -433,7 +433,7 @@ Prace:
   Pole `syncState` w bazie (nie `OfflineSyncStatus` w modelu domenowym, ktore nadal nic nie zmienia) jest teraz realnie ustawiane na `synced` + `lastSyncedAt` po kazdym push/pull (ADR-026). `syncError`/`conflict` nie sa uzywane - bledy trafiaja do `SyncSummary.errors`, nie do statusu per-rekord.
 - Spike backendu: PocketBase/Supabase/wlasne API. Rozstrzygnieto na PocketBase (ADR-017), rozwiniete do pelnej dwukierunkowej synchronizacji w ADR-026: piec serwisow synchronizujacych (`PocketBase{Client,Location,PowerPreset,Catalog,Project}SyncService`) + `SyncCoordinator`, migracje schematu PocketBase teraz w repozytorium (`pocketbase/pb_migrations/`).
 - Ustawienia synchronizacji (nowe, ADR-026): tabela `AppSettings`, przelacznik "Automatyczna synchronizacja" + przycisk "Synchronizuj teraz" w ekranie "O aplikacji", automatyczny sync co 15 minut gdy wlaczony.
-- Autoryzacja/reguly dostepu kolekcji PocketBase. Nadal puste/publiczne (ADR-017) - pozostaje przyszlym, osobnym krokiem.
+- Autoryzacja/reguly dostepu kolekcji PocketBase. Zrealizowano (ADR-028): konta osobiste, `owner` na klientach/projektach, wspolne kolekcje (katalog/lokacje/presety) kontra prywatne (klienci/projekty) z regulami dostepu na wszystkich 16 kolekcjach, karta "Konto" w "O aplikacji", stemplowanie wlasciciela przy pushu, `SyncCoordinator` odmawia synchronizacji bez logowania.
 
 ### Etap 11: Release i dystrybucja
 

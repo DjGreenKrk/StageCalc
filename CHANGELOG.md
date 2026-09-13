@@ -8,6 +8,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ### Dodano
 
+- Dodano prawdziwa autoryzacje PocketBase (ADR-028), zastepujac puste/publiczne reguly dostepu z ADR-017: konta osobiste (kolekcja `users`), nowa karta "Konto" w ekranie "O aplikacji" (logowanie/wylogowanie), sesja logowania przezywajaca restart aplikacji (`AsyncAuthStore`). Katalog urzadzen, lokacje i presety zasilania sa wspolne dla kazdego zalogowanego czlonka zespolu; klienci i projekty sa prywatne (widoczne tylko dla wlasciciela, stemplowanego automatycznie przy pierwszej synchronizacji). Praca lokalna dziala normalnie bez logowania — tylko synchronizacja czeka, az ktos sie zaloguje.
 - Dodano wsparcie lokalnej bazy Drift na platformie Web (ADR-016): `WasmDatabase` (sqlite3 skompilowane do WebAssembly) zamiast `NativeDatabase`, wybierane automatycznie przez conditional import (`infrastructure/local_database/connection/`). `flutter build web` wczesniej w ogole sie nie kompilowal (`dart:io`/`dart:ffi` nie dzialaja na web) — aplikacja pierwszy raz faktycznie dziala w przegladarce.
 - Wdrozono StageCalc Web pod `http://192.168.0.113/` (LXC 113, Caddy jako serwer statyczny + reverse proxy do PocketBase na `/api` i `/_`).
 - Dodano pierwsza integracje z PocketBase (ADR-017): utworzono w PocketBase 13 kolekcji odzwierciedlajacych obecny schemat Drift, dodano `PocketBaseProjectSyncService` (jednokierunkowy, idempotentny push projektu z pelnym drzewem grup/pozycji/rozdzielnic/gniazd/polaczen/kratownic do PocketBase) i skrypt dowodowy `tool/push_demo_project.dart`. Bez zmian w UI, bez odczytu z powrotem, bez obslugi konfliktow — to pierwszy krok, nie sync engine.
@@ -39,7 +40,8 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 ### Znane ograniczenia
 
 - Web bez HTTPS: przeglądarka wybiera `sharedIndexedDb` zamiast trwałego OPFS (wymaga bezpiecznego kontekstu, czyli TLS lub `localhost`). Zapisy mogą się zgubić przy twardym odświeżeniu/awarii karty tuż po zapisie. Do czasu skonfigurowania domeny + automatycznego HTTPS w Caddy jest to zaakceptowane ryzyko (patrz ADR-016).
-- Kolekcje PocketBase mają na razie **puste (publiczne) reguły dostępu** — każdy z dostępem do serwera może czytać/zapisywać dowolne dane bez logowania. Akceptowalne tylko w obecnej prywatnej sieci LAN (patrz ADR-017).
+- Klienci/projekty utworzeni przed ADR-028 (bez przypisanego właściciela) nie są już synchronizowalne przez nikogo, dopóki superuser ręcznie nie przypisze im właściciela — jednorazowy koszt migracji z publicznego na oparty na właścicielu model dostępu (patrz ADR-028, sekcja "Konsekwencje").
+- Zakładanie kont użytkowników PocketBase wymaga superusera (brak samodzielnej rejestracji) — zamierzone dla małego, zamkniętego zespołu (ADR-028).
 
 ### Zmieniono
 

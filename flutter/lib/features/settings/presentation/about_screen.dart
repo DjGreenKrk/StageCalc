@@ -5,6 +5,7 @@ import '../../../core/constants/app_metadata.dart';
 import '../../../infrastructure/backup/app_backup_import_service.dart';
 import '../../../infrastructure/backup/app_backup_service.dart';
 import '../../../infrastructure/local_database/app_database_provider.dart';
+import '../../../infrastructure/remote/pocketbase_auth_service.dart';
 import '../../../infrastructure/remote/pocketbase_client_provider.dart';
 import '../../../infrastructure/sync/app_sync_settings.dart';
 import '../../../infrastructure/sync/drift_app_sync_settings_repository.dart';
@@ -27,11 +28,18 @@ class AboutScreen extends StatefulWidget {
 
 class _AboutScreenState extends State<AboutScreen> {
   final _importPathController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   var _isCreatingBackup = false;
   var _isImportingBackup = false;
   var _syncSettings = AppSyncSettings.initial;
   var _isSyncing = false;
+  var _isLoggingIn = false;
   String? _lastSyncMessage;
+  String? _loginError;
+
+  PocketBaseAuthService get _authService =>
+      PocketBaseAuthService(PocketBaseClientProvider.instance);
 
   @override
   void initState() {
@@ -42,6 +50,8 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   void dispose() {
     _importPathController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -85,6 +95,59 @@ class _AboutScreenState extends State<AboutScreen> {
               _InfoRow(label: 'Repozytorium', value: AppMetadata.repository),
               _InfoRow(label: 'Licencja', value: AppMetadata.license),
               _InfoRow(label: 'Pakiet', value: AppMetadata.packageId),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        GreenCrewCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Konto', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              if (_authService.isLoggedIn) ...[
+                Text('Zalogowano jako: ${_authService.currentUserEmail}'),
+                const SizedBox(height: 12),
+                GreenCrewButton(
+                  label: 'Wyloguj',
+                  icon: Icons.logout,
+                  secondary: true,
+                  onPressed: _logout,
+                ),
+              ] else ...[
+                const Text(
+                  'Zaloguj sie, aby synchronizowac dane z reszta ekipy. '
+                  'Praca lokalna dziala normalnie bez logowania.',
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'E-mail'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Haslo'),
+                  onSubmitted: (_) => _isLoggingIn ? null : _login(),
+                ),
+                if (_loginError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _loginError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                GreenCrewButton(
+                  label: _isLoggingIn ? 'Logowanie...' : 'Zaloguj sie',
+                  icon: Icons.login,
+                  onPressed: _isLoggingIn ? null : _login,
+                ),
+              ],
             ],
           ),
         ),
@@ -215,6 +278,39 @@ class _AboutScreenState extends State<AboutScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoggingIn = true;
+      _loginError = null;
+    });
+
+    try {
+      await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (!mounted) {
+        return;
+      }
+      _passwordController.clear();
+      setState(() {});
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _loginError = 'Nie udalo sie zalogowac: $error');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingIn = false);
+      }
+    }
+  }
+
+  void _logout() {
+    _authService.logout();
+    setState(() {});
   }
 
   Future<void> _loadSyncSettings() async {
