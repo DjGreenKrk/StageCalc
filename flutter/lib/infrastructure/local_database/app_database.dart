@@ -300,8 +300,18 @@ class LocationPowerConnectors extends Table {
   TextColumn get id => text()();
   TextColumn get locationId => text().references(Locations, #id)();
   TextColumn get name => text()();
+
+  /// Superseded by [entriesJson] (a group can now mix several connector
+  /// types, see ADR-032) - the app always writes the group's first entry
+  /// here too, purely so this still-`NOT NULL` column stays satisfied; reads
+  /// go through [entriesJson] instead.
   TextColumn get connectorTypeId => text()();
   IntColumn get quantity => integer().withDefault(const Constant(1))();
+
+  /// JSON-encoded array of `{connectorTypeId, quantity}` objects - mirrors
+  /// `CatalogDevices.connectorTypeIdsJson`'s pattern of storing a list in one
+  /// text column instead of a child table.
+  TextColumn get entriesJson => text().withDefault(const Constant('[]'))();
   TextColumn get notes => text().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
@@ -419,7 +429,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -518,6 +528,36 @@ class AppDatabase extends _$AppDatabase {
           )..where((table) => table.id.equals(row.id))).write(
             CatalogDevicesCompanion(
               connectorTypeIdsJson: Value(jsonEncode([legacy])),
+            ),
+          );
+        }
+      }
+      if (from < 16) {
+        await _addColumnIfMissing(
+          migrator,
+          locationPowerConnectors,
+          locationPowerConnectors.entriesJson,
+        );
+        // Carries each existing group's single connector+quantity forward
+        // as a one-entry JSON array - `LocationPowerConnector.fromJson`/the
+        // repository mapper reads `entriesJson` as the source of truth, so
+        // without this every group saved before ADR-032 would appear to
+        // have lost its connector after the upgrade.
+        final connectorRows = await select(locationPowerConnectors).get();
+        for (final row in connectorRows) {
+          final legacy = row.connectorTypeId;
+          if (legacy.trim().isEmpty) {
+            continue;
+          }
+          await (update(
+            locationPowerConnectors,
+          )..where((table) => table.id.equals(row.id))).write(
+            LocationPowerConnectorsCompanion(
+              entriesJson: Value(
+                jsonEncode([
+                  {'connectorTypeId': legacy, 'quantity': row.quantity},
+                ]),
+              ),
             ),
           );
         }

@@ -75,6 +75,7 @@ class DriftLocationRepository implements LocationRepository {
       }
 
       for (final (index, connector) in location.powerConnectors.indexed) {
+        final firstEntry = connector.entries.firstOrNull;
         await _database
             .into(_database.locationPowerConnectors)
             .insertOnConflictUpdate(
@@ -82,8 +83,11 @@ class DriftLocationRepository implements LocationRepository {
                 id: Value(connector.id),
                 locationId: Value(location.id),
                 name: Value(connector.name),
-                connectorTypeId: Value(connector.connectorTypeId),
-                quantity: Value(connector.quantity),
+                connectorTypeId: Value(firstEntry?.connectorTypeId ?? ''),
+                quantity: Value(firstEntry?.quantity ?? 0),
+                entriesJson: Value(
+                  LocationPowerConnector.encodeStoredList(connector.entries),
+                ),
                 notes: Value(connector.notes),
                 sortOrder: Value(index),
                 createdAt: Value(connector.createdAt),
@@ -194,8 +198,10 @@ class DriftLocationRepository implements LocationRepository {
     return LocationPowerConnector(
       id: row.id,
       name: row.name,
-      connectorTypeId: row.connectorTypeId,
-      quantity: row.quantity,
+      entries: LocationPowerConnector.decodeStoredList(
+        row.entriesJson,
+        legacyQuantity: row.quantity,
+      ),
       notes: row.notes,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

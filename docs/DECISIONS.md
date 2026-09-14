@@ -390,6 +390,33 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-032: Wiele typow zlacz w jednej grupie zlaczy lokacji
+
+Status: accepted
+
+Kontekst:
+
+- `LocationPowerConnector` ("grupa zlaczy" na ekranie Lokacje, np. "Rozdzielnia sceny") mial dokladnie jeden `connectorTypeId` i jedna `quantity` na grupe - realna rozdzielnia sceniczna prawie zawsze oferuje kilka roznych typow zlacz naraz (np. 2x CEE 32A 5P + 4x Schuko), wiec taka grupa musiala byc sztucznie rozbita na kilka osobnych grup o tej samej nazwie, albo po prostu nie oddawala realnego wyposazenia.
+- Uzytkownik: "jak już mamy 'grupa złączy' to dobrze żeby w tej grupie dało się dodać różne rodzaje złącz."
+
+Decyzja:
+
+- `LocationPowerConnector` traci pola `connectorTypeId`/`quantity`, zyskuje `entries: List<LocationConnectorEntry>` - kazdy wpis to wlasny `connectorTypeId` + `quantity`. `availablePowerKw` sumuje wszystkie wpisy; nowy getter `entriesSummary` buduje czytelny opis typu "2x 32 A CEE 5P + 4x 16 A Uni-Schuko" (uzywany wszedzie tam, gdzie grupa jest wyswietlana - karta lokacji, szczegoly, dialog edycji, dialog tworzenia rozdzielnicy z lokacji w projekcie), zeby ten format nie byl duplikowany w kazdym miejscu z osobna.
+- **Lokalny magazyn (Drift)**: nowa kolumna `LocationPowerConnectors.entriesJson` (JSON-encoded array `{connectorTypeId, quantity}`, domyslnie `'[]'`) - dokladnie ten sam wzorzec co `CatalogDevices.connectorTypeIdsJson` z ADR-030/031. Stare kolumny `connectorTypeId`/`quantity` **zostaja fizycznie w schemacie bez zmiany nullability** (wciaz `NOT NULL`) - aplikacja nadal je zapisuje (pierwszy wpis z `entries`), tylko wylacznie po to, zeby ten wciaz-`NOT NULL` warunek pozostal spelniony; odczyt idzie zawsze przez `entriesJson`. Swiadomie NIE zmieniono `connectorTypeId` na `nullable()` (mimo ze `CatalogDevices.connectorTypeId` tak zrobiono w ADR-030) - nullability zadeklarowana w kodzie Dart dotyczy tylko `onCreate` na *nowej* bazie, a fizyczny `NOT NULL` istniejacych, migrowanych baz uzytkownikow zostaje niezmieniony (SQLite nie potrafi zdjac ograniczenia kolumny przez zwykly `ALTER TABLE ADD COLUMN`), wiec poleganie na tym dla nowych insertow byloby niespojne miedzy swieza instalacja a zaktualizowana - a to dokladnie ten rodzaj cichej niespojnosci, ktory juz raz kosztowal falszywie pozytywny test w v0.3.3.
+  - Migracja `from < 16`: dodaje `entriesJson`, potem dla kazdego istniejacego wiersza przepisuje jego stary pojedynczy `connectorTypeId`+`quantity` jako jednoelementowa tablice JSON - bez tego kroku kazda grupa zapisana przed ta zmiana wygladalaby po aktualizacji na pusta.
+- **Zdalny magazyn (PocketBase)**: zero migracji schematu - ponownie uzyto wymaganego pola tekstowego `connector_type_id` do przenoszenia calego JSON-a `entries` (identyczny trik co `pocketbase_catalog_sync_service.dart` z ADR-030/031 dla `connectorTypeIdsJson`). Odczyt (`decodeStoredList`) probuje `jsonDecode`; jesli to sie nie uda (stary zdalny rekord z pojedynczym connector-type-id jako czystym tekstem, zsynchronizowany przed ta zmiana), traktuje cala wartosc jako jednoelementowa liste, biorac `quantity` z osobnego zdalnego pola jako `legacyQuantity`.
+- **`distro_create_dialog.dart`** (tworzenie rozdzielnicy w projekcie z grupy zlaczy lokacji): `_locationOutlets` iteruje teraz po kazdym `entry` w grupie i generuje gniazda dla kazdego typu osobno (zamiast zakladac jeden typ na cala grupe) - to jedyne miejsce poza samym ekranem Lokacje, ktore faktycznie konsumowalo pojedynczy `connectorTypeId`/`quantity`, wiec bez tej zmiany wybranie grupy z wieloma typami po cichu zgubiloby wszystkie typy poza pierwszym.
+- **UI dialogu grupy** (`_PowerConnectorDialog`): zamiast jednego dropdownu + pola ilosci, lista wierszy (typ zlacza + ilosc + usun), kazdy z wlasnym `TextEditingController`, plus przycisk "Dodaj typ zlacza"; usuniecie ostatniego pozostalego wiersza jest zablokowane (grupa musi miec co najmniej jeden typ).
+
+Uzasadnienie:
+
+- Ponowne uzycie istniejacego wymaganego pola tekstowego zamiast dodawania nowego pola w PocketBase to ten sam kompromis co w ADR-030/031 - unika kolejnej reczej migracji `pb_migrations` dla czegos, co i tak jest zwyklym tekstem z punktu widzenia bazy.
+- Zachowanie fizycznej `NOT NULL` starych kolumn (zamiast probowac je poluzowac) jest bezposrednia lekcja z DriftRemoteException/`SqliteException` z v0.3.3-v0.3.4: zmiana nullability w kodzie Dart nie gwarantuje tego samego zachowania na juz-zmigrowanej bazie uzytkownika, wiec bezpieczniej jest po prostu zawsze cos zapisac niz polegac na zgodnosci schematu, ktorej nie da sie w pelni zweryfikowac bez fizycznego dostepu do kazdej wersji bazy w terenie.
+
+Konsekwencje:
+
+- Kazda grupa zlaczy zapisana przed ta zmiana (lokalnie lub zdalnie) zostaje przy nastepnym odczycie/synchronizacji automatycznie przepisana na jednoelementowa liste `entries` - bez utraty danych i bez akcji uzytkownika.
+
 ## ADR-031: Kategorie i pola zalezne od kategorii w katalogu urzadzen
 
 Status: accepted

@@ -157,8 +157,7 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
                         (connector) => DropdownMenuItem(
                           value: connector,
                           child: Text(
-                            '${connector.name} / ${connector.quantity}x '
-                            '${_connectorLabel(connector.connectorTypeId)}',
+                            '${connector.name} / ${connector.entriesSummary}',
                           ),
                         ),
                       )
@@ -282,21 +281,27 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
       return const [];
     }
 
-    final count = connector.quantity.clamp(0, 96).toInt();
-    return [
-      for (var index = 0; index < count; index++)
-        PowerOutletTemplate(
-          id: 'location_${connector.id}_$index',
-          name: _defaultOutletName(
-            label: connector.name,
-            connectorTypeId: connector.connectorTypeId,
-            phase: _phaseForLocationConnector(connector, index, count),
-            index: index,
+    final outlets = <PowerOutletTemplate>[];
+    for (final entry in connector.entries) {
+      final count = entry.quantity.clamp(0, 96).toInt();
+      for (var index = 0; index < count; index++) {
+        final phase = _phaseForLocationConnectorEntry(entry, index, count);
+        outlets.add(
+          PowerOutletTemplate(
+            id: 'location_${connector.id}_${entry.connectorTypeId}_$index',
+            name: _defaultOutletName(
+              label: connector.name,
+              connectorTypeId: entry.connectorTypeId,
+              phase: phase,
+              index: index,
+            ),
+            connectorTypeId: entry.connectorTypeId,
+            phase: phase,
           ),
-          connectorTypeId: connector.connectorTypeId,
-          phase: _phaseForLocationConnector(connector, index, count),
-        ),
-    ];
+        );
+      }
+    }
+    return outlets;
   }
 
   List<PowerOutletTemplate> get _customOutlets {
@@ -547,12 +552,12 @@ class _DistroCreateResult {
   final String? locationConnectorGroupId;
 }
 
-PowerPhase _phaseForLocationConnector(
-  LocationPowerConnector connector,
+PowerPhase _phaseForLocationConnectorEntry(
+  LocationConnectorEntry entry,
   int index,
   int count,
 ) {
-  final type = ConnectorTypes.findById(connector.connectorTypeId);
+  final type = ConnectorTypes.findById(entry.connectorTypeId);
   if (type?.phaseCount == 3) {
     return PowerPhase.all;
   }

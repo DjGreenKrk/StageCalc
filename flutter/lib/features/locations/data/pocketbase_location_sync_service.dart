@@ -6,6 +6,7 @@ import '../../../infrastructure/sync/pocketbase_child_sync.dart';
 import '../../../infrastructure/sync/pocketbase_datetime.dart';
 import '../../../infrastructure/sync/sync_direction.dart';
 import '../../../infrastructure/sync/sync_summary.dart';
+import '../domain/entities/location.dart';
 
 /// Two-way sync of `locations` plus its `location_power_connectors` and
 /// `location_contacts` children (ADR-026). Reconciliation happens at the
@@ -121,7 +122,12 @@ class PocketBaseLocationSyncService {
             'local_id': connector.id,
             'location': record.id,
             'name': connector.name,
-            'connector_type_id': connector.connectorTypeId,
+            // Reuses the required `connector_type_id` text field to carry
+            // the full JSON-encoded entries array (mirrors how the catalog
+            // devices sync service reuses its own `connector_type_id` field
+            // for `connectorTypeIdsJson` - see ADR-030/ADR-032) instead of
+            // adding a PocketBase schema migration for one more field.
+            'connector_type_id': connector.entriesJson,
             'quantity': connector.quantity,
             'notes': connector.notes,
             'created_at': toRemoteIso(connector.createdAt),
@@ -207,6 +213,11 @@ class PocketBaseLocationSyncService {
             filter: _pb.filter('location = {:id}', {'id': remote.id}),
           );
       for (final record in remoteConnectors) {
+        final remoteQuantity = record.getIntValue('quantity', 1);
+        final entries = LocationPowerConnector.decodeStoredList(
+          record.getStringValue('connector_type_id'),
+          legacyQuantity: remoteQuantity,
+        );
         await _database
             .into(_database.locationPowerConnectors)
             .insertOnConflictUpdate(
@@ -215,9 +226,12 @@ class PocketBaseLocationSyncService {
                 locationId: Value(localId),
                 name: Value(record.getStringValue('name')),
                 connectorTypeId: Value(
-                  record.getStringValue('connector_type_id'),
+                  entries.firstOrNull?.connectorTypeId ?? '',
                 ),
-                quantity: Value(record.getIntValue('quantity', 1)),
+                quantity: Value(entries.firstOrNull?.quantity ?? 0),
+                entriesJson: Value(
+                  LocationPowerConnector.encodeStoredList(entries),
+                ),
                 notes: Value(_nullable(record, 'notes')),
                 createdAt: Value(
                   fromRemoteIso(record.getStringValue('created_at')) ??

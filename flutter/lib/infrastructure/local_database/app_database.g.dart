@@ -11291,6 +11291,18 @@ class $LocationPowerConnectorsTable extends LocationPowerConnectors
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _entriesJsonMeta = const VerificationMeta(
+    'entriesJson',
+  );
+  @override
+  late final GeneratedColumn<String> entriesJson = GeneratedColumn<String>(
+    'entries_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -11387,6 +11399,7 @@ class $LocationPowerConnectorsTable extends LocationPowerConnectors
     name,
     connectorTypeId,
     quantity,
+    entriesJson,
     notes,
     sortOrder,
     createdAt,
@@ -11444,6 +11457,15 @@ class $LocationPowerConnectorsTable extends LocationPowerConnectors
       context.handle(
         _quantityMeta,
         quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('entries_json')) {
+      context.handle(
+        _entriesJsonMeta,
+        entriesJson.isAcceptableOrUnknown(
+          data['entries_json']!,
+          _entriesJsonMeta,
+        ),
       );
     }
     if (data.containsKey('notes')) {
@@ -11530,6 +11552,10 @@ class $LocationPowerConnectorsTable extends LocationPowerConnectors
         DriftSqlType.int,
         data['${effectivePrefix}quantity'],
       )!,
+      entriesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entries_json'],
+      )!,
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -11576,8 +11602,18 @@ class LocationPowerConnector extends DataClass
   final String id;
   final String locationId;
   final String name;
+
+  /// Superseded by [entriesJson] (a group can now mix several connector
+  /// types, see ADR-032) - the app always writes the group's first entry
+  /// here too, purely so this still-`NOT NULL` column stays satisfied; reads
+  /// go through [entriesJson] instead.
   final String connectorTypeId;
   final int quantity;
+
+  /// JSON-encoded array of `{connectorTypeId, quantity}` objects - mirrors
+  /// `CatalogDevices.connectorTypeIdsJson`'s pattern of storing a list in one
+  /// text column instead of a child table.
+  final String entriesJson;
   final String? notes;
   final int sortOrder;
   final DateTime createdAt;
@@ -11592,6 +11628,7 @@ class LocationPowerConnector extends DataClass
     required this.name,
     required this.connectorTypeId,
     required this.quantity,
+    required this.entriesJson,
     this.notes,
     required this.sortOrder,
     required this.createdAt,
@@ -11609,6 +11646,7 @@ class LocationPowerConnector extends DataClass
     map['name'] = Variable<String>(name);
     map['connector_type_id'] = Variable<String>(connectorTypeId);
     map['quantity'] = Variable<int>(quantity);
+    map['entries_json'] = Variable<String>(entriesJson);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -11633,6 +11671,7 @@ class LocationPowerConnector extends DataClass
       name: Value(name),
       connectorTypeId: Value(connectorTypeId),
       quantity: Value(quantity),
+      entriesJson: Value(entriesJson),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -11661,6 +11700,7 @@ class LocationPowerConnector extends DataClass
       name: serializer.fromJson<String>(json['name']),
       connectorTypeId: serializer.fromJson<String>(json['connectorTypeId']),
       quantity: serializer.fromJson<int>(json['quantity']),
+      entriesJson: serializer.fromJson<String>(json['entriesJson']),
       notes: serializer.fromJson<String?>(json['notes']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -11680,6 +11720,7 @@ class LocationPowerConnector extends DataClass
       'name': serializer.toJson<String>(name),
       'connectorTypeId': serializer.toJson<String>(connectorTypeId),
       'quantity': serializer.toJson<int>(quantity),
+      'entriesJson': serializer.toJson<String>(entriesJson),
       'notes': serializer.toJson<String?>(notes),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -11697,6 +11738,7 @@ class LocationPowerConnector extends DataClass
     String? name,
     String? connectorTypeId,
     int? quantity,
+    String? entriesJson,
     Value<String?> notes = const Value.absent(),
     int? sortOrder,
     DateTime? createdAt,
@@ -11711,6 +11753,7 @@ class LocationPowerConnector extends DataClass
     name: name ?? this.name,
     connectorTypeId: connectorTypeId ?? this.connectorTypeId,
     quantity: quantity ?? this.quantity,
+    entriesJson: entriesJson ?? this.entriesJson,
     notes: notes.present ? notes.value : this.notes,
     sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
@@ -11733,6 +11776,9 @@ class LocationPowerConnector extends DataClass
           ? data.connectorTypeId.value
           : this.connectorTypeId,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      entriesJson: data.entriesJson.present
+          ? data.entriesJson.value
+          : this.entriesJson,
       notes: data.notes.present ? data.notes.value : this.notes,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -11754,6 +11800,7 @@ class LocationPowerConnector extends DataClass
           ..write('name: $name, ')
           ..write('connectorTypeId: $connectorTypeId, ')
           ..write('quantity: $quantity, ')
+          ..write('entriesJson: $entriesJson, ')
           ..write('notes: $notes, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
@@ -11773,6 +11820,7 @@ class LocationPowerConnector extends DataClass
     name,
     connectorTypeId,
     quantity,
+    entriesJson,
     notes,
     sortOrder,
     createdAt,
@@ -11791,6 +11839,7 @@ class LocationPowerConnector extends DataClass
           other.name == this.name &&
           other.connectorTypeId == this.connectorTypeId &&
           other.quantity == this.quantity &&
+          other.entriesJson == this.entriesJson &&
           other.notes == this.notes &&
           other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
@@ -11808,6 +11857,7 @@ class LocationPowerConnectorsCompanion
   final Value<String> name;
   final Value<String> connectorTypeId;
   final Value<int> quantity;
+  final Value<String> entriesJson;
   final Value<String?> notes;
   final Value<int> sortOrder;
   final Value<DateTime> createdAt;
@@ -11823,6 +11873,7 @@ class LocationPowerConnectorsCompanion
     this.name = const Value.absent(),
     this.connectorTypeId = const Value.absent(),
     this.quantity = const Value.absent(),
+    this.entriesJson = const Value.absent(),
     this.notes = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -11839,6 +11890,7 @@ class LocationPowerConnectorsCompanion
     required String name,
     required String connectorTypeId,
     this.quantity = const Value.absent(),
+    this.entriesJson = const Value.absent(),
     this.notes = const Value.absent(),
     this.sortOrder = const Value.absent(),
     required DateTime createdAt,
@@ -11860,6 +11912,7 @@ class LocationPowerConnectorsCompanion
     Expression<String>? name,
     Expression<String>? connectorTypeId,
     Expression<int>? quantity,
+    Expression<String>? entriesJson,
     Expression<String>? notes,
     Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
@@ -11876,6 +11929,7 @@ class LocationPowerConnectorsCompanion
       if (name != null) 'name': name,
       if (connectorTypeId != null) 'connector_type_id': connectorTypeId,
       if (quantity != null) 'quantity': quantity,
+      if (entriesJson != null) 'entries_json': entriesJson,
       if (notes != null) 'notes': notes,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
@@ -11894,6 +11948,7 @@ class LocationPowerConnectorsCompanion
     Value<String>? name,
     Value<String>? connectorTypeId,
     Value<int>? quantity,
+    Value<String>? entriesJson,
     Value<String?>? notes,
     Value<int>? sortOrder,
     Value<DateTime>? createdAt,
@@ -11910,6 +11965,7 @@ class LocationPowerConnectorsCompanion
       name: name ?? this.name,
       connectorTypeId: connectorTypeId ?? this.connectorTypeId,
       quantity: quantity ?? this.quantity,
+      entriesJson: entriesJson ?? this.entriesJson,
       notes: notes ?? this.notes,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
@@ -11939,6 +11995,9 @@ class LocationPowerConnectorsCompanion
     }
     if (quantity.present) {
       map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (entriesJson.present) {
+      map['entries_json'] = Variable<String>(entriesJson.value);
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -11978,6 +12037,7 @@ class LocationPowerConnectorsCompanion
           ..write('name: $name, ')
           ..write('connectorTypeId: $connectorTypeId, ')
           ..write('quantity: $quantity, ')
+          ..write('entriesJson: $entriesJson, ')
           ..write('notes: $notes, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
@@ -22726,6 +22786,7 @@ typedef $$LocationPowerConnectorsTableCreateCompanionBuilder =
       required String name,
       required String connectorTypeId,
       Value<int> quantity,
+      Value<String> entriesJson,
       Value<String?> notes,
       Value<int> sortOrder,
       required DateTime createdAt,
@@ -22743,6 +22804,7 @@ typedef $$LocationPowerConnectorsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String> connectorTypeId,
       Value<int> quantity,
+      Value<String> entriesJson,
       Value<String?> notes,
       Value<int> sortOrder,
       Value<DateTime> createdAt,
@@ -22811,6 +22873,11 @@ class $$LocationPowerConnectorsTableFilterComposer
 
   ColumnFilters<int> get quantity => $composableBuilder(
     column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entriesJson => $composableBuilder(
+    column: $table.entriesJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22907,6 +22974,11 @@ class $$LocationPowerConnectorsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get entriesJson => $composableBuilder(
+    column: $table.entriesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -22993,6 +23065,11 @@ class $$LocationPowerConnectorsTableAnnotationComposer
 
   GeneratedColumn<int> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get entriesJson => $composableBuilder(
+    column: $table.entriesJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -23088,6 +23165,7 @@ class $$LocationPowerConnectorsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String> connectorTypeId = const Value.absent(),
                 Value<int> quantity = const Value.absent(),
+                Value<String> entriesJson = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -23103,6 +23181,7 @@ class $$LocationPowerConnectorsTableTableManager
                 name: name,
                 connectorTypeId: connectorTypeId,
                 quantity: quantity,
+                entriesJson: entriesJson,
                 notes: notes,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
@@ -23120,6 +23199,7 @@ class $$LocationPowerConnectorsTableTableManager
                 required String name,
                 required String connectorTypeId,
                 Value<int> quantity = const Value.absent(),
+                Value<String> entriesJson = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 required DateTime createdAt,
@@ -23135,6 +23215,7 @@ class $$LocationPowerConnectorsTableTableManager
                 name: name,
                 connectorTypeId: connectorTypeId,
                 quantity: quantity,
+                entriesJson: entriesJson,
                 notes: notes,
                 sortOrder: sortOrder,
                 createdAt: createdAt,

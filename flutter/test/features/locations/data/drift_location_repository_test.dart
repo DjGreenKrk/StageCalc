@@ -53,8 +53,16 @@ void main() {
           LocationPowerConnector(
             id: 'connector_sqlite',
             name: 'Scena',
-            connectorTypeId: 'cee_32a_5p',
-            quantity: 2,
+            entries: const [
+              LocationConnectorEntry(
+                connectorTypeId: 'cee_32a_5p',
+                quantity: 2,
+              ),
+              LocationConnectorEntry(
+                connectorTypeId: 'schuko_16a',
+                quantity: 4,
+              ),
+            ],
             createdAt: now,
             updatedAt: now,
           ),
@@ -73,7 +81,16 @@ void main() {
     expect(location.contacts.first.role, 'Manager');
     expect(location.contacts.last.name, 'Technik obiektu');
     expect(location.powerConnectors.single.name, 'Scena');
-    expect(location.totalAvailablePowerKw, closeTo(44.3, 0.1));
+    expect(location.powerConnectors.single.entries, hasLength(2));
+    expect(
+      location.powerConnectors.single.entries.first.connectorTypeId,
+      'cee_32a_5p',
+    );
+    expect(
+      location.powerConnectors.single.entries.last.connectorTypeId,
+      'schuko_16a',
+    );
+    expect(location.totalAvailablePowerKw, closeTo(59.1, 0.1));
 
     await repository.deleteLocation(locationId);
     final locationsAfterDelete = await repository.getLocations();

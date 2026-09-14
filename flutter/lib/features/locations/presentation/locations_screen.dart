@@ -331,8 +331,7 @@ class _LocationCard extends StatelessWidget {
                 for (final connector in location.powerConnectors)
                   Chip(
                     label: Text(
-                      '${connector.name}: ${connector.quantity}x '
-                      '${_connectorLabel(connector.connectorTypeId)}',
+                      '${connector.name}: ${connector.entriesSummary}',
                     ),
                   ),
               ],
@@ -433,7 +432,7 @@ class _LocationDetailsScreen extends StatelessWidget {
                   _DetailRow(
                     label: connector.name,
                     value:
-                        '${connector.quantity}x ${_connectorLabel(connector.connectorTypeId)} / '
+                        '${connector.entriesSummary} / '
                         '${connector.availablePowerKw.toStringAsFixed(1)} kW',
                   ),
             ],
@@ -663,7 +662,7 @@ class _LocationDialogState extends State<_LocationDialog> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(connector.name),
                       subtitle: Text(
-                        '${connector.quantity}x ${_connectorLabel(connector.connectorTypeId)} / '
+                        '${connector.entriesSummary} / '
                         '${connector.availablePowerKw.toStringAsFixed(1)} kW',
                       ),
                       trailing: Wrap(
@@ -822,8 +821,9 @@ class _LocationDialogState extends State<_LocationDialog> {
         connector: LocationPowerConnector(
           id: 'location_connector_${now.microsecondsSinceEpoch}',
           name: 'Grupa zlaczy ${_powerConnectors.length + 1}',
-          connectorTypeId: 'cee_32a_5p',
-          quantity: 1,
+          entries: const [
+            LocationConnectorEntry(connectorTypeId: 'cee_32a_5p', quantity: 1),
+          ],
           createdAt: now,
           updatedAt: now,
         ),
@@ -871,28 +871,39 @@ class _PowerConnectorDialog extends StatefulWidget {
 
 class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
   late final TextEditingController _nameController;
-  late final TextEditingController _quantityController;
   late final TextEditingController _notesController;
-  late String _connectorTypeId;
+  late List<_ConnectorEntryDraft> _entries;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.connector.name);
-    _quantityController = TextEditingController(
-      text: widget.connector.quantity.toString(),
-    );
     _notesController = TextEditingController(
       text: widget.connector.notes ?? '',
     );
-    _connectorTypeId = widget.connector.connectorTypeId;
+    _entries = widget.connector.entries.isNotEmpty
+        ? [
+            for (final entry in widget.connector.entries)
+              _ConnectorEntryDraft(
+                connectorTypeId: entry.connectorTypeId,
+                quantity: entry.quantity,
+              ),
+          ]
+        : [
+            _ConnectorEntryDraft(
+              connectorTypeId: ConnectorTypes.all.first.id,
+              quantity: 1,
+            ),
+          ];
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _quantityController.dispose();
     _notesController.dispose();
+    for (final entry in _entries) {
+      entry.dispose();
+    }
     super.dispose();
   }
 
@@ -910,28 +921,77 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
               decoration: const InputDecoration(labelText: 'Nazwa'),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _connectorTypeId,
-              decoration: const InputDecoration(labelText: 'Typ zlacza'),
-              items: ConnectorTypes.all
-                  .map(
-                    (connector) => DropdownMenuItem(
-                      value: connector.id,
-                      child: Text(connector.label),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _connectorTypeId = value);
-                }
-              },
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Typy zlacz w tej grupie',
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _quantityController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Ilosc'),
+            const SizedBox(height: 4),
+            for (final entry in _entries)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: entry.connectorTypeId,
+                        decoration: const InputDecoration(
+                          labelText: 'Typ zlacza',
+                        ),
+                        items: ConnectorTypes.all
+                            .map(
+                              (connector) => DropdownMenuItem(
+                                value: connector.id,
+                                child: Text(connector.label),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => entry.connectorTypeId = value);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: entry.quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Ilosc'),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Usun typ zlacza',
+                      onPressed: _entries.length <= 1
+                          ? null
+                          : () => setState(() {
+                              entry.dispose();
+                              _entries.remove(entry);
+                            }),
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() {
+                  _entries.add(
+                    _ConnectorEntryDraft(
+                      connectorTypeId: ConnectorTypes.all.first.id,
+                      quantity: 1,
+                    ),
+                  );
+                }),
+                icon: const Icon(Icons.add),
+                label: const Text('Dodaj typ zlacza'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -962,8 +1022,13 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
       LocationPowerConnector(
         id: widget.connector.id,
         name: name,
-        connectorTypeId: _connectorTypeId,
-        quantity: int.tryParse(_quantityController.text.trim()) ?? 1,
+        entries: [
+          for (final entry in _entries)
+            LocationConnectorEntry(
+              connectorTypeId: entry.connectorTypeId,
+              quantity: int.tryParse(entry.quantityController.text.trim()) ?? 1,
+            ),
+        ],
         notes: _emptyToNull(_notesController.text),
         createdAt: widget.connector.createdAt,
         updatedAt: DateTime.now(),
@@ -975,6 +1040,19 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
   }
+}
+
+/// Mutable editing state for one row in [_PowerConnectorDialog]'s "Typy
+/// zlacz" list - a [TextEditingController] needs a stable owner to dispose,
+/// so this cannot just be the immutable [LocationConnectorEntry].
+class _ConnectorEntryDraft {
+  _ConnectorEntryDraft({required this.connectorTypeId, required int quantity})
+    : quantityController = TextEditingController(text: quantity.toString());
+
+  String connectorTypeId;
+  final TextEditingController quantityController;
+
+  void dispose() => quantityController.dispose();
 }
 
 class _LocationContactDialog extends StatefulWidget {
@@ -1105,8 +1183,4 @@ class _LocationFormResult {
   final String? notes;
   final List<LocationContact> contacts;
   final List<LocationPowerConnector> powerConnectors;
-}
-
-String _connectorLabel(String connectorTypeId) {
-  return ConnectorTypes.findById(connectorTypeId)?.label ?? connectorTypeId;
 }

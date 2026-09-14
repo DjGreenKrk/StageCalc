@@ -346,6 +346,75 @@ void main() {
     expect(find.text('Zacisk hakowy'), findsOneWidget);
   });
 
+  testWidgets(
+    'adds a location connector group mixing several connector types',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Lokacje'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Dodaj lokacje').first);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Nazwa'),
+        'Hala Testowa',
+      );
+      await tester.pumpAndSettle();
+
+      final addGroupButton = find.text('Dodaj grupe');
+      await tester.ensureVisible(addGroupButton);
+      await tester.pumpAndSettle();
+      await tester.tap(addGroupButton);
+      await tester.pumpAndSettle();
+
+      // The group dialog opens with one default entry (32 A CEE 5P).
+      // Adding a second entry defaults it to the first `ConnectorTypes`
+      // entry (16 A Uni-Schuko) - already a different type from the first,
+      // without needing to touch either dropdown.
+      final addEntryButton = find.text('Dodaj typ zlacza');
+      await tester.ensureVisible(addEntryButton);
+      await tester.pumpAndSettle();
+      await tester.tap(addEntryButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
+
+      // Two `FilledButton`s named "Zapisz" exist at this point - the group
+      // dialog's own and the location dialog's underneath it, which stays
+      // mounted (just obscured) while the group dialog's route is on top -
+      // `.last` is the topmost (most recently pushed) one.
+      final saveGroupButton = find.widgetWithText(FilledButton, 'Zapisz').last;
+      await tester.ensureVisible(saveGroupButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveGroupButton);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('1x 32 A CEE 5P + 1x 16 A Uni-Schuko / 25.8 kW'),
+        findsOneWidget,
+      );
+
+      final saveLocationButton = find.widgetWithText(FilledButton, 'Zapisz');
+      await tester.ensureVisible(saveLocationButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveLocationButton);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Grupa zlaczy 1: 1x 32 A CEE 5P + 1x 16 A Uni-Schuko'),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('switches project editor to patcher view', (tester) async {
     await tester.pumpWidget(const StageCalcApp());
     await tester.pumpAndSettle();

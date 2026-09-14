@@ -9,6 +9,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 ### Dodano
 
 - Dodano kategorie oswietlenie/naglosnienie/multimedia w katalogu urzadzen (ADR-031), zastepujac jedna ogolna kategorie "Urzadzenie" - zgodnie z pierwotnym podzialem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urzadzenie" pokazuje teraz tylko pola sensowne dla wybranej kategorii: "Rigging" nie pokazuje juz Mocy/Pradu/typow zlacz/punktow zaczepienia, "Kabel" nie pokazuje Mocy/Pradu/Producenta/punktow zaczepienia. Dodano tez filtr kategorii (rzad chipow) na ekranie Katalog, obok istniejacego wyszukiwania tekstowego. Bez migracji schematu (kategoria to zwykle pole tekstowe, ten sam wzorzec co ADR-030) - istniejace urzadzenia z kategoria "Urzadzenie" wczytuja sie jako "Inne".
+- Grupa zlaczy lokacji moze teraz miec wiele roznych typow zlacz naraz (ADR-032), np. "Rozdzielnia sceny" = 2x CEE 32A 5P + 4x Schuko, zamiast jednego typu na cala grupe. Dialog edycji grupy pokazuje liste wierszy typ+ilosc z przyciskiem "Dodaj typ zlacza"; tworzenie rozdzielnicy w projekcie z takiej grupy generuje teraz gniazda dla kazdego typu osobno. Bez migracji schematu PocketBase (ponownie uzyto istniejacego pola tekstowego na JSON, jak w ADR-030/031); lokalna baza dostaje jedna nowa kolumne i automatycznie przepisuje kazda istniejaca grupe na jednoelementowa liste.
 
 ## v0.3.4+1 - 2026-09-14
 
