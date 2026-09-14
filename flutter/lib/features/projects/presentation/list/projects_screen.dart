@@ -78,7 +78,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac projektow. Dane lokalne pozostaly bez zmian.\n$error';
+            'Nie udało się wczytać projektów. Dane lokalne pozostały bez zmian.\n$error';
         _isLoading = false;
       });
     }
@@ -102,7 +102,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+            _error ?? 'Baza danych nie jest gotowa. Spróbuj ponownie.',
           ),
         ),
       );
@@ -135,9 +135,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               height: 360,
               child: GreenCrewEmptyState(
                 icon: Icons.error_outline,
-                title: 'Blad danych',
+                title: 'Błąd danych',
                 message: _error!,
-                actionLabel: 'Sprobuj ponownie',
+                actionLabel: 'Spróbuj ponownie',
                 onAction: _loadProjects,
               ),
             )
@@ -146,8 +146,8 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               height: 360,
               child: GreenCrewEmptyState(
                 icon: Icons.dashboard_outlined,
-                title: 'Brak projektow',
-                message: 'Dodaj pierwszy projekt, aby rozpoczac kalkulacje.',
+                title: 'Brak projektów',
+                message: 'Dodaj pierwszy projekt, aby rozpocząć kalkulacje.',
                 actionLabel: 'Dodaj projekt',
               ),
             )
@@ -417,7 +417,7 @@ class _ProjectCard extends StatelessWidget {
                 value: '${totals.powerKw.toStringAsFixed(1)} kW',
               ),
               _MetricChip(
-                label: 'Prad',
+                label: 'Prąd',
                 value: '${totals.currentA.toStringAsFixed(1)} A',
               ),
               _MetricChip(

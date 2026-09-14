@@ -70,7 +70,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac klientow. Dane lokalne pozostaly bez zmian.\n$error';
+            'Nie udało się wczytać klientów. Dane lokalne pozostały bez zmian.\n$error';
         _isLoading = false;
       });
     }
@@ -97,7 +97,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+            _error ?? 'Baza danych nie jest gotowa. Spróbuj ponownie.',
           ),
         ),
       );
@@ -135,9 +135,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
               height: 360,
               child: GreenCrewEmptyState(
                 icon: Icons.error_outline,
-                title: 'Blad danych',
+                title: 'Błąd danych',
                 message: _error!,
-                actionLabel: 'Sprobuj ponownie',
+                actionLabel: 'Spróbuj ponownie',
                 onAction: _loadClients,
               ),
             )
@@ -145,10 +145,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
             GreenCrewCard(
               child: GreenCrewEmptyState(
                 icon: Icons.badge_outlined,
-                title: 'Brak klientow',
+                title: 'Brak klientów',
                 message: _query.isEmpty
-                    ? 'Dodaj klienta, aby przypisac go do projektu.'
-                    : 'Zmien zapytanie albo dodaj nowego klienta.',
+                    ? 'Dodaj klienta, aby przypisać go do projektu.'
+                    : 'Zmień zapytanie albo dodaj nowego klienta.',
                 actionLabel: 'Dodaj klienta',
                 onAction: () => _openClientDialog(),
               ),
@@ -219,8 +219,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac klienta?'),
-        content: Text('"${client.name}" zostanie usuniety lokalnie.'),
+        title: const Text('Usunąć klienta?'),
+        content: Text('"${client.name}" zostanie usunięty lokalnie.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -228,7 +228,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -248,7 +248,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     setState(() => _clients = clients);
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Klient usuniety lokalnie')));
+    ).showSnackBar(const SnackBar(content: Text('Klient usunięty lokalnie')));
   }
 }
 
@@ -287,7 +287,7 @@ class _ClientCard extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined),
               ),
               IconButton(
-                tooltip: 'Usun klienta',
+                tooltip: 'Usuń klienta',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
               ),

@@ -14,8 +14,8 @@ import '../domain/entities/catalog_device.dart';
 
 String _categoryLabel(CatalogDeviceCategory category) {
   return switch (category) {
-    CatalogDeviceCategory.lighting => 'Oswietlenie',
-    CatalogDeviceCategory.sound => 'Naglosnienie',
+    CatalogDeviceCategory.lighting => 'Oświetlenie',
+    CatalogDeviceCategory.sound => 'Nagłośnienie',
     CatalogDeviceCategory.multimedia => 'Multimedia',
     CatalogDeviceCategory.distribution => 'Rozdzielnia',
     CatalogDeviceCategory.cable => 'Kabel',
@@ -90,7 +90,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac katalogu. Dane lokalne pozostaly bez zmian.\n$error';
+            'Nie udało się wczytać katalogu. Dane lokalne pozostały bez zmian.\n$error';
         _isLoading = false;
       });
     }
@@ -113,7 +113,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+            _error ?? 'Baza danych nie jest gotowa. Spróbuj ponownie.',
           ),
         ),
       );
@@ -128,7 +128,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     return Scaffold(
       floatingActionButton: _view == _CatalogView.devices
           ? GreenCrewFab(
-              label: 'Dodaj urzadzenie',
+              label: 'Dodaj urządzenie',
               icon: Icons.add,
               onPressed: _isLoading ? null : () => _openDeviceDialog(),
             )
@@ -143,7 +143,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               ButtonSegment(
                 value: _CatalogView.devices,
                 icon: Icon(Icons.inventory_2_outlined),
-                label: Text('Urzadzenia'),
+                label: Text('Urządzenia'),
               ),
               ButtonSegment(
                 value: _CatalogView.presets,
@@ -159,7 +159,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           const SizedBox(height: 16),
           if (_view == _CatalogView.devices) ...[
             GreenCrewSearchBar(
-              hintText: 'Szukaj urzadzenia',
+              hintText: 'Szukaj urządzenia',
               onChanged: (value) => setState(() => _query = value),
             ),
             const SizedBox(height: 12),
@@ -197,9 +197,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 height: 360,
                 child: GreenCrewEmptyState(
                   icon: Icons.error_outline,
-                  title: 'Blad danych',
+                  title: 'Błąd danych',
                   message: _error!,
-                  actionLabel: 'Sprobuj ponownie',
+                  actionLabel: 'Spróbuj ponownie',
                   onAction: _loadDevices,
                 ),
               )
@@ -207,11 +207,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
               GreenCrewCard(
                 child: GreenCrewEmptyState(
                   icon: Icons.inventory_2_outlined,
-                  title: 'Brak urzadzen',
+                  title: 'Brak urządzeń',
                   message: _query.isEmpty
-                      ? 'Dodaj urzadzenia i rozdzielnie, aby uzywac ich w projektach.'
-                      : 'Zmien zapytanie albo dodaj nowe urzadzenie.',
-                  actionLabel: 'Dodaj urzadzenie',
+                      ? 'Dodaj urządzenia i rozdzielnie, aby używać ich w projektach.'
+                      : 'Zmień zapytanie albo dodaj nowe urządzenie.',
+                  actionLabel: 'Dodaj urządzenie',
                   onAction: () => _openDeviceDialog(),
                 ),
               )
@@ -286,9 +286,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac urzadzenie?'),
+        title: const Text('Usunąć urządzenie?'),
         content: Text(
-          '"${device.name}" zostanie usuniete z katalogu lokalnego.',
+          '"${device.name}" zostanie usunięte z katalogu lokalnego.',
         ),
         actions: [
           TextButton(
@@ -297,7 +297,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -316,7 +316,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
     setState(() => _devices = devices);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Urzadzenie usuniete lokalnie')),
+      const SnackBar(content: Text('Urządzenie usunięte lokalnie')),
     );
   }
 }
@@ -351,12 +351,12 @@ class _CatalogDeviceCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Edytuj urzadzenie',
+                tooltip: 'Edytuj urządzenie',
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined),
               ),
               IconButton(
-                tooltip: 'Usun urzadzenie',
+                tooltip: 'Usuń urządzenie',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -421,7 +421,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   var _isUpdatingElectricalFields = false;
 
   /// Rigging hardware (trusses, clamps, hooks) and cables don't draw power -
-  /// showing "Moc"/"Prad" for them just invites made-up numbers.
+  /// showing "Moc"/"Prąd" for them just invites made-up numbers.
   bool get _showElectrical =>
       _category != CatalogDeviceCategory.rigging &&
       _category != CatalogDeviceCategory.cable;
@@ -490,7 +490,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        widget.device == null ? 'Dodaj urzadzenie' : 'Edytuj urzadzenie',
+        widget.device == null ? 'Dodaj urządzenie' : 'Edytuj urządzenie',
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -542,7 +542,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 controller: _currentController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Prad',
+                  labelText: 'Prąd',
                   suffixText: 'A',
                   helperText: 'Przeliczane dla 230 V',
                 ),
@@ -562,7 +562,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Typy zlacz (mozna wybrac kilka)',
+                  'Typy złącz (można wybrać kilka)',
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
               ),
@@ -596,7 +596,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Punkty zaczepienia (opcjonalnie)',
                   helperText:
-                      'Liczba hakow potrzebnych, gdy urzadzenie wisi na kratownicy.',
+                      'Liczba haków potrzebnych, gdy urządzenie wisi na kratownicy.',
                 ),
               ),
             ],
@@ -606,7 +606,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Tabela nosnosci producenta (opcjonalnie)',
+                      'Tabela nośności producenta (opcjonalnie)',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
@@ -620,8 +620,8 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 ],
               ),
               const Text(
-                'Uzywana do interpolacji limitow kratownicy po dlugosci - '
-                'zostaw puste, jesli limity beda wpisywane recznie per projekt.',
+                'Używana do interpolacji limitów kratownicy po długości - '
+                'zostaw puste, jeśli limity będą wpisywane ręcznie per projekt.',
                 style: TextStyle(fontSize: 12),
               ),
               for (final row in _loadChartRows)
@@ -635,7 +635,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                           controller: row.lengthController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
-                            labelText: 'Dlugosc',
+                            labelText: 'Długość',
                             suffixText: 'm',
                             isDense: true,
                           ),
@@ -659,14 +659,14 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                           controller: row.distributedLoadController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
-                            labelText: 'Obc. rozlozone',
+                            labelText: 'Obc. rozłożone',
                             suffixText: 'kg/m',
                             isDense: true,
                           ),
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Usun wpis',
+                        tooltip: 'Usuń wpis',
                         icon: const Icon(Icons.delete_outline),
                         onPressed: () =>
                             setState(() => _loadChartRows.remove(row)),

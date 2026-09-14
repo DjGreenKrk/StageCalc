@@ -104,7 +104,7 @@ class _ProjectMetadataCard extends StatelessWidget {
         rows: [
           _InfoRow('Adres', location.address),
           _InfoRow(
-            'Pojemnosc',
+            'Pojemność',
             location.capacity == null ? null : '${location.capacity}',
           ),
           _InfoRow('Kontakt', location.contactName),

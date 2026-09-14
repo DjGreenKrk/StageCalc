@@ -7,7 +7,7 @@ Future<String> writeLocalFile({
 }) async {
   throw UnsupportedError(
     'Zapis pliku nie jest jeszcze wspierany w wersji web. '
-    'Uzyj aplikacji na Windows lub Android.',
+    'Użyj aplikacji na Windows lub Android.',
   );
 }
 
@@ -18,6 +18,6 @@ Future<String> writeLocalBytesFile({
 }) async {
   throw UnsupportedError(
     'Zapis pliku nie jest jeszcze wspierany w wersji web. '
-    'Uzyj aplikacji na Windows lub Android.',
+    'Użyj aplikacji na Windows lub Android.',
   );
 }

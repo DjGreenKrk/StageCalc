@@ -76,7 +76,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac lokacji. Dane lokalne pozostaly bez zmian.\n$error';
+            'Nie udało się wczytać lokacji. Dane lokalne pozostały bez zmian.\n$error';
         _isLoading = false;
       });
     }
@@ -99,7 +99,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+            _error ?? 'Baza danych nie jest gotowa. Spróbuj ponownie.',
           ),
         ),
       );
@@ -113,7 +113,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
     return Scaffold(
       floatingActionButton: GreenCrewFab(
-        label: 'Dodaj lokacje',
+        label: 'Dodaj lokację',
         icon: Icons.add,
         onPressed: _isLoading ? null : () => _openLocationDialog(),
       ),
@@ -137,9 +137,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
               height: 360,
               child: GreenCrewEmptyState(
                 icon: Icons.error_outline,
-                title: 'Blad danych',
+                title: 'Błąd danych',
                 message: _error!,
-                actionLabel: 'Sprobuj ponownie',
+                actionLabel: 'Spróbuj ponownie',
                 onAction: _loadLocations,
               ),
             )
@@ -149,9 +149,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 icon: Icons.location_city_outlined,
                 title: 'Brak lokacji',
                 message: _query.isEmpty
-                    ? 'Dodaj obiekt, aby zapisac jego przylacza i kontakty techniczne.'
-                    : 'Zmien zapytanie albo dodaj nowa lokacje.',
-                actionLabel: 'Dodaj lokacje',
+                    ? 'Dodaj obiekt, aby zapisać jego przyłącza i kontakty techniczne.'
+                    : 'Zmień zapytanie albo dodaj nową lokację.',
+                actionLabel: 'Dodaj lokację',
                 onAction: () => _openLocationDialog(),
               ),
             )
@@ -232,8 +232,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac lokacje?'),
-        content: Text('"${location.name}" zostanie usunieta lokalnie.'),
+        title: const Text('Usunąć lokację?'),
+        content: Text('"${location.name}" zostanie usunięta lokalnie.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -241,7 +241,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -261,7 +261,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     setState(() => _locations = locations);
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Lokacja usunieta lokalnie')));
+    ).showSnackBar(const SnackBar(content: Text('Lokacja usunięta lokalnie')));
   }
 }
 
@@ -299,12 +299,12 @@ class _LocationCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Edytuj lokacje',
+                  tooltip: 'Edytuj lokację',
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
                 ),
                 IconButton(
-                  tooltip: 'Usun lokacje',
+                  tooltip: 'Usuń lokację',
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline),
                 ),
@@ -316,7 +316,7 @@ class _LocationCard extends StatelessWidget {
             if ((primaryContact?.phone ?? '').isNotEmpty)
               Text(primaryContact!.phone!),
             if (location.capacity != null)
-              Text('Pojemnosc: ${location.capacity}'),
+              Text('Pojemność: ${location.capacity}'),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -377,7 +377,7 @@ class _LocationDetailsScreen extends StatelessWidget {
                   ],
                 ),
               if (location.capacity != null)
-                _DetailRow(label: 'Pojemnosc', value: '${location.capacity}'),
+                _DetailRow(label: 'Pojemność', value: '${location.capacity}'),
             ],
           ),
           const SizedBox(height: 12),
@@ -386,7 +386,7 @@ class _LocationDetailsScreen extends StatelessWidget {
             icon: Icons.contact_phone_outlined,
             children: [
               if (contacts.isEmpty)
-                const Text('Brak kontaktow.')
+                const Text('Brak kontaktów.')
               else
                 for (final contact in contacts)
                   _DetailRow(
@@ -400,7 +400,7 @@ class _LocationDetailsScreen extends StatelessWidget {
                             Uri(scheme: 'tel', path: contact.phone!.trim()),
                           ),
                           icon: const Icon(Icons.call_outlined),
-                          label: const Text('Zadzwon'),
+                          label: const Text('Zadzwoń'),
                         ),
                       if ((contact.email ?? '').trim().isNotEmpty)
                         TextButton.icon(
@@ -426,7 +426,7 @@ class _LocationDetailsScreen extends StatelessWidget {
                     '${location.totalAvailablePowerKw.toStringAsFixed(1)} kW',
               ),
               if (location.powerConnectors.isEmpty)
-                const Text('Brak grup zlaczy.')
+                const Text('Brak grup złączy.')
               else
                 for (final connector in location.powerConnectors)
                   _DetailRow(
@@ -529,7 +529,7 @@ Future<void> _launchExternalUri(BuildContext context, Uri uri) async {
   final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
   if (!launched) {
     messenger.showSnackBar(
-      const SnackBar(content: Text('Nie udalo sie otworzyc linku.')),
+      const SnackBar(content: Text('Nie udało się otworzyć linku.')),
     );
   }
 }
@@ -577,7 +577,7 @@ class _LocationDialogState extends State<_LocationDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.location == null ? 'Dodaj lokacje' : 'Edytuj lokacje'),
+      title: Text(widget.location == null ? 'Dodaj lokację' : 'Edytuj lokację'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -588,7 +588,7 @@ class _LocationDialogState extends State<_LocationDialog> {
               children: [
                 _field(_nameController, 'Nazwa', autofocus: true),
                 _field(_addressController, 'Adres'),
-                _field(_capacityController, 'Pojemnosc'),
+                _field(_capacityController, 'Pojemność'),
               ],
             ),
             _formSection(
@@ -603,7 +603,7 @@ class _LocationDialogState extends State<_LocationDialog> {
                 if (_contacts.isEmpty)
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Brak kontaktow.'),
+                    child: Text('Brak kontaktów.'),
                   )
                 else
                   for (final contact in _contacts)
@@ -625,7 +625,7 @@ class _LocationDialogState extends State<_LocationDialog> {
                             icon: const Icon(Icons.edit_outlined),
                           ),
                           IconButton(
-                            tooltip: 'Usun kontakt',
+                            tooltip: 'Usuń kontakt',
                             onPressed: () {
                               setState(() {
                                 _contacts = _contacts
@@ -644,17 +644,17 @@ class _LocationDialogState extends State<_LocationDialog> {
             ),
             _formSection(
               context,
-              title: 'Grupy zlaczy',
+              title: 'Grupy złączy',
               trailing: TextButton.icon(
                 onPressed: _addPowerConnector,
                 icon: const Icon(Icons.add),
-                label: const Text('Dodaj grupe'),
+                label: const Text('Dodaj grupę'),
               ),
               children: [
                 if (_powerConnectors.isEmpty)
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Brak grup zlaczy.'),
+                    child: Text('Brak grup złączy.'),
                   )
                 else
                   for (final connector in _powerConnectors)
@@ -669,12 +669,12 @@ class _LocationDialogState extends State<_LocationDialog> {
                         spacing: 4,
                         children: [
                           IconButton(
-                            tooltip: 'Edytuj grupe zlaczy',
+                            tooltip: 'Edytuj grupę złączy',
                             onPressed: () => _editPowerConnector(connector),
                             icon: const Icon(Icons.edit_outlined),
                           ),
                           IconButton(
-                            tooltip: 'Usun grupe zlaczy',
+                            tooltip: 'Usuń grupę złączy',
                             onPressed: () {
                               setState(() {
                                 _powerConnectors = _powerConnectors
@@ -820,7 +820,7 @@ class _LocationDialogState extends State<_LocationDialog> {
       builder: (context) => _PowerConnectorDialog(
         connector: LocationPowerConnector(
           id: 'location_connector_${now.microsecondsSinceEpoch}',
-          name: 'Grupa zlaczy ${_powerConnectors.length + 1}',
+          name: 'Grupa złączy ${_powerConnectors.length + 1}',
           entries: const [
             LocationConnectorEntry(connectorTypeId: 'cee_32a_5p', quantity: 1),
           ],
@@ -910,7 +910,7 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Grupa zlaczy'),
+      title: const Text('Grupa złączy'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -924,7 +924,7 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Typy zlacz w tej grupie',
+                'Typy złącz w tej grupie',
                 style: Theme.of(context).textTheme.labelMedium,
               ),
             ),
@@ -940,7 +940,7 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
                       child: DropdownButtonFormField<String>(
                         initialValue: entry.connectorTypeId,
                         decoration: const InputDecoration(
-                          labelText: 'Typ zlacza',
+                          labelText: 'Typ złącza',
                         ),
                         items: ConnectorTypes.all
                             .map(
@@ -962,11 +962,11 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
                       child: TextField(
                         controller: entry.quantityController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Ilosc'),
+                        decoration: const InputDecoration(labelText: 'Ilość'),
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Usun typ zlacza',
+                      tooltip: 'Usuń typ złącza',
                       onPressed: _entries.length <= 1
                           ? null
                           : () => setState(() {
@@ -990,7 +990,7 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
                   );
                 }),
                 icon: const Icon(Icons.add),
-                label: const Text('Dodaj typ zlacza'),
+                label: const Text('Dodaj typ złącza'),
               ),
             ),
             const SizedBox(height: 12),
@@ -1043,7 +1043,7 @@ class _PowerConnectorDialogState extends State<_PowerConnectorDialog> {
 }
 
 /// Mutable editing state for one row in [_PowerConnectorDialog]'s "Typy
-/// zlacz" list - a [TextEditingController] needs a stable owner to dispose,
+/// złącz" list - a [TextEditingController] needs a stable owner to dispose,
 /// so this cannot just be the immutable [LocationConnectorEntry].
 class _ConnectorEntryDraft {
   _ConnectorEntryDraft({required this.connectorTypeId, required int quantity})
@@ -1107,7 +1107,7 @@ class _LocationContactDialogState extends State<_LocationContactDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Imie i nazwisko'),
+              decoration: const InputDecoration(labelText: 'Imię i nazwisko'),
             ),
             const SizedBox(height: 12),
             TextField(

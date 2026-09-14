@@ -28,7 +28,7 @@ class SyncCoordinator {
   Future<SyncSummary> syncAll() async {
     if (!_pb.authStore.isValid) {
       return const SyncSummary(
-        errors: ['Zaloguj sie, aby zsynchronizowac dane.'],
+        errors: ['Zaloguj się, aby zsynchronizować dane.'],
       );
     }
 

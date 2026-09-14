@@ -103,7 +103,7 @@ class _CatalogSelectionDialogState extends State<_CatalogSelectionDialog> {
                   if (filteredDevices.isEmpty)
                     const Align(
                       alignment: Alignment.centerLeft,
-                      child: Text('Brak wynikow.'),
+                      child: Text('Brak wyników.'),
                     )
                   else
                     SizedBox(
@@ -155,7 +155,7 @@ class _CatalogSelectionDialogState extends State<_CatalogSelectionDialog> {
                     controller: _quantityController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Ilosc',
+                      labelText: 'Ilość',
                       suffixText: selectedDevice == null
                           ? null
                           : _unitLabel(selectedDevice.quantityUnit),
@@ -175,7 +175,7 @@ class _CatalogSelectionDialogState extends State<_CatalogSelectionDialog> {
                                 '${(selectedDevice.powerW / 1000).toStringAsFixed(1)} kW',
                           ),
                           _MetricChip(
-                            label: 'Prad',
+                            label: 'Prąd',
                             value:
                                 '${selectedDevice.currentA.toStringAsFixed(1)} A',
                           ),
@@ -232,8 +232,8 @@ class _CatalogSelectionDialogState extends State<_CatalogSelectionDialog> {
 
   String _categoryLabel(CatalogDeviceCategory category) {
     return switch (category) {
-      CatalogDeviceCategory.lighting => 'Oswietlenie',
-      CatalogDeviceCategory.sound => 'Naglosnienie',
+      CatalogDeviceCategory.lighting => 'Oświetlenie',
+      CatalogDeviceCategory.sound => 'Nagłośnienie',
       CatalogDeviceCategory.multimedia => 'Multimedia',
       CatalogDeviceCategory.distribution => 'Rozdzielnia',
       CatalogDeviceCategory.cable => 'Kabel',

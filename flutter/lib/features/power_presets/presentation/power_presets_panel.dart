@@ -58,7 +58,7 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac presetow. Dane lokalne pozostaly bez zmian.';
+            'Nie udało się wczytać presetów. Dane lokalne pozostały bez zmian.';
         _isLoading = false;
       });
     }
@@ -78,9 +78,9 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
         height: 360,
         child: GreenCrewEmptyState(
           icon: Icons.error_outline,
-          title: 'Blad danych',
+          title: 'Błąd danych',
           message: _error!,
-          actionLabel: 'Sprobuj ponownie',
+          actionLabel: 'Spróbuj ponownie',
           onAction: _loadPresets,
         ),
       );
@@ -102,8 +102,8 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
           GreenCrewCard(
             child: GreenCrewEmptyState(
               icon: Icons.electrical_services_outlined,
-              title: 'Brak presetow',
-              message: 'Dodaj preset rozdzielnicy, aby uzyc go w patcherze.',
+              title: 'Brak presetów',
+              message: 'Dodaj preset rozdzielnicy, aby użyć go w patcherze.',
               actionLabel: 'Dodaj preset',
               onAction: _openPresetDialog,
             ),
@@ -168,8 +168,8 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac preset?'),
-        content: Text('"${preset.name}" zostanie usuniety lokalnie.'),
+        title: const Text('Usunąć preset?'),
+        content: Text('"${preset.name}" zostanie usunięty lokalnie.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -177,7 +177,7 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -197,7 +197,7 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
     setState(() => _presets = presets);
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Preset usuniety lokalnie')));
+    ).showSnackBar(const SnackBar(content: Text('Preset usunięty lokalnie')));
   }
 }
 
@@ -222,7 +222,7 @@ class _PowerPresetCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Usun preset',
+                tooltip: 'Usuń preset',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -261,7 +261,7 @@ class _PowerPresetCard extends StatelessWidget {
 
   String _connectorLabel(String? connectorTypeId) {
     if (connectorTypeId == null) {
-      return 'Bez wejscia';
+      return 'Bez wejścia';
     }
 
     return ConnectorTypes.all
@@ -323,11 +323,11 @@ class _PresetDialogState extends State<_PresetDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String?>(
               initialValue: _inputConnectorTypeId,
-              decoration: const InputDecoration(labelText: 'Wejscie'),
+              decoration: const InputDecoration(labelText: 'Wejście'),
               items: [
                 const DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('Bez wejscia'),
+                  child: Text('Bez wejścia'),
                 ),
                 for (final connector in ConnectorTypes.all)
                   DropdownMenuItem<String?>(
@@ -472,7 +472,7 @@ class _PresetOutletGroupsEditor extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Sekcje wyjsc',
+                'Sekcje wyjść',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
@@ -486,7 +486,7 @@ class _PresetOutletGroupsEditor extends StatelessWidget {
         if (groups.isEmpty)
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text('Brak sekcji wyjsc.'),
+            child: Text('Brak sekcji wyjść.'),
           )
         else
           for (final group in groups)
@@ -500,12 +500,12 @@ class _PresetOutletGroupsEditor extends StatelessWidget {
                 spacing: 4,
                 children: [
                   IconButton(
-                    tooltip: 'Edytuj sekcje',
+                    tooltip: 'Edytuj sekcję',
                     onPressed: () => _editGroup(context, group),
                     icon: const Icon(Icons.edit_outlined),
                   ),
                   IconButton(
-                    tooltip: 'Usun sekcje',
+                    tooltip: 'Usuń sekcję',
                     onPressed: () {
                       onChanged(
                         groups
@@ -610,7 +610,7 @@ class _PresetOutletGroupDialogState extends State<_PresetOutletGroupDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Sekcja wyjsc'),
+      title: const Text('Sekcja wyjść'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -623,7 +623,7 @@ class _PresetOutletGroupDialogState extends State<_PresetOutletGroupDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _connectorTypeId,
-              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              decoration: const InputDecoration(labelText: 'Typ złącza'),
               items: ConnectorTypes.all
                   .map(
                     (connector) => DropdownMenuItem(
@@ -652,23 +652,23 @@ class _PresetOutletGroupDialogState extends State<_PresetOutletGroupDialog> {
             TextField(
               controller: _countController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Ilosc'),
+              decoration: const InputDecoration(labelText: 'Ilość'),
             ),
             const SizedBox(height: 12),
             if (_isThreePhaseConnector(_connectorTypeId))
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+                child: Text('Złącze 3F używa wszystkich faz.'),
               )
             else if (_inputIsSinglePhase)
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+                child: Text('Wejście 1F używa jednej fazy dla wyjść 1F.'),
               )
             else
               DropdownButtonFormField<_PresetPhaseMode>(
                 initialValue: _phaseMode,
-                decoration: const InputDecoration(labelText: 'Rozklad faz'),
+                decoration: const InputDecoration(labelText: 'Rozkład faz'),
                 items: _PresetPhaseMode.values
                     .where((mode) => mode != _PresetPhaseMode.all)
                     .map(

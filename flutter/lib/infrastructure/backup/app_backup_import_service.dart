@@ -112,7 +112,7 @@ class AppBackupImportService {
     if (schemaVersion > appBackupFormatVersion) {
       throw BackupValidationException(
         'Ta kopia zapasowa pochodzi z nowszej wersji formatu ($schemaVersion) '
-        'niz obslugiwana przez te wersje aplikacji ($appBackupFormatVersion). '
+        'niż obsługiwana przez tę wersję aplikacji ($appBackupFormatVersion). '
         'Zaktualizuj StageCalc przed importem.',
       );
     }

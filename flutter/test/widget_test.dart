@@ -50,7 +50,7 @@ void main() {
     expect(find.text('StageCalc'), findsOneWidget);
     expect(find.text('Projekty'), findsWidgets);
     expect(
-      find.text('Tryb offline. Dane sa zapisywane lokalnie.'),
+      find.text('Tryb offline. Dane są zapisywane lokalnie.'),
       findsOneWidget,
     );
     expect(find.text('Demo techniczne'), findsOneWidget);
@@ -90,7 +90,7 @@ void main() {
     await tester.tap(find.text('Projekt edycji'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Dodaj grupe'));
+    await tester.tap(find.text('Dodaj grupę'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText).last, 'Front');
     await tester.tap(find.text('Dodaj').last);
@@ -98,7 +98,7 @@ void main() {
 
     expect(find.text('Front'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Dodaj recznie').last, warnIfMissed: false);
+    await tester.tap(find.byTooltip('Dodaj ręcznie').last, warnIfMissed: false);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText).at(0), 'Riser LED');
     await tester.enterText(find.byType(EditableText).at(1), '2');
@@ -112,11 +112,11 @@ void main() {
     expect(find.text('2 szt.'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.byTooltip('Edytuj pozycje').last,
+      find.byTooltip('Edytuj pozycję').last,
       120,
       scrollable: find.byType(Scrollable).last,
     );
-    await tester.tap(find.byTooltip('Edytuj pozycje').last);
+    await tester.tap(find.byTooltip('Edytuj pozycję').last);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText).at(0), 'Riser LED MK2');
     await tester.tap(find.text('Zapisz').last);
@@ -145,7 +145,7 @@ void main() {
     await tester.tap(find.text('Projekt katalogu'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Dodaj grupe'));
+    await tester.tap(find.text('Dodaj grupę'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText).last, 'Backline');
     await tester.tap(find.text('Dodaj').last);
@@ -183,7 +183,7 @@ void main() {
     await tester.tap(find.text('Katalog'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Dodaj urzadzenie'));
+    await tester.tap(find.text('Dodaj urządzenie'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -218,7 +218,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: newDeviceCard,
-        matching: find.byTooltip('Edytuj urzadzenie'),
+        matching: find.byTooltip('Edytuj urządzenie'),
       ),
     );
     await tester.pumpAndSettle();
@@ -259,14 +259,14 @@ void main() {
     await tester.tap(find.text('Katalog'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Dodaj urzadzenie'));
+    await tester.tap(find.text('Dodaj urządzenie'));
     await tester.pumpAndSettle();
 
-    // Default category (Oswietlenie) shows the full field set.
+    // Default category (Oświetlenie) shows the full field set.
     expect(find.widgetWithText(TextField, 'Producent'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Moc'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Prad'), findsOneWidget);
-    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Prąd'), findsOneWidget);
+    expect(find.text('Typy złącz (można wybrać kilka)'), findsOneWidget);
     expect(
       find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
       findsOneWidget,
@@ -283,8 +283,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(TextField, 'Moc'), findsNothing);
-    expect(find.widgetWithText(TextField, 'Prad'), findsNothing);
-    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Prąd'), findsNothing);
+    expect(find.text('Typy złącz (można wybrać kilka)'), findsNothing);
     expect(
       find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
       findsNothing,
@@ -304,8 +304,8 @@ void main() {
 
     expect(find.widgetWithText(TextField, 'Producent'), findsNothing);
     expect(find.widgetWithText(TextField, 'Moc'), findsNothing);
-    expect(find.widgetWithText(TextField, 'Prad'), findsNothing);
-    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Prąd'), findsNothing);
+    expect(find.text('Typy złącz (można wybrać kilka)'), findsOneWidget);
     expect(
       find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
       findsNothing,
@@ -360,7 +360,7 @@ void main() {
       await tester.tap(find.text('Lokacje'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Dodaj lokacje').first);
+      await tester.tap(find.text('Dodaj lokację').first);
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -369,7 +369,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final addGroupButton = find.text('Dodaj grupe');
+      final addGroupButton = find.text('Dodaj grupę');
       await tester.ensureVisible(addGroupButton);
       await tester.pumpAndSettle();
       await tester.tap(addGroupButton);
@@ -379,7 +379,7 @@ void main() {
       // Adding a second entry defaults it to the first `ConnectorTypes`
       // entry (16 A Uni-Schuko) - already a different type from the first,
       // without needing to touch either dropdown.
-      final addEntryButton = find.text('Dodaj typ zlacza');
+      final addEntryButton = find.text('Dodaj typ złącza');
       await tester.ensureVisible(addEntryButton);
       await tester.pumpAndSettle();
       await tester.tap(addEntryButton);
@@ -409,7 +409,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Grupa zlaczy 1: 1x 32 A CEE 5P + 1x 16 A Uni-Schuko'),
+        find.text('Grupa złączy 1: 1x 32 A CEE 5P + 1x 16 A Uni-Schuko'),
         findsOneWidget,
       );
     },
@@ -428,7 +428,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Rozdzielnice'), findsOneWidget);
-    expect(find.text('Polaczenia'), findsOneWidget);
+    expect(find.text('Połączenia'), findsOneWidget);
   });
 
   testWidgets('deleting a group removes its dangling connections', (
@@ -483,20 +483,20 @@ void main() {
     await tester.tap(find.text('Patcher'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Brak polaczen grup z rozdzielnicami.'), findsNothing);
+    expect(find.text('Brak połączeń grup z rozdzielnicami.'), findsNothing);
 
-    await tester.tap(find.text('Sprzet'));
+    await tester.tap(find.text('Sprzęt'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Usun grupe'));
+    await tester.tap(find.byTooltip('Usuń grupę'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Usun').last);
+    await tester.tap(find.text('Usuń').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Patcher'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Brak polaczen grup z rozdzielnicami.'), findsOneWidget);
+    expect(find.text('Brak połączeń grup z rozdzielnicami.'), findsOneWidget);
 
     final reloaded = (await repository.getProjects()).firstWhere(
       (project) => project.id == 'orphan_test_project',
@@ -552,17 +552,17 @@ void main() {
     expect(find.text('Wolne'), findsOneWidget);
 
     // Tap the empty outlet tile - opens the quick-connect dialog instead of
-    // the bulk "Polacz" dialog.
+    // the bulk "Połącz" dialog.
     await tester.tap(outletTile);
     await tester.pumpAndSettle();
 
-    expect(find.text('Polacz Schuko L1.1'), findsOneWidget);
+    expect(find.text('Połącz Schuko L1.1'), findsOneWidget);
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Notatki (opcjonalnie)'),
       'DMX kanal 12',
     );
-    await tester.tap(find.widgetWithText(FilledButton, 'Polacz'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Połącz'));
     await tester.pumpAndSettle();
 
     expect(find.text('Wolne'), findsNothing);
@@ -579,7 +579,7 @@ void main() {
     expect(find.text('Gniazdo Schuko L1.1'), findsOneWidget);
     expect(find.text('DMX kanal 12'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Rozlacz'));
+    await tester.tap(find.byTooltip('Rozłącz'));
     await tester.pumpAndSettle();
 
     expect(find.text('Wolne'), findsOneWidget);
@@ -604,7 +604,7 @@ void main() {
     await tester.tap(find.text('Info'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Utworz kopie zapasowa (JSON)'));
+    await tester.tap(find.text('Utwórz kopię zapasową (JSON)'));
     await tester.pump();
     // Real dart:io file writes need real wall-clock time to complete even
     // inside the fake-async test zone, so poll with tester.runAsync until
@@ -689,7 +689,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.widgetWithText(TextField, 'Sciezka do pliku kopii zapasowej'),
+      find.widgetWithText(TextField, 'Ścieżka do pliku kopii zapasowej'),
       backupFile.path,
     );
     FocusManager.instance.primaryFocus?.unfocus();
@@ -701,14 +701,14 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
       await tester.pump();
-      if (find.text('Zaimportowac kopie zapasowa?').evaluate().isNotEmpty) {
+      if (find.text('Zaimportować kopię zapasową?').evaluate().isNotEmpty) {
         break;
       }
     }
     await tester.pumpAndSettle();
 
-    expect(find.text('Zaimportowac kopie zapasowa?'), findsOneWidget);
-    expect(find.textContaining('1 klientow'), findsOneWidget);
+    expect(find.text('Zaimportować kopię zapasową?'), findsOneWidget);
+    expect(find.textContaining('1 klientów'), findsOneWidget);
 
     await tester.tap(find.text('Importuj'));
     await tester.pump();
@@ -723,7 +723,7 @@ void main() {
     }
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Zaimportowano 1 rekordow'), findsOneWidget);
+    expect(find.textContaining('Zaimportowano 1 rekordów'), findsOneWidget);
 
     final clients = await DriftClientRepository(database).getClients();
     expect(
@@ -759,7 +759,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final field = tester.widget<TextField>(
-      find.widgetWithText(TextField, 'Sciezka do pliku kopii zapasowej'),
+      find.widgetWithText(TextField, 'Ścieżka do pliku kopii zapasowej'),
     );
     expect(field.controller!.text, r'C:\fake\stagecalc_backup.json');
   });
@@ -784,7 +784,7 @@ void main() {
     await tester.tap(find.widgetWithText(GreenCrewButton, 'Dodaj'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Dodaj kratownice'), findsOneWidget);
+    expect(find.text('Dodaj kratownicę'), findsOneWidget);
 
     // The demo project has a single group ("Front light") totalling 192 kg;
     // assigning it should make the truss show that same total mass.
@@ -843,7 +843,7 @@ void main() {
       await tester.tap(find.widgetWithText(GreenCrewButton, 'Dodaj'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.widgetWithText(TextField, 'Dlugosc'), '6');
+      await tester.enterText(find.widgetWithText(TextField, 'Długość'), '6');
       await tester.tap(find.byType(DropdownButtonFormField<String?>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Prolyte H30V').last);

@@ -41,7 +41,7 @@ class _ConnectionCard extends StatelessWidget {
                 Text(
                   group?.name ??
                       targetDistro?.name ??
-                      'Nieznany cel polaczenia',
+                      'Nieznany cel połączenia',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 4),
@@ -53,7 +53,7 @@ class _ConnectionCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   const Chip(
                     avatar: Icon(Icons.link_off, size: 16),
-                    label: Text('Gniazdo uzyte wiele razy'),
+                    label: Text('Gniazdo użyte wiele razy'),
                   ),
                 ],
                 if (connection.selectedPhases.isNotEmpty) ...[
@@ -70,7 +70,7 @@ class _ConnectionCard extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Usun polaczenie',
+            tooltip: 'Usuń połączenie',
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline),
           ),
@@ -124,7 +124,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
     final canSubmit = _hasValidTarget && selectedOutletOptions.isNotEmpty;
 
     return AlertDialog(
-      title: const Text('Polacz'),
+      title: const Text('Połącz'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -176,14 +176,14 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
               DropdownButtonFormField<String>(
                 initialValue: _targetDistroId,
                 decoration: const InputDecoration(
-                  labelText: 'Rozdzielnica podrzedna',
+                  labelText: 'Rozdzielnica podrzędna',
                 ),
                 items: _availableTargetDistros
                     .map(
                       (distro) => DropdownMenuItem(
                         value: distro.id,
                         child: Text(
-                          '${distro.name} / wejscie ${_connectorLabel(distro.inputConnectorTypeId)}',
+                          '${distro.name} / wejście ${_connectorLabel(distro.inputConnectorTypeId)}',
                         ),
                       ),
                     )
@@ -202,8 +202,8 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _allowOccupiedOutlet,
-                title: const Text('Pokaz uzyte zlacza'),
-                subtitle: const Text('Pozwala nadpisac istniejace polaczenie.'),
+                title: const Text('Pokaż użyte złącza'),
+                subtitle: const Text('Pozwala nadpisać istniejące połączenie.'),
                 onChanged: (value) {
                   setState(() {
                     _allowOccupiedOutlet = value;
@@ -216,7 +216,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
             if (outletOptions.isEmpty)
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Brak pasujacych wolnych gniazd.'),
+                child: Text('Brak pasujących wolnych gniazd.'),
               )
             else if (_targetType == PowerConnectionTargetType.group) ...[
               Row(
@@ -241,7 +241,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                     onPressed: () {
                       setState(() => _selectedOutletKeys.clear());
                     },
-                    child: const Text('Wyczysc'),
+                    child: const Text('Wyczyść'),
                   ),
                 ],
               ),
@@ -254,7 +254,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                   title: Text(
                     '${option.distro.name} / ${option.outlet.name} '
                     '${_phaseLabel(option.outlet.phase)}'
-                    '${_isOutletOccupied(option.outlet.id) ? ' zajete' : ''}',
+                    '${_isOutletOccupied(option.outlet.id) ? ' zajęte' : ''}',
                   ),
                   onChanged: (selected) {
                     setState(() {
@@ -277,7 +277,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
                       child: Text(
                         '${option.distro.name} / ${option.outlet.name} '
                         '${_phaseLabel(option.outlet.phase)}'
-                        '${_isOutletOccupied(option.outlet.id) ? ' zajete' : ''}',
+                        '${_isOutletOccupied(option.outlet.id) ? ' zajęte' : ''}',
                       ),
                     ),
                 ],
@@ -326,7 +326,7 @@ class _ConnectionDialogState extends State<_ConnectionDialog> {
         ),
         FilledButton(
           onPressed: canSubmit ? _submit : null,
-          child: const Text('Polacz'),
+          child: const Text('Połącz'),
         ),
       ],
     );
@@ -586,7 +586,7 @@ class _QuickConnectDialogState extends State<_QuickConnectDialog> {
         : _targetDistroId != null;
 
     return AlertDialog(
-      title: Text('Polacz ${widget.outlet.name}'),
+      title: Text('Połącz ${widget.outlet.name}'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -615,7 +615,7 @@ class _QuickConnectDialogState extends State<_QuickConnectDialog> {
             ],
             if (_targetType == PowerConnectionTargetType.group)
               if (!hasGroups)
-                const Text('Brak grup urzadzen w projekcie.')
+                const Text('Brak grup urządzeń w projekcie.')
               else
                 DropdownButtonFormField<String>(
                   initialValue: _groupId,
@@ -631,12 +631,12 @@ class _QuickConnectDialogState extends State<_QuickConnectDialog> {
                   onChanged: (value) => setState(() => _groupId = value),
                 )
             else if (availableTargetDistros.isEmpty)
-              const Text('Brak pasujacych rozdzielnic (niezgodne wejscie).')
+              const Text('Brak pasujących rozdzielnic (niezgodne wejście).')
             else
               DropdownButtonFormField<String>(
                 initialValue: _targetDistroId,
                 decoration: const InputDecoration(
-                  labelText: 'Rozdzielnica podrzedna',
+                  labelText: 'Rozdzielnica podrzędna',
                 ),
                 items: availableTargetDistros
                     .map(
@@ -694,7 +694,7 @@ class _QuickConnectDialogState extends State<_QuickConnectDialog> {
         ),
         FilledButton(
           onPressed: canSubmit ? _submit : null,
-          child: const Text('Polacz'),
+          child: const Text('Połącz'),
         ),
       ],
     );
@@ -852,7 +852,7 @@ class _OutletDetailsDialogState extends State<_OutletDetailsDialog> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Rozlacz',
+                      tooltip: 'Rozłącz',
                       icon: const Icon(Icons.link_off),
                       onPressed: () => _disconnect(connection),
                     ),
@@ -875,7 +875,7 @@ class _OutletDetailsDialogState extends State<_OutletDetailsDialog> {
                     labelText: 'Notatki',
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.save_outlined),
-                      tooltip: 'Zapisz notatke',
+                      tooltip: 'Zapisz notatkę',
                       onPressed: () => _saveNotes(connection),
                     ),
                   ),

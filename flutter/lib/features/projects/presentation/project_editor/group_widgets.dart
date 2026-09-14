@@ -37,7 +37,7 @@ class _GroupCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Dodaj recznie',
+                tooltip: 'Dodaj ręcznie',
                 onPressed: onAddItem,
                 icon: const Icon(Icons.add_circle_outline),
               ),
@@ -47,12 +47,12 @@ class _GroupCard extends StatelessWidget {
                 icon: const Icon(Icons.inventory_2_outlined),
               ),
               IconButton(
-                tooltip: 'Edytuj grupe',
+                tooltip: 'Edytuj grupę',
                 onPressed: onEditGroup,
                 icon: const Icon(Icons.edit_outlined),
               ),
               IconButton(
-                tooltip: 'Usun grupe',
+                tooltip: 'Usuń grupę',
                 onPressed: onDeleteGroup,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -68,7 +68,7 @@ class _GroupCard extends StatelessWidget {
                 value: '${totals.powerKw.toStringAsFixed(1)} kW',
               ),
               _MetricChip(
-                label: 'Prad',
+                label: 'Prąd',
                 value: '${totals.currentA.toStringAsFixed(1)} A',
               ),
               _MetricChip(
@@ -99,12 +99,12 @@ class _GroupCard extends StatelessWidget {
                       '${(item.weightKgSnapshot * item.quantity).toStringAsFixed(1)} kg',
                     ),
                     IconButton(
-                      tooltip: 'Edytuj pozycje',
+                      tooltip: 'Edytuj pozycję',
                       onPressed: () => onEditItem(item),
                       icon: const Icon(Icons.edit_outlined),
                     ),
                     IconButton(
-                      tooltip: 'Usun pozycje',
+                      tooltip: 'Usuń pozycję',
                       onPressed: () => onDeleteItem(item),
                       icon: const Icon(Icons.delete_outline),
                     ),
@@ -210,7 +210,7 @@ class _ItemDialogState extends State<_ItemDialog> {
     super.initState();
     final item = widget.item;
     _nameController = TextEditingController(
-      text: item?.nameSnapshot ?? 'Pozycja reczna',
+      text: item?.nameSnapshot ?? 'Pozycja ręczna',
     );
     _quantityController = TextEditingController(
       text: (item?.quantity ?? 1).toStringAsFixed(0),
@@ -256,7 +256,7 @@ class _ItemDialogState extends State<_ItemDialog> {
               controller: _quantityController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Ilosc',
+                labelText: 'Ilość',
                 suffixText: 'szt.',
               ),
             ),
@@ -275,7 +275,7 @@ class _ItemDialogState extends State<_ItemDialog> {
               controller: _currentController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
-                labelText: 'Prad',
+                labelText: 'Prąd',
                 suffixText: 'A',
                 helperText: 'Przeliczane dla 230 V',
               ),

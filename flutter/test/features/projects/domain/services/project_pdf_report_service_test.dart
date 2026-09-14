@@ -4,6 +4,10 @@ import 'package:stagecalc/features/projects/domain/entities/project_models.dart'
 import 'package:stagecalc/features/projects/domain/services/project_pdf_report_service.dart';
 
 void main() {
+  // buildPdfReport() loads the bundled Roboto font via rootBundle, which
+  // needs a real binding even for these plain (non-widget) tests.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   const service = ProjectPdfReportService();
   final generatedAt = DateTime(2026, 7, 5, 14, 30);
 

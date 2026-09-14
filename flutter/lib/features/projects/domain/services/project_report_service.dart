@@ -12,7 +12,7 @@ import 'truss_load_service.dart';
 /// shows.
 ///
 /// Plain text rather than PDF for now: `docs/FEATURE_SCOPE.md` explicitly
-/// allows "eksport danych lub PDF w prostszej formie, jesli PDF opoznia
+/// allows "eksport danych lub PDF w prostszej formie, jeśli PDF opóźnia
 /// MVP" - PDF layout is a separate, larger piece of work (new dependency,
 /// pagination, GreenCrew-branded styling) that shouldn't block having a
 /// readable, shareable report at all.
@@ -51,10 +51,10 @@ class ProjectReportService {
     writeHeader('PODSUMOWANIE');
     buffer
       ..writeln('Moc: ${totals.powerKw.toStringAsFixed(1)} kW')
-      ..writeln('Prad: ${totals.currentA.toStringAsFixed(1)} A')
+      ..writeln('Prąd: ${totals.currentA.toStringAsFixed(1)} A')
       ..writeln('Masa: ${totals.weightKg.toStringAsFixed(0)} kg');
 
-    writeHeader('GRUPY URZADZEN');
+    writeHeader('GRUPY URZĄDZEŃ');
     if (project.groups.isEmpty) {
       buffer.writeln('Brak grup.');
     }
@@ -89,22 +89,22 @@ class ProjectReportService {
       );
       if (distroLoad != null && distroLoad.isInputOverloaded) {
         buffer.writeln(
-          '    OSTRZEZENIE: przeciazone wejscie (limit '
+          '    OSTRZEŻENIE: przeciążone wejście (limit '
           '${distroLoad.inputMaxCurrentA.toStringAsFixed(0)} A)',
         );
       }
       if (patchValidation.isDistroInCycle(distro.id)) {
         buffer.writeln(
-          '    OSTRZEZENIE: rozdzielnica jest czescia cyklu polaczen - wynik '
-          'moze byc niekompletny',
+          '    OSTRZEŻENIE: rozdzielnica jest częścią cyklu połączeń - wynik '
+          'może być niekompletny',
         );
       }
       for (final outlet in distro.outlets) {
         final outletLoad = powerLoads.outletLoads[outlet.id];
         final flags = <String>[
           if (patchValidation.isOutletDuplicated(outlet.id))
-            'GNIAZDO UZYTE WIELOKROTNIE',
-          if (outletLoad != null && outletLoad.isOverloaded) 'PRZECIAZONE',
+            'GNIAZDO UŻYTE WIELOKROTNIE',
+          if (outletLoad != null && outletLoad.isOverloaded) 'PRZECIĄŻONE',
         ];
         buffer.writeln(
           '    ${outlet.name} (${_phaseLabel(outlet.phase)}): '
@@ -129,9 +129,9 @@ class ProjectReportService {
         '${load.maxDistributedLoadKgPerM == null ? '' : ' / ${load.maxDistributedLoadKgPerM!.toStringAsFixed(1)} kg/m'}',
       );
       if (load.isOverloaded) {
-        buffer.writeln('    OSTRZEZENIE: przekroczony limit obciazenia');
+        buffer.writeln('    OSTRZEŻENIE: przekroczony limit obciążenia');
       } else if (!load.hasKnownLimits) {
-        buffer.writeln('    Brak zdefiniowanych limitow obciazenia.');
+        buffer.writeln('    Brak zdefiniowanych limitów obciążenia.');
       }
     }
 

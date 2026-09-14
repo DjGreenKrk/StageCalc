@@ -20,7 +20,7 @@ class GreenCrewOfflineBanner extends StatelessWidget {
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Tryb offline. Dane sa zapisywane lokalnie.',
+              'Tryb offline. Dane są zapisywane lokalnie.',
               style: TextStyle(
                 fontSize: 12,
                 color: GreenCrewColors.textSecondary,

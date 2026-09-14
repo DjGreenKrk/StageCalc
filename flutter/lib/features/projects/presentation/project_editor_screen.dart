@@ -128,7 +128,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                     value: '${totals.powerKw.toStringAsFixed(1)} kW',
                   ),
                   _MetricChip(
-                    label: 'Prad',
+                    label: 'Prąd',
                     value: '${totals.currentA.toStringAsFixed(1)} A',
                   ),
                   _MetricChip(
@@ -144,7 +144,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                 ButtonSegment(
                   value: ProjectEditorView.equipment,
                   icon: Icon(Icons.view_list_outlined),
-                  label: Text('Sprzet'),
+                  label: Text('Sprzęt'),
                 ),
                 ButtonSegment(
                   value: ProjectEditorView.patcher,
@@ -167,7 +167,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
               GreenCrewSectionHeader(
                 title: 'Grupy',
                 action: GreenCrewButton(
-                  label: 'Dodaj grupe',
+                  label: 'Dodaj grupę',
                   icon: Icons.add,
                   onPressed: _openAddGroupDialog,
                   secondary: true,
@@ -176,7 +176,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
               const SizedBox(height: 12),
               if (project.groups.isEmpty)
                 const GreenCrewCard(
-                  child: Text('Brak grup. Dodaj pierwsza grupe urzadzen.'),
+                  child: Text('Brak grup. Dodaj pierwszą grupę urządzeń.'),
                 )
               else
                 for (final group in project.groups) ...[
@@ -230,9 +230,9 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                 ],
               const SizedBox(height: 16),
               GreenCrewSectionHeader(
-                title: 'Polaczenia',
+                title: 'Połączenia',
                 action: GreenCrewButton(
-                  label: 'Polacz',
+                  label: 'Połącz',
                   icon: Icons.cable,
                   onPressed: _controller.canCreateConnection
                       ? _openAddConnectionDialog
@@ -243,7 +243,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
               const SizedBox(height: 12),
               if (project.connections.isEmpty)
                 const GreenCrewCard(
-                  child: Text('Brak polaczen grup z rozdzielnicami.'),
+                  child: Text('Brak połączeń grup z rozdzielnicami.'),
                 )
               else
                 for (final connection in project.connections) ...[
@@ -280,12 +280,12 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
                   const SizedBox(height: 12),
                 ],
               const SizedBox(height: 12),
-              const GreenCrewSectionHeader(title: 'Haki grup urzadzen'),
+              const GreenCrewSectionHeader(title: 'Haki grup urządzeń'),
               const SizedBox(height: 12),
               if (_groupsNeedingHooks(project).isEmpty)
                 const GreenCrewCard(
                   child: Text(
-                    'Zadna grupa nie ma jeszcze urzadzen wymagajacych hakow '
+                    'Żadna grupa nie ma jeszcze urządzeń wymagających haków '
                     '(pole "Punkty zaczepienia" w katalogu).',
                   ),
                 )
@@ -363,7 +363,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udalo sie wyeksportowac raportu: $error')),
+        SnackBar(content: Text('Nie udało się wyeksportować raportu: $error')),
       );
     }
   }
@@ -405,7 +405,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nie udalo sie wyeksportowac raportu PDF: $error'),
+          content: Text('Nie udało się wyeksportować raportu PDF: $error'),
         ),
       );
     }
@@ -487,8 +487,8 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac rozdzielnice?'),
-        content: Text('"${distro.name}" zostanie usunieta lokalnie.'),
+        title: const Text('Usunąć rozdzielnicę?'),
+        content: Text('"${distro.name}" zostanie usunięta lokalnie.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -496,7 +496,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -548,7 +548,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   /// Tapping a "patch point" outlet tile (visual patcher): an empty outlet
   /// opens a quick single-outlet connect dialog, an already-patched one
   /// opens its details (target, notes, disconnect) instead of the bulk
-  /// "Polacz" dialog used for the "Polaczenia" list below.
+  /// "Połącz" dialog used for the "Połączenia" list below.
   void _openOutletTap(
     ProjectDistro distro,
     ProjectOutlet outlet,
@@ -630,7 +630,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => const _GroupNameDialog(
-        title: 'Dodaj grupe',
+        title: 'Dodaj grupę',
         confirmLabel: 'Dodaj',
         initialName: 'Nowa grupa',
       ),
@@ -648,7 +648,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final name = await showDialog<String>(
       context: context,
       builder: (context) => _GroupNameDialog(
-        title: 'Edytuj grupe',
+        title: 'Edytuj grupę',
         confirmLabel: 'Zapisz',
         initialName: group.name,
       ),
@@ -666,9 +666,9 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac grupe?'),
+        title: const Text('Usunąć grupę?'),
         content: Text(
-          'Grupa "${group.name}" i jej pozycje zostana usuniete lokalnie.',
+          'Grupa "${group.name}" i jej pozycje zostaną usunięte lokalnie.',
         ),
         actions: [
           TextButton(
@@ -677,7 +677,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -694,7 +694,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final result = await showDialog<_ItemFormResult>(
       context: context,
       builder: (context) =>
-          const _ItemDialog(title: 'Dodaj pozycje', confirmLabel: 'Dodaj'),
+          const _ItemDialog(title: 'Dodaj pozycję', confirmLabel: 'Dodaj'),
     );
 
     if (result == null) {
@@ -738,7 +738,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final result = await showDialog<_ItemFormResult>(
       context: context,
       builder: (context) => _ItemDialog(
-        title: 'Edytuj pozycje',
+        title: 'Edytuj pozycję',
         confirmLabel: 'Zapisz',
         item: item,
       ),
@@ -765,8 +765,8 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac pozycje?'),
-        content: Text('"${item.nameSnapshot}" zostanie usunieta z grupy.'),
+        title: const Text('Usunąć pozycję?'),
+        content: Text('"${item.nameSnapshot}" zostanie usunięta z grupy.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -774,7 +774,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),
@@ -852,8 +852,8 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Usunac kratownice?'),
-        content: Text('"${truss.name}" zostanie usunieta lokalnie.'),
+        title: const Text('Usunąć kratownicę?'),
+        content: Text('"${truss.name}" zostanie usunięta lokalnie.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -861,7 +861,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Usun'),
+            child: const Text('Usuń'),
           ),
         ],
       ),

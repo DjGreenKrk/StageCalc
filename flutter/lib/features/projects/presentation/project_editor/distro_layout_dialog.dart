@@ -42,7 +42,7 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
         _outlets.fold<double>(0, (sum, outlet) => sum + outlet.maxCurrentA);
 
     return AlertDialog(
-      title: const Text('Edytuj rozdzielnice'),
+      title: const Text('Edytuj rozdzielnicę'),
       content: SizedBox(
         width: 520,
         child: SingleChildScrollView(
@@ -57,7 +57,7 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 initialValue: _inputConnectorTypeId,
-                decoration: const InputDecoration(labelText: 'Wejscie'),
+                decoration: const InputDecoration(labelText: 'Wejście'),
                 items: [
                   const DropdownMenuItem<String?>(
                     value: null,
@@ -81,11 +81,11 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
                 controller: _manualLimitController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Reczny limit wejscia (opcjonalnie)',
+                  labelText: 'Ręczny limit wejścia (opcjonalnie)',
                   suffixText: 'A',
                   helperText:
                       'Automatycznie: ${automaticLimitA.toStringAsFixed(0)} A. '
-                      'Zostaw puste, zeby uzyc wartosci automatycznej.',
+                      'Zostaw puste, żeby użyć wartości automatycznej.',
                 ),
               ),
               const SizedBox(height: 16),
@@ -133,7 +133,7 @@ class _DistroLayoutDialogState extends State<_DistroLayoutDialog> {
                           icon: const Icon(Icons.edit_outlined),
                         ),
                         IconButton(
-                          tooltip: 'Usun gniazdo',
+                          tooltip: 'Usuń gniazdo',
                           onPressed: () {
                             setState(() {
                               _outlets = _outlets
@@ -321,7 +321,7 @@ class _OutletEditDialogState extends State<_OutletEditDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _connectorTypeId,
-              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              decoration: const InputDecoration(labelText: 'Typ złącza'),
               items: ConnectorTypes.all
                   .map(
                     (connector) => DropdownMenuItem(
@@ -350,12 +350,12 @@ class _OutletEditDialogState extends State<_OutletEditDialog> {
             if (_isThreePhaseConnector(_connectorTypeId))
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+                child: Text('Złącze 3F używa wszystkich faz.'),
               )
             else if (_inputIsSinglePhase)
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+                child: Text('Wejście 1F używa jednej fazy dla wyjść 1F.'),
               )
             else
               DropdownButtonFormField<PowerPhase>(

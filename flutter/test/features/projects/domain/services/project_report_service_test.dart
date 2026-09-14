@@ -37,7 +37,7 @@ void main() {
     expect(report, contains('RAPORT TECHNICZNY - Koncert testowy'));
     expect(report, contains('Wygenerowano: 2026-07-05 14:30'));
     expect(report, contains('Moc: 8.0 kW'));
-    expect(report, contains('Prad: 34.8 A'));
+    expect(report, contains('Prąd: 34.8 A'));
     expect(report, contains('Masa: 144 kg'));
     expect(report, contains('Front light'));
     expect(report, contains('4x Robe BMFL Spot (Robe)'));
@@ -97,8 +97,8 @@ void main() {
 
     final report = service.buildTextReport(project, generatedAt: generatedAt);
 
-    expect(report, contains('GNIAZDO UZYTE WIELOKROTNIE'));
-    expect(report, contains('OSTRZEZENIE: przeciazone wejscie'));
+    expect(report, contains('GNIAZDO UŻYTE WIELOKROTNIE'));
+    expect(report, contains('OSTRZEŻENIE: przeciążone wejście'));
   });
 
   test('flags an overloaded truss and one with unknown limits', () {
@@ -123,9 +123,9 @@ void main() {
     final report = service.buildTextReport(project, generatedAt: generatedAt);
 
     expect(report, contains('Overloaded'));
-    expect(report, contains('OSTRZEZENIE: przekroczony limit obciazenia'));
+    expect(report, contains('OSTRZEŻENIE: przekroczony limit obciążenia'));
     expect(report, contains('Unknown limits'));
-    expect(report, contains('Brak zdefiniowanych limitow obciazenia.'));
+    expect(report, contains('Brak zdefiniowanych limitów obciążenia.'));
   });
 
   test('shows empty-state lines for a project with nothing in it', () {

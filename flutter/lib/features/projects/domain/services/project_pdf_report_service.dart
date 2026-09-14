@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -42,9 +43,21 @@ class ProjectPdfReportService {
     final powerLoads = _powerService.calculateProjectLoads(project);
     final patchValidation = _validationService.validate(project, powerLoads);
 
+    // Roboto (bundled under assets/fonts/, OFL-1.1) instead of the `pdf`
+    // package's default Helvetica - Helvetica has no Unicode support, so
+    // without this every Polish diacritic in the report would render as a
+    // missing/broken glyph.
+    final regularFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/Roboto-Regular.ttf'),
+    );
+    final boldFont = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/Roboto-Bold.ttf'),
+    );
+
     final document = pw.Document(
       title: 'Raport - ${project.name}',
       author: 'StageCalc',
+      theme: pw.ThemeData.withFont(base: regularFont, bold: boldFont),
     );
 
     document.addPage(
@@ -128,7 +141,7 @@ class ProjectPdfReportService {
           ),
           headerDecoration: const pw.BoxDecoration(color: _greenCrewGreen),
           cellAlignment: pw.Alignment.centerLeft,
-          headers: const ['Moc', 'Prad', 'Masa'],
+          headers: const ['Moc', 'Prąd', 'Masa'],
           data: [
             [
               '${totals.powerKw.toStringAsFixed(1)} kW',
@@ -145,7 +158,7 @@ class ProjectPdfReportService {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Grupy urzadzen'),
+        _sectionTitle('Grupy urządzeń'),
         if (project.groups.isEmpty)
           pw.Text('Brak grup.')
         else
@@ -176,7 +189,7 @@ class ProjectPdfReportService {
             headerStyle: const pw.TextStyle(fontSize: 9),
             cellStyle: const pw.TextStyle(fontSize: 9),
             cellAlignment: pw.Alignment.centerLeft,
-            headers: const ['Ilosc', 'Nazwa', 'Producent', 'Masa'],
+            headers: const ['Ilość', 'Nazwa', 'Producent', 'Masa'],
             data: [
               for (final item in group.items)
                 [
@@ -219,10 +232,10 @@ class ProjectPdfReportService {
     final distroLoad = powerLoads.distroLoads[distro.id];
     final warnings = <String>[
       if (distroLoad != null && distroLoad.isInputOverloaded)
-        'Przeciazone wejscie (limit '
+        'Przeciążone wejście (limit '
             '${distroLoad.inputMaxCurrentA.toStringAsFixed(0)} A)',
       if (patchValidation.isDistroInCycle(distro.id))
-        'Rozdzielnica jest czescia cyklu polaczen - wynik moze byc '
+        'Rozdzielnica jest częścią cyklu połączeń - wynik może być '
             'niekompletny',
     ];
 
@@ -238,7 +251,7 @@ class ProjectPdfReportService {
         ),
         for (final warning in warnings)
           pw.Text(
-            'Ostrzezenie: $warning',
+            'Ostrzeżenie: $warning',
             style: const pw.TextStyle(fontSize: 9, color: PdfColors.red700),
           ),
         if (distro.outlets.isNotEmpty)
@@ -246,7 +259,7 @@ class ProjectPdfReportService {
             headerStyle: const pw.TextStyle(fontSize: 9),
             cellStyle: const pw.TextStyle(fontSize: 9),
             cellAlignment: pw.Alignment.centerLeft,
-            headers: const ['Gniazdo', 'Faza', 'Obciazenie', 'Uwagi'],
+            headers: const ['Gniazdo', 'Faza', 'Obciążenie', 'Uwagi'],
             data: [
               for (final outlet in distro.outlets)
                 [
@@ -256,10 +269,10 @@ class ProjectPdfReportService {
                       '${outlet.maxCurrentA.toStringAsFixed(0)} A',
                   [
                     if (patchValidation.isOutletDuplicated(outlet.id))
-                      'uzyte wielokrotnie',
+                      'użyte wielokrotnie',
                     if (powerLoads.outletLoads[outlet.id]?.isOverloaded ??
                         false)
-                      'przeciazone',
+                      'przeciążone',
                   ].join(', '),
                 ],
             ],
@@ -286,9 +299,9 @@ class ProjectPdfReportService {
             cellAlignment: pw.Alignment.centerLeft,
             headers: const [
               'Nazwa',
-              'Dlugosc',
-              'Obciazenie',
-              'Rozlozone',
+              'Długość',
+              'Obciążenie',
+              'Rozłożone',
               'Uwagi',
             ],
             data: [
@@ -304,7 +317,7 @@ class ProjectPdfReportService {
     final load = _trussLoadService.calculateLoad(truss, project);
     final notes = <String>[
       if (load.isOverloaded) 'przekroczony limit',
-      if (!load.hasKnownLimits) 'brak limitow',
+      if (!load.hasKnownLimits) 'brak limitów',
     ];
 
     return [

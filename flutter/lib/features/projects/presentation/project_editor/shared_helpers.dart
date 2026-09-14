@@ -2,7 +2,7 @@ part of '../project_editor_screen.dart';
 
 String _connectorLabel(String? connectorTypeId) {
   if (connectorTypeId == null) {
-    return 'Bez wejscia';
+    return 'Bez wejścia';
   }
 
   return ConnectorTypes.all

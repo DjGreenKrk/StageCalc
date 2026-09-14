@@ -26,7 +26,7 @@ class GreenCrewErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Sprobuj ponownie'),
+              label: const Text('Spróbuj ponownie'),
             ),
           ],
         ],

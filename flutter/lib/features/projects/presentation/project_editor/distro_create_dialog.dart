@@ -48,7 +48,7 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
     final inputConnectorTypeId = _inputConnectorTypeId;
 
     return AlertDialog(
-      title: const Text('Dodaj rozdzielnice'),
+      title: const Text('Dodaj rozdzielnicę'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -117,7 +117,7 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
               )
             else if (_mode == _DistroCreateMode.custom) ...[
               _connectorDropdown(
-                label: 'Wejscie',
+                label: 'Wejście',
                 value: _customInputConnectorTypeId,
                 allowEmpty: true,
                 onChanged: (value) {
@@ -147,11 +147,11 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
               if (widget.location == null)
                 const Text('Projekt nie ma przypisanej lokacji.')
               else if (widget.location!.powerConnectors.isEmpty)
-                const Text('Lokacja nie ma zapisanych grup zlaczy.')
+                const Text('Lokacja nie ma zapisanych grup złączy.')
               else
                 DropdownButtonFormField<LocationPowerConnector>(
                   initialValue: _selectedLocationConnector,
-                  decoration: const InputDecoration(labelText: 'Grupa zlaczy'),
+                  decoration: const InputDecoration(labelText: 'Grupa złączy'),
                   items: widget.location!.powerConnectors
                       .map(
                         (connector) => DropdownMenuItem(
@@ -173,7 +173,7 @@ class _DistroCreateDialogState extends State<_DistroCreateDialog> {
                   },
                 ),
             ] else if (widget.presets.isEmpty)
-              const Text('Brak presetow rozdzielnic.')
+              const Text('Brak presetów rozdzielnic.')
             else
               DropdownButtonFormField<PowerPreset>(
                 initialValue: selectedPreset,

@@ -82,7 +82,7 @@ class _OutletGroupsEditor extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Sekcje wyjsc',
+                'Sekcje wyjść',
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
@@ -96,7 +96,7 @@ class _OutletGroupsEditor extends StatelessWidget {
         if (groups.isEmpty)
           const Align(
             alignment: Alignment.centerLeft,
-            child: Text('Brak sekcji wyjsc.'),
+            child: Text('Brak sekcji wyjść.'),
           )
         else
           for (final group in groups)
@@ -110,12 +110,12 @@ class _OutletGroupsEditor extends StatelessWidget {
                 spacing: 4,
                 children: [
                   IconButton(
-                    tooltip: 'Edytuj sekcje',
+                    tooltip: 'Edytuj sekcję',
                     onPressed: () => _editGroup(context, group),
                     icon: const Icon(Icons.edit_outlined),
                   ),
                   IconButton(
-                    tooltip: 'Usun sekcje',
+                    tooltip: 'Usuń sekcję',
                     onPressed: () {
                       onChanged(
                         groups
@@ -219,7 +219,7 @@ class _OutletGroupDialogState extends State<_OutletGroupDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Sekcja wyjsc'),
+      title: const Text('Sekcja wyjść'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -232,7 +232,7 @@ class _OutletGroupDialogState extends State<_OutletGroupDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _connectorTypeId,
-              decoration: const InputDecoration(labelText: 'Typ zlacza'),
+              decoration: const InputDecoration(labelText: 'Typ złącza'),
               items: ConnectorTypes.all
                   .map(
                     (connector) => DropdownMenuItem(
@@ -261,23 +261,23 @@ class _OutletGroupDialogState extends State<_OutletGroupDialog> {
             TextField(
               controller: _countController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Ilosc'),
+              decoration: const InputDecoration(labelText: 'Ilość'),
             ),
             const SizedBox(height: 12),
             if (_isThreePhaseConnector(_connectorTypeId))
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Zlacze 3F uzywa wszystkich faz.'),
+                child: Text('Złącze 3F używa wszystkich faz.'),
               )
             else if (_inputIsSinglePhase)
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Wejscie 1F uzywa jednej fazy dla wyjsc 1F.'),
+                child: Text('Wejście 1F używa jednej fazy dla wyjść 1F.'),
               )
             else
               DropdownButtonFormField<_CustomDistroPhaseMode>(
                 initialValue: _phaseMode,
-                decoration: const InputDecoration(labelText: 'Rozklad faz'),
+                decoration: const InputDecoration(labelText: 'Rozkład faz'),
                 items: _CustomDistroPhaseMode.values
                     .where((mode) => mode != _CustomDistroPhaseMode.all)
                     .map(

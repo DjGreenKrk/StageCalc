@@ -202,7 +202,7 @@ class LocationPowerConnector {
   /// each duplicating the same join logic.
   String get entriesSummary {
     if (entries.isEmpty) {
-      return 'Brak zlacz';
+      return 'Brak złącz';
     }
     return entries.map((entry) => entry.summaryLabel).join(' + ');
   }

@@ -116,8 +116,8 @@ class _AboutScreenState extends State<AboutScreen> {
                 ),
               ] else ...[
                 const Text(
-                  'Zaloguj sie, aby synchronizowac dane z reszta ekipy. '
-                  'Praca lokalna dziala normalnie bez logowania.',
+                  'Zaloguj się, aby synchronizować dane z resztą ekipy. '
+                  'Praca lokalna działa normalnie bez logowania.',
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -129,7 +129,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Haslo'),
+                  decoration: const InputDecoration(labelText: 'Hasło'),
                   onSubmitted: (_) => _isLoggingIn ? null : _login(),
                 ),
                 if (_loginError != null) ...[
@@ -143,7 +143,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 ],
                 const SizedBox(height: 12),
                 GreenCrewButton(
-                  label: _isLoggingIn ? 'Logowanie...' : 'Zaloguj sie',
+                  label: _isLoggingIn ? 'Logowanie...' : 'Zaloguj się',
                   icon: Icons.login,
                   onPressed: _isLoggingIn ? null : _login,
                 ),
@@ -162,9 +162,9 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Wysyla i pobiera projekty, katalog, klientow, lokacje i '
+                'Wysyła i pobiera projekty, katalog, klientów, lokacje i '
                 'presety z serwera PocketBase w sieci lokalnej. Nowszy zapis '
-                '(wedlug czasu ostatniej edycji) zawsze wygrywa.',
+                '(według czasu ostatniej edycji) zawsze wygrywa.',
               ),
               const SizedBox(height: 12),
               SwitchListTile(
@@ -204,13 +204,13 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Eksportuje wszystkie lokalne dane (projekty, katalog, '
-                'klientow, lokacje i presety rozdzielnic) do jednego pliku JSON.',
+                'klientów, lokacje i presety rozdzielnic) do jednego pliku JSON.',
               ),
               const SizedBox(height: 12),
               GreenCrewButton(
                 label: _isCreatingBackup
                     ? 'Tworzenie kopii...'
-                    : 'Utworz kopie zapasowa (JSON)',
+                    : 'Utwórz kopię zapasową (JSON)',
                 icon: Icons.save_alt,
                 onPressed: _isCreatingBackup ? null : _createBackup,
               ),
@@ -229,7 +229,7 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Wczytuje plik kopii zapasowej JSON. Rekordy o tych samych ID '
-                'co juz istniejace zostana nadpisane; nic innego nie zostanie usuniete.',
+                'co już istniejące zostaną nadpisane; nic innego nie zostanie usunięte.',
               ),
               const SizedBox(height: 12),
               Row(
@@ -239,7 +239,7 @@ class _AboutScreenState extends State<AboutScreen> {
                     child: TextField(
                       controller: _importPathController,
                       decoration: const InputDecoration(
-                        labelText: 'Sciezka do pliku kopii zapasowej',
+                        labelText: 'Ścieżka do pliku kopii zapasowej',
                         hintText:
                             r'np. C:\Users\...\Documents\StageCalc\backups\stagecalc_backup_...json',
                       ),
@@ -300,7 +300,7 @@ class _AboutScreenState extends State<AboutScreen> {
       if (!mounted) {
         return;
       }
-      setState(() => _loginError = 'Nie udalo sie zalogowac: $error');
+      setState(() => _loginError = 'Nie udało się zalogować: $error');
     } finally {
       if (mounted) {
         setState(() => _isLoggingIn = false);
@@ -353,9 +353,9 @@ class _AboutScreenState extends State<AboutScreen> {
       setState(() {
         _syncSettings = settings;
         _lastSyncMessage = summary.hasErrors
-            ? 'Zsynchronizowano z bledami (${summary.errors.length}). '
-                  'Wyslano: ${summary.pushed}, pobrano: ${summary.pulled}.'
-            : 'Wyslano: ${summary.pushed}, pobrano: ${summary.pulled}, '
+            ? 'Zsynchronizowano z błędami (${summary.errors.length}). '
+                  'Wysłano: ${summary.pushed}, pobrano: ${summary.pulled}.'
+            : 'Wysłano: ${summary.pushed}, pobrano: ${summary.pulled}, '
                   'bez zmian: ${summary.unchanged}.';
       });
       if (showSnackBar && mounted) {
@@ -368,7 +368,7 @@ class _AboutScreenState extends State<AboutScreen> {
         return;
       }
       setState(
-        () => _lastSyncMessage = 'Synchronizacja nie powiodla sie: $error',
+        () => _lastSyncMessage = 'Synchronizacja nie powiodła się: $error',
       );
       if (showSnackBar) {
         ScaffoldMessenger.of(
@@ -423,7 +423,7 @@ class _AboutScreenState extends State<AboutScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udalo sie utworzyc kopii: $error')),
+        SnackBar(content: Text('Nie udało się utworzyć kopii: $error')),
       );
     } finally {
       if (mounted) {
@@ -448,7 +448,7 @@ class _AboutScreenState extends State<AboutScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udalo sie otworzyc wyboru pliku: $error')),
+        SnackBar(content: Text('Nie udało się otworzyć wyboru pliku: $error')),
       );
     }
   }
@@ -458,7 +458,7 @@ class _AboutScreenState extends State<AboutScreen> {
     if (path.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Podaj sciezke do pliku.')));
+      ).showSnackBar(const SnackBar(content: Text('Podaj ścieżkę do pliku.')));
       return;
     }
 
@@ -476,18 +476,18 @@ class _AboutScreenState extends State<AboutScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Zaimportowac kopie zapasowa?'),
+          title: const Text('Zaimportować kopię zapasową?'),
           content: Text(
             'Plik z wersji aplikacji ${preview.appVersion}'
             '${preview.createdAt == null ? '' : ' (${preview.createdAt})'}.\n\n'
             'Znaleziono:\n'
-            '${preview.projects.length} projektow\n'
-            '${preview.clients.length} klientow\n'
+            '${preview.projects.length} projektów\n'
+            '${preview.clients.length} klientów\n'
             '${preview.locations.length} lokacji\n'
             '${preview.catalogDevices.length} pozycji katalogu\n'
-            '${preview.powerPresets.length} presetow rozdzielnic\n\n'
-            'Rekordy o tych samych ID co juz istniejace zostana nadpisane. '
-            'Tej operacji nie mozna cofnac.',
+            '${preview.powerPresets.length} presetów rozdzielnic\n\n'
+            'Rekordy o tych samych ID co już istniejące zostaną nadpisane. '
+            'Tej operacji nie można cofnąć.',
           ),
           actions: [
             TextButton(
@@ -513,7 +513,7 @@ class _AboutScreenState extends State<AboutScreen> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Zaimportowano ${preview.totalRecords} rekordow.'),
+          content: Text('Zaimportowano ${preview.totalRecords} rekordów.'),
         ),
       );
     } catch (error) {
@@ -521,7 +521,7 @@ class _AboutScreenState extends State<AboutScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udalo sie zaimportowac kopii: $error')),
+        SnackBar(content: Text('Nie udało się zaimportować kopii: $error')),
       );
     } finally {
       if (mounted) {

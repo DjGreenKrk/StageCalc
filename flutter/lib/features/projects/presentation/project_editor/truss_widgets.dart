@@ -36,12 +36,12 @@ class _TrussCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Edytuj kratownice',
+                tooltip: 'Edytuj kratownicę',
                 onPressed: onEdit,
                 icon: const Icon(Icons.tune),
               ),
               IconButton(
-                tooltip: 'Usun kratownice',
+                tooltip: 'Usuń kratownicę',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -83,13 +83,13 @@ class _TrussCard extends StatelessWidget {
               if (!load.hasKnownLimits)
                 const Chip(
                   avatar: Icon(Icons.help_outline, size: 16),
-                  label: Text('Brak zdefiniowanych limitow'),
+                  label: Text('Brak zdefiniowanych limitów'),
                 ),
               if (load.hasInterpolatedLimits && load.isChartExtrapolated)
                 Chip(
                   avatar: const Icon(Icons.warning_amber_outlined, size: 16),
                   label: const Text(
-                    'Dlugosc poza tabela producenta (ekstrapolacja)',
+                    'Długość poza tabelą producenta (ekstrapolacja)',
                   ),
                   backgroundColor: Colors.amber.shade700,
                 )
@@ -171,7 +171,7 @@ class _GroupHooksCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (group.hookAssignments.isEmpty)
-            const Text('Brak przypisanych hakow.')
+            const Text('Brak przypisanych haków.')
           else
             for (final assignment in group.hookAssignments)
               Padding(
@@ -185,7 +185,7 @@ class _GroupHooksCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Zmniejsz ilosc',
+                      tooltip: 'Zmniejsz ilość',
                       icon: const Icon(Icons.remove_circle_outline),
                       onPressed: assignment.quantity > 1
                           ? () => onEditQuantity(
@@ -196,13 +196,13 @@ class _GroupHooksCard extends StatelessWidget {
                     ),
                     Text('${assignment.quantity}'),
                     IconButton(
-                      tooltip: 'Zwieksz ilosc',
+                      tooltip: 'Zwiększ ilość',
                       icon: const Icon(Icons.add_circle_outline),
                       onPressed: () =>
                           onEditQuantity(assignment, assignment.quantity + 1),
                     ),
                     IconButton(
-                      tooltip: 'Usun hak',
+                      tooltip: 'Usuń hak',
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => onRemove(assignment),
                     ),
@@ -286,7 +286,7 @@ class _TrussDialogState extends State<_TrussDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        widget.truss == null ? 'Dodaj kratownice' : 'Edytuj kratownice',
+        widget.truss == null ? 'Dodaj kratownicę' : 'Edytuj kratownicę',
       ),
       content: SizedBox(
         width: 480,
@@ -305,7 +305,7 @@ class _TrussDialogState extends State<_TrussDialog> {
                 controller: _lengthController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Dlugosc',
+                  labelText: 'Długość',
                   suffixText: 'm',
                 ),
               ),
@@ -314,9 +314,9 @@ class _TrussDialogState extends State<_TrussDialog> {
                 controller: _manualLoadController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Reczne obciazenie',
+                  labelText: 'Ręczne obciążenie',
                   suffixText: 'kg',
-                  helperText: 'Np. akcesoria bez wlasnej grupy w projekcie.',
+                  helperText: 'Np. akcesoria bez własnej grupy w projekcie.',
                 ),
               ),
               const SizedBox(height: 12),
@@ -325,13 +325,13 @@ class _TrussDialogState extends State<_TrussDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Model kratownicy (opcjonalnie)',
                   helperText:
-                      'Gdy model ma tabele nosnosci producenta, limity ponizej '
-                      'mozna zostawic puste - zostana wyliczone z tabeli.',
+                      'Gdy model ma tabelę nośności producenta, limity poniżej '
+                      'można zostawić puste - zostaną wyliczone z tabeli.',
                 ),
                 items: [
                   const DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Brak / recznie'),
+                    child: Text('Brak / ręcznie'),
                   ),
                   for (final device in widget.trussDevices)
                     DropdownMenuItem<String?>(
@@ -347,7 +347,7 @@ class _TrussDialogState extends State<_TrussDialog> {
                 controller: _maxTotalLoadController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Limit calkowity (opcjonalnie)',
+                  labelText: 'Limit całkowity (opcjonalnie)',
                   suffixText: 'kg',
                 ),
               ),
@@ -356,7 +356,7 @@ class _TrussDialogState extends State<_TrussDialog> {
                 controller: _maxDistributedLoadController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Limit rozlozony (opcjonalnie)',
+                  labelText: 'Limit rozłożony (opcjonalnie)',
                   suffixText: 'kg/m',
                 ),
               ),
@@ -375,7 +375,7 @@ class _TrussDialogState extends State<_TrussDialog> {
               if (widget.groups.isEmpty)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('Projekt nie ma jeszcze zadnej grupy urzadzen.'),
+                  child: Text('Projekt nie ma jeszcze żadnej grupy urządzeń.'),
                 )
               else
                 for (final group in widget.groups)

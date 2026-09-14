@@ -83,15 +83,15 @@ class _DistroCard extends StatelessWidget {
               if (isPowerSource)
                 const Chip(
                   avatar: Icon(Icons.power, size: 16),
-                  label: Text('Zrodlo'),
+                  label: Text('Źródło'),
                 ),
               IconButton(
-                tooltip: 'Edytuj rozdzielnice',
+                tooltip: 'Edytuj rozdzielnicę',
                 onPressed: onEdit,
                 icon: const Icon(Icons.tune),
               ),
               IconButton(
-                tooltip: 'Usun rozdzielnice',
+                tooltip: 'Usuń rozdzielnicę',
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -113,7 +113,7 @@ class _DistroCard extends StatelessWidget {
                 ),
               if (patchValidation.isDistroInCycle(distro.id))
                 const _StatusChip(
-                  label: 'Cykl w polaczeniach rozdzielnic',
+                  label: 'Cykl w połączeniach rozdzielnic',
                   isError: true,
                   isWarning: false,
                 ),
@@ -121,7 +121,7 @@ class _DistroCard extends StatelessWidget {
                   (distroLoad?.isInputNearLimit ?? false))
                 _StatusChip(
                   label:
-                      'Wejscie ${distroLoad!.maxLoadedPhaseA.toStringAsFixed(1)}/'
+                      'Wejście ${distroLoad!.maxLoadedPhaseA.toStringAsFixed(1)}/'
                       '${distroLoad!.inputMaxCurrentA.toStringAsFixed(0)} A',
                   isError: distroLoad!.isInputOverloaded,
                   isWarning: distroLoad!.isInputNearLimit,
@@ -245,7 +245,7 @@ class _StatusChip extends StatelessWidget {
 }
 
 /// Tappable "patch point" for a single outlet (visual patcher, backlog item
-/// "bardziej wizualny uklad patchera") - a bigger, more diagram-like tile
+/// "bardziej wizualny układ patchera") - a bigger, more diagram-like tile
 /// than a plain chip, mirroring `docs/FEATURE_SCOPE.md`'s original "Wizualny
 /// patcher" spec: shows the outlet's phase, occupancy, load and (if
 /// connected) its target at a glance, and reacts to taps instead of only
