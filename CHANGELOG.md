@@ -6,6 +6,8 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.6+1 - 2026-09-14
+
 ### Dodano
 
 - Dodano import listy sprzętu z Gremium Panel (ADR-034): przycisk "Importuj z Gremium" na ekranie Projekty wczytuje plik `.json` z eksportem checklisty Gremium, dopasowuje pozycje do istniejącego katalogu po zapamiętanym id Gremium (nigdy po samej nazwie), i przed jakimkolwiek zapisem pokazuje interaktywny panel przeglądu: każdą pozycję można odznaczyć (nie każda pozycja z Gremium ma trafić do projektu), przypisać do dowolnej grupy, a dla nieznanych urządzeń wybrać istniejącą kategorię katalogową (Oświetlenie/Nagłośnienie/Multimedia/Rozdzielnia/Kabel/Rigging/Inne - te same kategorie co wszędzie indziej w katalogu) albo ręcznie połączyć z urządzeniem już istniejącym w katalogu zamiast tworzyć duplikat. Zaimportowane urządzenia/pozycje są w pełni natywnymi rekordami StageCalc - jedyny ślad pochodzenia to nowa kolumna z id Gremium (`CatalogDevice.gremiumInventoryItemId`, `Project.gremiumProjectId`, `ProjectItem.gremiumLineId`, ten sam wzorzec co `remoteId` dla PocketBase). Ponowny import tego samego pliku aktualizuje ten sam projekt (ilości pozycji), nigdy nie nadpisuje parametrów technicznych już poprawionych ręcznie w StageCalc, i usuwa z projektu pozycje, które zniknęły z nowego pliku. Schemat lokalny podniesiony do wersji `17`.

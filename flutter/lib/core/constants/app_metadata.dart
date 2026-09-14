@@ -4,7 +4,7 @@ class AppMetadata {
   static const name = 'StageCalc';
   static const description =
       'Profesjonalne narzędzie do planowania zasilania, masy oraz infrastruktury technicznej wydarzeń.';
-  static const version = '0.3.5';
+  static const version = '0.3.6';
   static const author = 'Julian Szymański';
   static const organization = 'GreenCrew';
   static const website = 'greencrew.pl';
