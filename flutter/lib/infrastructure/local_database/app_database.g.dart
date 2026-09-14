@@ -94,6 +94,17 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _gremiumProjectIdMeta = const VerificationMeta(
+    'gremiumProjectId',
+  );
+  @override
+  late final GeneratedColumn<String> gremiumProjectId = GeneratedColumn<String>(
+    'gremium_project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -172,6 +183,7 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     phaseId,
     clientId,
     locationId,
+    gremiumProjectId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -241,6 +253,15 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
       context.handle(
         _locationIdMeta,
         locationId.isAcceptableOrUnknown(data['location_id']!, _locationIdMeta),
+      );
+    }
+    if (data.containsKey('gremium_project_id')) {
+      context.handle(
+        _gremiumProjectIdMeta,
+        gremiumProjectId.isAcceptableOrUnknown(
+          data['gremium_project_id']!,
+          _gremiumProjectIdMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -327,6 +348,10 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
         DriftSqlType.string,
         data['${effectivePrefix}location_id'],
       ),
+      gremiumProjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gremium_project_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -372,6 +397,11 @@ class Project extends DataClass implements Insertable<Project> {
   final String phaseId;
   final String? clientId;
   final String? locationId;
+
+  /// `project.id` from a Gremium Panel pack-list export this project is
+  /// linked to (ADR-034) - `null` for every project not imported from
+  /// Gremium.
+  final String? gremiumProjectId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -387,6 +417,7 @@ class Project extends DataClass implements Insertable<Project> {
     required this.phaseId,
     this.clientId,
     this.locationId,
+    this.gremiumProjectId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -412,6 +443,9 @@ class Project extends DataClass implements Insertable<Project> {
     }
     if (!nullToAbsent || locationId != null) {
       map['location_id'] = Variable<String>(locationId);
+    }
+    if (!nullToAbsent || gremiumProjectId != null) {
+      map['gremium_project_id'] = Variable<String>(gremiumProjectId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -444,6 +478,9 @@ class Project extends DataClass implements Insertable<Project> {
       locationId: locationId == null && nullToAbsent
           ? const Value.absent()
           : Value(locationId),
+      gremiumProjectId: gremiumProjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gremiumProjectId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -471,6 +508,7 @@ class Project extends DataClass implements Insertable<Project> {
       phaseId: serializer.fromJson<String>(json['phaseId']),
       clientId: serializer.fromJson<String?>(json['clientId']),
       locationId: serializer.fromJson<String?>(json['locationId']),
+      gremiumProjectId: serializer.fromJson<String?>(json['gremiumProjectId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -491,6 +529,7 @@ class Project extends DataClass implements Insertable<Project> {
       'phaseId': serializer.toJson<String>(phaseId),
       'clientId': serializer.toJson<String?>(clientId),
       'locationId': serializer.toJson<String?>(locationId),
+      'gremiumProjectId': serializer.toJson<String?>(gremiumProjectId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -509,6 +548,7 @@ class Project extends DataClass implements Insertable<Project> {
     String? phaseId,
     Value<String?> clientId = const Value.absent(),
     Value<String?> locationId = const Value.absent(),
+    Value<String?> gremiumProjectId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -524,6 +564,9 @@ class Project extends DataClass implements Insertable<Project> {
     phaseId: phaseId ?? this.phaseId,
     clientId: clientId.present ? clientId.value : this.clientId,
     locationId: locationId.present ? locationId.value : this.locationId,
+    gremiumProjectId: gremiumProjectId.present
+        ? gremiumProjectId.value
+        : this.gremiumProjectId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -545,6 +588,9 @@ class Project extends DataClass implements Insertable<Project> {
       locationId: data.locationId.present
           ? data.locationId.value
           : this.locationId,
+      gremiumProjectId: data.gremiumProjectId.present
+          ? data.gremiumProjectId.value
+          : this.gremiumProjectId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -567,6 +613,7 @@ class Project extends DataClass implements Insertable<Project> {
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
           ..write('locationId: $locationId, ')
+          ..write('gremiumProjectId: $gremiumProjectId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -587,6 +634,7 @@ class Project extends DataClass implements Insertable<Project> {
     phaseId,
     clientId,
     locationId,
+    gremiumProjectId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -606,6 +654,7 @@ class Project extends DataClass implements Insertable<Project> {
           other.phaseId == this.phaseId &&
           other.clientId == this.clientId &&
           other.locationId == this.locationId &&
+          other.gremiumProjectId == this.gremiumProjectId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -623,6 +672,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   final Value<String> phaseId;
   final Value<String?> clientId;
   final Value<String?> locationId;
+  final Value<String?> gremiumProjectId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -639,6 +689,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
     this.locationId = const Value.absent(),
+    this.gremiumProjectId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -656,6 +707,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
     this.locationId = const Value.absent(),
+    this.gremiumProjectId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -676,6 +728,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Expression<String>? phaseId,
     Expression<String>? clientId,
     Expression<String>? locationId,
+    Expression<String>? gremiumProjectId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -693,6 +746,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       if (phaseId != null) 'phase_id': phaseId,
       if (clientId != null) 'client_id': clientId,
       if (locationId != null) 'location_id': locationId,
+      if (gremiumProjectId != null) 'gremium_project_id': gremiumProjectId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -712,6 +766,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Value<String>? phaseId,
     Value<String?>? clientId,
     Value<String?>? locationId,
+    Value<String?>? gremiumProjectId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -729,6 +784,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       phaseId: phaseId ?? this.phaseId,
       clientId: clientId ?? this.clientId,
       locationId: locationId ?? this.locationId,
+      gremiumProjectId: gremiumProjectId ?? this.gremiumProjectId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -766,6 +822,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     if (locationId.present) {
       map['location_id'] = Variable<String>(locationId.value);
     }
+    if (gremiumProjectId.present) {
+      map['gremium_project_id'] = Variable<String>(gremiumProjectId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -801,6 +860,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
           ..write('locationId: $locationId, ')
+          ..write('gremiumProjectId: $gremiumProjectId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -1675,6 +1735,17 @@ class $ProjectItemsTable extends ProjectItems
     requiredDuringInsert: false,
     defaultValue: const Constant('pcs'),
   );
+  static const VerificationMeta _gremiumLineIdMeta = const VerificationMeta(
+    'gremiumLineId',
+  );
+  @override
+  late final GeneratedColumn<String> gremiumLineId = GeneratedColumn<String>(
+    'gremium_line_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _sortOrderMeta = const VerificationMeta(
     'sortOrder',
   );
@@ -1770,6 +1841,7 @@ class $ProjectItemsTable extends ProjectItems
     weightKgSnapshot,
     riggingPointsSnapshot,
     unit,
+    gremiumLineId,
     sortOrder,
     createdAt,
     updatedAt,
@@ -1896,6 +1968,15 @@ class $ProjectItemsTable extends ProjectItems
         unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
       );
     }
+    if (data.containsKey('gremium_line_id')) {
+      context.handle(
+        _gremiumLineIdMeta,
+        gremiumLineId.isAcceptableOrUnknown(
+          data['gremium_line_id']!,
+          _gremiumLineIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('sort_order')) {
       context.handle(
         _sortOrderMeta,
@@ -2006,6 +2087,10 @@ class $ProjectItemsTable extends ProjectItems
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      gremiumLineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gremium_line_id'],
+      ),
       sortOrder: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
@@ -2057,6 +2142,11 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
   final double weightKgSnapshot;
   final int? riggingPointsSnapshot;
   final String unit;
+
+  /// `lineId` from a Gremium Panel pack-list export this item was created
+  /// or last refreshed from (ADR-034) - `null` for every item added
+  /// manually.
+  final String? gremiumLineId;
   final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2078,6 +2168,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     required this.weightKgSnapshot,
     this.riggingPointsSnapshot,
     required this.unit,
+    this.gremiumLineId,
     required this.sortOrder,
     required this.createdAt,
     required this.updatedAt,
@@ -2108,6 +2199,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       map['rigging_points_snapshot'] = Variable<int>(riggingPointsSnapshot);
     }
     map['unit'] = Variable<String>(unit);
+    if (!nullToAbsent || gremiumLineId != null) {
+      map['gremium_line_id'] = Variable<String>(gremiumLineId);
+    }
     map['sort_order'] = Variable<int>(sortOrder);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2143,6 +2237,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           ? const Value.absent()
           : Value(riggingPointsSnapshot),
       unit: Value(unit),
+      gremiumLineId: gremiumLineId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gremiumLineId),
       sortOrder: Value(sortOrder),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -2180,6 +2277,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
         json['riggingPointsSnapshot'],
       ),
       unit: serializer.fromJson<String>(json['unit']),
+      gremiumLineId: serializer.fromJson<String?>(json['gremiumLineId']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2206,6 +2304,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
       'weightKgSnapshot': serializer.toJson<double>(weightKgSnapshot),
       'riggingPointsSnapshot': serializer.toJson<int?>(riggingPointsSnapshot),
       'unit': serializer.toJson<String>(unit),
+      'gremiumLineId': serializer.toJson<String?>(gremiumLineId),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2230,6 +2329,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     double? weightKgSnapshot,
     Value<int?> riggingPointsSnapshot = const Value.absent(),
     String? unit,
+    Value<String?> gremiumLineId = const Value.absent(),
     int? sortOrder,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -2257,6 +2357,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
         ? riggingPointsSnapshot.value
         : this.riggingPointsSnapshot,
     unit: unit ?? this.unit,
+    gremiumLineId: gremiumLineId.present
+        ? gremiumLineId.value
+        : this.gremiumLineId,
     sortOrder: sortOrder ?? this.sortOrder,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -2294,6 +2397,9 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           ? data.riggingPointsSnapshot.value
           : this.riggingPointsSnapshot,
       unit: data.unit.present ? data.unit.value : this.unit,
+      gremiumLineId: data.gremiumLineId.present
+          ? data.gremiumLineId.value
+          : this.gremiumLineId,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2322,6 +2428,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           ..write('weightKgSnapshot: $weightKgSnapshot, ')
           ..write('riggingPointsSnapshot: $riggingPointsSnapshot, ')
           ..write('unit: $unit, ')
+          ..write('gremiumLineId: $gremiumLineId, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2334,7 +2441,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     projectId,
     groupId,
@@ -2348,6 +2455,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     weightKgSnapshot,
     riggingPointsSnapshot,
     unit,
+    gremiumLineId,
     sortOrder,
     createdAt,
     updatedAt,
@@ -2355,7 +2463,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
     revision,
     syncState,
     lastSyncedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2373,6 +2481,7 @@ class ProjectItem extends DataClass implements Insertable<ProjectItem> {
           other.weightKgSnapshot == this.weightKgSnapshot &&
           other.riggingPointsSnapshot == this.riggingPointsSnapshot &&
           other.unit == this.unit &&
+          other.gremiumLineId == this.gremiumLineId &&
           other.sortOrder == this.sortOrder &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -2396,6 +2505,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
   final Value<double> weightKgSnapshot;
   final Value<int?> riggingPointsSnapshot;
   final Value<String> unit;
+  final Value<String?> gremiumLineId;
   final Value<int> sortOrder;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2418,6 +2528,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     this.weightKgSnapshot = const Value.absent(),
     this.riggingPointsSnapshot = const Value.absent(),
     this.unit = const Value.absent(),
+    this.gremiumLineId = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2441,6 +2552,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     this.weightKgSnapshot = const Value.absent(),
     this.riggingPointsSnapshot = const Value.absent(),
     this.unit = const Value.absent(),
+    this.gremiumLineId = const Value.absent(),
     this.sortOrder = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -2470,6 +2582,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     Expression<double>? weightKgSnapshot,
     Expression<int>? riggingPointsSnapshot,
     Expression<String>? unit,
+    Expression<String>? gremiumLineId,
     Expression<int>? sortOrder,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2495,6 +2608,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
       if (riggingPointsSnapshot != null)
         'rigging_points_snapshot': riggingPointsSnapshot,
       if (unit != null) 'unit': unit,
+      if (gremiumLineId != null) 'gremium_line_id': gremiumLineId,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2520,6 +2634,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     Value<double>? weightKgSnapshot,
     Value<int?>? riggingPointsSnapshot,
     Value<String>? unit,
+    Value<String?>? gremiumLineId,
     Value<int>? sortOrder,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
@@ -2544,6 +2659,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
       riggingPointsSnapshot:
           riggingPointsSnapshot ?? this.riggingPointsSnapshot,
       unit: unit ?? this.unit,
+      gremiumLineId: gremiumLineId ?? this.gremiumLineId,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2601,6 +2717,9 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (gremiumLineId.present) {
+      map['gremium_line_id'] = Variable<String>(gremiumLineId.value);
+    }
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
@@ -2644,6 +2763,7 @@ class ProjectItemsCompanion extends UpdateCompanion<ProjectItem> {
           ..write('weightKgSnapshot: $weightKgSnapshot, ')
           ..write('riggingPointsSnapshot: $riggingPointsSnapshot, ')
           ..write('unit: $unit, ')
+          ..write('gremiumLineId: $gremiumLineId, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7695,6 +7815,17 @@ class $CatalogDevicesTable extends CatalogDevices
     requiredDuringInsert: false,
     defaultValue: const Constant('pcs'),
   );
+  static const VerificationMeta _gremiumInventoryItemIdMeta =
+      const VerificationMeta('gremiumInventoryItemId');
+  @override
+  late final GeneratedColumn<String> gremiumInventoryItemId =
+      GeneratedColumn<String>(
+        'gremium_inventory_item_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -7778,6 +7909,7 @@ class $CatalogDevicesTable extends CatalogDevices
     connectorTypeIdsJson,
     riggingPoints,
     quantityUnit,
+    gremiumInventoryItemId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -7894,6 +8026,15 @@ class $CatalogDevicesTable extends CatalogDevices
         ),
       );
     }
+    if (data.containsKey('gremium_inventory_item_id')) {
+      context.handle(
+        _gremiumInventoryItemIdMeta,
+        gremiumInventoryItemId.isAcceptableOrUnknown(
+          data['gremium_inventory_item_id']!,
+          _gremiumInventoryItemIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -7998,6 +8139,10 @@ class $CatalogDevicesTable extends CatalogDevices
         DriftSqlType.string,
         data['${effectivePrefix}quantity_unit'],
       )!,
+      gremiumInventoryItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gremium_inventory_item_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -8053,6 +8198,11 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   final String connectorTypeIdsJson;
   final int? riggingPoints;
   final String quantityUnit;
+
+  /// `inventoryItemId` from a Gremium Panel pack-list export this device is
+  /// linked to (ADR-034) - `null` for every device added manually or not yet
+  /// linked to a Gremium import item.
+  final String? gremiumInventoryItemId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -8073,6 +8223,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     required this.connectorTypeIdsJson,
     this.riggingPoints,
     required this.quantityUnit,
+    this.gremiumInventoryItemId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -8104,6 +8255,11 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       map['rigging_points'] = Variable<int>(riggingPoints);
     }
     map['quantity_unit'] = Variable<String>(quantityUnit);
+    if (!nullToAbsent || gremiumInventoryItemId != null) {
+      map['gremium_inventory_item_id'] = Variable<String>(
+        gremiumInventoryItemId,
+      );
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -8140,6 +8296,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ? const Value.absent()
           : Value(riggingPoints),
       quantityUnit: Value(quantityUnit),
+      gremiumInventoryItemId: gremiumInventoryItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gremiumInventoryItemId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -8174,6 +8333,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       ),
       riggingPoints: serializer.fromJson<int?>(json['riggingPoints']),
       quantityUnit: serializer.fromJson<String>(json['quantityUnit']),
+      gremiumInventoryItemId: serializer.fromJson<String?>(
+        json['gremiumInventoryItemId'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -8199,6 +8361,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       'connectorTypeIdsJson': serializer.toJson<String>(connectorTypeIdsJson),
       'riggingPoints': serializer.toJson<int?>(riggingPoints),
       'quantityUnit': serializer.toJson<String>(quantityUnit),
+      'gremiumInventoryItemId': serializer.toJson<String?>(
+        gremiumInventoryItemId,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -8222,6 +8387,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     String? connectorTypeIdsJson,
     Value<int?> riggingPoints = const Value.absent(),
     String? quantityUnit,
+    Value<String?> gremiumInventoryItemId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -8246,6 +8412,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
         ? riggingPoints.value
         : this.riggingPoints,
     quantityUnit: quantityUnit ?? this.quantityUnit,
+    gremiumInventoryItemId: gremiumInventoryItemId.present
+        ? gremiumInventoryItemId.value
+        : this.gremiumInventoryItemId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -8280,6 +8449,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       quantityUnit: data.quantityUnit.present
           ? data.quantityUnit.value
           : this.quantityUnit,
+      gremiumInventoryItemId: data.gremiumInventoryItemId.present
+          ? data.gremiumInventoryItemId.value
+          : this.gremiumInventoryItemId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -8307,6 +8479,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ..write('connectorTypeIdsJson: $connectorTypeIdsJson, ')
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
+          ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8332,6 +8505,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     connectorTypeIdsJson,
     riggingPoints,
     quantityUnit,
+    gremiumInventoryItemId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -8356,6 +8530,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           other.connectorTypeIdsJson == this.connectorTypeIdsJson &&
           other.riggingPoints == this.riggingPoints &&
           other.quantityUnit == this.quantityUnit &&
+          other.gremiumInventoryItemId == this.gremiumInventoryItemId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -8378,6 +8553,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
   final Value<String> connectorTypeIdsJson;
   final Value<int?> riggingPoints;
   final Value<String> quantityUnit;
+  final Value<String?> gremiumInventoryItemId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -8399,6 +8575,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.connectorTypeIdsJson = const Value.absent(),
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
+    this.gremiumInventoryItemId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -8421,6 +8598,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.connectorTypeIdsJson = const Value.absent(),
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
+    this.gremiumInventoryItemId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -8446,6 +8624,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Expression<String>? connectorTypeIdsJson,
     Expression<int>? riggingPoints,
     Expression<String>? quantityUnit,
+    Expression<String>? gremiumInventoryItemId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -8469,6 +8648,8 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
         'connector_type_ids_json': connectorTypeIdsJson,
       if (riggingPoints != null) 'rigging_points': riggingPoints,
       if (quantityUnit != null) 'quantity_unit': quantityUnit,
+      if (gremiumInventoryItemId != null)
+        'gremium_inventory_item_id': gremiumInventoryItemId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -8493,6 +8674,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Value<String>? connectorTypeIdsJson,
     Value<int?>? riggingPoints,
     Value<String>? quantityUnit,
+    Value<String?>? gremiumInventoryItemId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -8515,6 +8697,8 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       connectorTypeIdsJson: connectorTypeIdsJson ?? this.connectorTypeIdsJson,
       riggingPoints: riggingPoints ?? this.riggingPoints,
       quantityUnit: quantityUnit ?? this.quantityUnit,
+      gremiumInventoryItemId:
+          gremiumInventoryItemId ?? this.gremiumInventoryItemId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -8569,6 +8753,11 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     if (quantityUnit.present) {
       map['quantity_unit'] = Variable<String>(quantityUnit.value);
     }
+    if (gremiumInventoryItemId.present) {
+      map['gremium_inventory_item_id'] = Variable<String>(
+        gremiumInventoryItemId.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8609,6 +8798,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('connectorTypeIdsJson: $connectorTypeIdsJson, ')
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
+          ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -14687,6 +14877,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
       Value<String> phaseId,
       Value<String?> clientId,
       Value<String?> locationId,
+      Value<String?> gremiumProjectId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -14705,6 +14896,7 @@ typedef $$ProjectsTableUpdateCompanionBuilder =
       Value<String> phaseId,
       Value<String?> clientId,
       Value<String?> locationId,
+      Value<String?> gremiumProjectId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -14900,6 +15092,11 @@ class $$ProjectsTableFilterComposer
 
   ColumnFilters<String> get locationId => $composableBuilder(
     column: $table.locationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gremiumProjectId => $composableBuilder(
+    column: $table.gremiumProjectId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15162,6 +15359,11 @@ class $$ProjectsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get gremiumProjectId => $composableBuilder(
+    column: $table.gremiumProjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -15227,6 +15429,11 @@ class $$ProjectsTableAnnotationComposer
 
   GeneratedColumn<String> get locationId => $composableBuilder(
     column: $table.locationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gremiumProjectId => $composableBuilder(
+    column: $table.gremiumProjectId,
     builder: (column) => column,
   );
 
@@ -15474,6 +15681,7 @@ class $$ProjectsTableTableManager
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
                 Value<String?> locationId = const Value.absent(),
+                Value<String?> gremiumProjectId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -15490,6 +15698,7 @@ class $$ProjectsTableTableManager
                 phaseId: phaseId,
                 clientId: clientId,
                 locationId: locationId,
+                gremiumProjectId: gremiumProjectId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -15508,6 +15717,7 @@ class $$ProjectsTableTableManager
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
                 Value<String?> locationId = const Value.absent(),
+                Value<String?> gremiumProjectId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -15524,6 +15734,7 @@ class $$ProjectsTableTableManager
                 phaseId: phaseId,
                 clientId: clientId,
                 locationId: locationId,
+                gremiumProjectId: gremiumProjectId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -16429,6 +16640,7 @@ typedef $$ProjectItemsTableCreateCompanionBuilder =
       Value<double> weightKgSnapshot,
       Value<int?> riggingPointsSnapshot,
       Value<String> unit,
+      Value<String?> gremiumLineId,
       Value<int> sortOrder,
       required DateTime createdAt,
       required DateTime updatedAt,
@@ -16453,6 +16665,7 @@ typedef $$ProjectItemsTableUpdateCompanionBuilder =
       Value<double> weightKgSnapshot,
       Value<int?> riggingPointsSnapshot,
       Value<String> unit,
+      Value<String?> gremiumLineId,
       Value<int> sortOrder,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
@@ -16563,6 +16776,11 @@ class $$ProjectItemsTableFilterComposer
 
   ColumnFilters<String> get unit => $composableBuilder(
     column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gremiumLineId => $composableBuilder(
+    column: $table.gremiumLineId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -16712,6 +16930,11 @@ class $$ProjectItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get gremiumLineId => $composableBuilder(
+    column: $table.gremiumLineId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
@@ -16850,6 +17073,11 @@ class $$ProjectItemsTableAnnotationComposer
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
 
+  GeneratedColumn<String> get gremiumLineId => $composableBuilder(
+    column: $table.gremiumLineId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
 
@@ -16961,6 +17189,7 @@ class $$ProjectItemsTableTableManager
                 Value<double> weightKgSnapshot = const Value.absent(),
                 Value<int?> riggingPointsSnapshot = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<String?> gremiumLineId = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
@@ -16983,6 +17212,7 @@ class $$ProjectItemsTableTableManager
                 weightKgSnapshot: weightKgSnapshot,
                 riggingPointsSnapshot: riggingPointsSnapshot,
                 unit: unit,
+                gremiumLineId: gremiumLineId,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -17007,6 +17237,7 @@ class $$ProjectItemsTableTableManager
                 Value<double> weightKgSnapshot = const Value.absent(),
                 Value<int?> riggingPointsSnapshot = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<String?> gremiumLineId = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
@@ -17029,6 +17260,7 @@ class $$ProjectItemsTableTableManager
                 weightKgSnapshot: weightKgSnapshot,
                 riggingPointsSnapshot: riggingPointsSnapshot,
                 unit: unit,
+                gremiumLineId: gremiumLineId,
                 sortOrder: sortOrder,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -20635,6 +20867,7 @@ typedef $$CatalogDevicesTableCreateCompanionBuilder =
       Value<String> connectorTypeIdsJson,
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
+      Value<String?> gremiumInventoryItemId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -20658,6 +20891,7 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<String> connectorTypeIdsJson,
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
+      Value<String?> gremiumInventoryItemId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -20776,6 +21010,11 @@ class $$CatalogDevicesTableFilterComposer
 
   ColumnFilters<String> get quantityUnit => $composableBuilder(
     column: $table.quantityUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gremiumInventoryItemId => $composableBuilder(
+    column: $table.gremiumInventoryItemId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -20910,6 +21149,11 @@ class $$CatalogDevicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get gremiumInventoryItemId => $composableBuilder(
+    column: $table.gremiumInventoryItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -20998,6 +21242,11 @@ class $$CatalogDevicesTableAnnotationComposer
 
   GeneratedColumn<String> get quantityUnit => $composableBuilder(
     column: $table.quantityUnit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gremiumInventoryItemId => $composableBuilder(
+    column: $table.gremiumInventoryItemId,
     builder: (column) => column,
   );
 
@@ -21091,6 +21340,7 @@ class $$CatalogDevicesTableTableManager
                 Value<String> connectorTypeIdsJson = const Value.absent(),
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
+                Value<String?> gremiumInventoryItemId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21112,6 +21362,7 @@ class $$CatalogDevicesTableTableManager
                 connectorTypeIdsJson: connectorTypeIdsJson,
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
+                gremiumInventoryItemId: gremiumInventoryItemId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -21135,6 +21386,7 @@ class $$CatalogDevicesTableTableManager
                 Value<String> connectorTypeIdsJson = const Value.absent(),
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
+                Value<String?> gremiumInventoryItemId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21156,6 +21408,7 @@ class $$CatalogDevicesTableTableManager
                 connectorTypeIdsJson: connectorTypeIdsJson,
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
+                gremiumInventoryItemId: gremiumInventoryItemId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

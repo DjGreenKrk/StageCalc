@@ -11,7 +11,7 @@ import '../../features/power_presets/domain/entities/power_preset.dart';
 import '../../features/projects/data/project_repository.dart';
 import '../../features/projects/domain/entities/project_models.dart';
 import 'app_backup_service.dart';
-import 'backup_file_reader/backup_file_reader.dart';
+import '../files/local_file_reader/local_file_reader.dart';
 
 /// Thrown when backup content fails validation. The message is meant to be
 /// shown directly to the user, so it stays specific about what and where.
@@ -73,7 +73,7 @@ class AppBackupImportService {
   final PowerPresetRepository powerPresetRepository;
 
   Future<BackupImportPreview> loadAndValidate(String path) async {
-    final content = await readBackupFile(path);
+    final content = await readLocalTextFile(path);
     return validate(content);
   }
 

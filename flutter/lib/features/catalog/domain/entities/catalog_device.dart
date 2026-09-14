@@ -18,6 +18,7 @@ class CatalogDevice {
     this.riggingPoints,
     this.loadChart = const [],
     this.syncStatus = OfflineSyncStatus.localOnly,
+    this.gremiumInventoryItemId,
   });
 
   final String id;
@@ -51,6 +52,13 @@ class CatalogDevice {
   final DateTime updatedAt;
   final OfflineSyncStatus syncStatus;
 
+  /// `inventoryItemId` from a Gremium Panel pack-list export this device is
+  /// linked to (see ADR-034) - `null` for every device added manually or not
+  /// yet linked. Set either when the import creates a brand-new device, or
+  /// when the user manually links an already-existing device to a Gremium
+  /// import item instead of creating a duplicate.
+  final String? gremiumInventoryItemId;
+
   CatalogDevice copyWith({
     String? id,
     String? name,
@@ -66,6 +74,7 @@ class CatalogDevice {
     DateTime? createdAt,
     DateTime? updatedAt,
     OfflineSyncStatus? syncStatus,
+    String? gremiumInventoryItemId,
   }) {
     return CatalogDevice(
       id: id ?? this.id,
@@ -82,6 +91,8 @@ class CatalogDevice {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      gremiumInventoryItemId:
+          gremiumInventoryItemId ?? this.gremiumInventoryItemId,
     );
   }
 
@@ -103,6 +114,7 @@ class CatalogDevice {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'syncStatus': syncStatus.toJson(),
+      'gremiumInventoryItemId': gremiumInventoryItemId,
     };
   }
 
@@ -132,6 +144,7 @@ class CatalogDevice {
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       syncStatus: OfflineSyncStatusJson.fromJson(json['syncStatus'] as String?),
+      gremiumInventoryItemId: json['gremiumInventoryItemId'] as String?,
     );
   }
 }

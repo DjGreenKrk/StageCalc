@@ -15,6 +15,7 @@ class Project {
     this.connections = const [],
     this.trusses = const [],
     this.syncStatus = OfflineSyncStatus.localOnly,
+    this.gremiumProjectId,
   });
 
   final String id;
@@ -29,6 +30,12 @@ class Project {
   final DateTime createdAt;
   final DateTime updatedAt;
   final OfflineSyncStatus syncStatus;
+
+  /// `project.id` from a Gremium Panel pack-list export this project was
+  /// created from or last matched to (see ADR-034) - `null` for every
+  /// project not linked to Gremium. Re-importing the same Gremium project
+  /// (same id) updates this project instead of creating a duplicate.
+  final String? gremiumProjectId;
 
   Project copyWith({
     String? id,
@@ -45,6 +52,7 @@ class Project {
     DateTime? createdAt,
     DateTime? updatedAt,
     OfflineSyncStatus? syncStatus,
+    String? gremiumProjectId,
   }) {
     return Project(
       id: id ?? this.id,
@@ -59,6 +67,7 @@ class Project {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      gremiumProjectId: gremiumProjectId ?? this.gremiumProjectId,
     );
   }
 
@@ -78,6 +87,7 @@ class Project {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'syncStatus': syncStatus.toJson(),
+      'gremiumProjectId': gremiumProjectId,
     };
   }
 
@@ -93,6 +103,7 @@ class Project {
       phaseId: json['phaseId'] as String? ?? 'default',
       clientId: json['clientId'] as String?,
       locationId: json['locationId'] as String?,
+      gremiumProjectId: json['gremiumProjectId'] as String?,
       groups: groupsJson
           .whereType<Map>()
           .map(
@@ -563,6 +574,7 @@ class ProjectItem {
     this.weightKgSnapshot = 0,
     this.riggingPointsSnapshot,
     this.unit = ProjectItemUnit.pcs,
+    this.gremiumLineId,
   });
 
   final String id;
@@ -580,6 +592,12 @@ class ProjectItem {
   final int? riggingPointsSnapshot;
   final ProjectItemUnit unit;
 
+  /// `lineId` from a Gremium Panel pack-list export (see ADR-034) - `null`
+  /// for every item added manually. Used to recognize this exact line on a
+  /// re-import of the same project: quantity gets refreshed, every other
+  /// field stays whatever the user already set in StageCalc.
+  final String? gremiumLineId;
+
   ProjectItem copyWith({
     String? id,
     String? catalogDeviceId,
@@ -591,6 +609,7 @@ class ProjectItem {
     double? weightKgSnapshot,
     int? riggingPointsSnapshot,
     ProjectItemUnit? unit,
+    String? gremiumLineId,
   }) {
     return ProjectItem(
       id: id ?? this.id,
@@ -604,6 +623,7 @@ class ProjectItem {
       riggingPointsSnapshot:
           riggingPointsSnapshot ?? this.riggingPointsSnapshot,
       unit: unit ?? this.unit,
+      gremiumLineId: gremiumLineId ?? this.gremiumLineId,
     );
   }
 
@@ -619,6 +639,7 @@ class ProjectItem {
       'weightKgSnapshot': weightKgSnapshot,
       'riggingPointsSnapshot': riggingPointsSnapshot,
       'unit': unit.toJson(),
+      'gremiumLineId': gremiumLineId,
     };
   }
 
@@ -634,6 +655,7 @@ class ProjectItem {
       weightKgSnapshot: (json['weightKgSnapshot'] as num? ?? 0).toDouble(),
       riggingPointsSnapshot: (json['riggingPointsSnapshot'] as num?)?.toInt(),
       unit: ProjectItemUnitJson.fromJson(json['unit'] as String?),
+      gremiumLineId: json['gremiumLineId'] as String?,
     );
   }
 }

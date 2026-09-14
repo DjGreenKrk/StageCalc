@@ -10,6 +10,7 @@ import '../../../clients/data/drift_client_repository.dart';
 import '../../../clients/domain/entities/client.dart';
 import '../../../locations/data/drift_location_repository.dart';
 import '../../../locations/domain/entities/location.dart';
+import '../../../gremium_import/presentation/gremium_import_entry.dart';
 import '../../data/demo_project_factory.dart';
 import '../../data/drift_project_repository.dart';
 import '../../data/project_repository.dart';
@@ -121,7 +122,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const GreenCrewSectionHeader(title: 'Projekty'),
+          GreenCrewSectionHeader(
+            title: 'Projekty',
+            action: GremiumImportButton(onImported: _loadProjects),
+          ),
           const SizedBox(height: 12),
           const GreenCrewSearchBar(hintText: 'Szukaj projektu'),
           const SizedBox(height: 16),

@@ -19,6 +19,11 @@ class Projects extends Table {
   TextColumn get phaseId => text().withDefault(const Constant('default'))();
   TextColumn get clientId => text().nullable()();
   TextColumn get locationId => text().nullable()();
+
+  /// `project.id` from a Gremium Panel pack-list export this project is
+  /// linked to (ADR-034) - `null` for every project not imported from
+  /// Gremium.
+  TextColumn get gremiumProjectId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -63,6 +68,11 @@ class ProjectItems extends Table {
   RealColumn get weightKgSnapshot => real().withDefault(const Constant(0))();
   IntColumn get riggingPointsSnapshot => integer().nullable()();
   TextColumn get unit => text().withDefault(const Constant('pcs'))();
+
+  /// `lineId` from a Gremium Panel pack-list export this item was created
+  /// or last refreshed from (ADR-034) - `null` for every item added
+  /// manually.
+  TextColumn get gremiumLineId => text().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -216,6 +226,11 @@ class CatalogDevices extends Table {
       text().withDefault(const Constant('[]'))();
   IntColumn get riggingPoints => integer().nullable()();
   TextColumn get quantityUnit => text().withDefault(const Constant('pcs'))();
+
+  /// `inventoryItemId` from a Gremium Panel pack-list export this device is
+  /// linked to (ADR-034) - `null` for every device added manually or not yet
+  /// linked to a Gremium import item.
+  TextColumn get gremiumInventoryItemId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -429,7 +444,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -561,6 +576,26 @@ class AppDatabase extends _$AppDatabase {
             ),
           );
         }
+      }
+      if (from < 17) {
+        // Nullable columns for linking a native record to the Gremium Panel
+        // item it was imported from or manually matched to (ADR-034) - no
+        // backfill needed, every pre-existing row simply stays unlinked.
+        await _addColumnIfMissing(
+          migrator,
+          catalogDevices,
+          catalogDevices.gremiumInventoryItemId,
+        );
+        await _addColumnIfMissing(
+          migrator,
+          projects,
+          projects.gremiumProjectId,
+        );
+        await _addColumnIfMissing(
+          migrator,
+          projectItems,
+          projectItems.gremiumLineId,
+        );
       }
     },
   );

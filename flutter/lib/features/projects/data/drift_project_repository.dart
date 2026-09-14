@@ -129,6 +129,7 @@ class DriftProjectRepository implements ProjectRepository {
               phaseId: Value(project.phaseId),
               clientId: Value(project.clientId),
               locationId: Value(project.locationId),
+              gremiumProjectId: Value(project.gremiumProjectId),
               createdAt: Value(project.createdAt),
               updatedAt: Value(project.updatedAt),
               syncState: Value(project.syncStatus.toJson()),
@@ -207,6 +208,7 @@ class DriftProjectRepository implements ProjectRepository {
                   weightKgSnapshot: Value(item.weightKgSnapshot),
                   riggingPointsSnapshot: Value(item.riggingPointsSnapshot),
                   unit: Value(item.unit.toJson()),
+                  gremiumLineId: Value(item.gremiumLineId),
                   sortOrder: Value(itemIndex),
                   createdAt: Value(project.createdAt),
                   updatedAt: Value(project.updatedAt),
@@ -471,6 +473,7 @@ class DriftProjectRepository implements ProjectRepository {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       syncStatus: OfflineSyncStatusJson.fromJson(row.syncState),
+      gremiumProjectId: row.gremiumProjectId,
     );
   }
 
@@ -500,6 +503,7 @@ class DriftProjectRepository implements ProjectRepository {
       weightKgSnapshot: row.weightKgSnapshot,
       riggingPointsSnapshot: row.riggingPointsSnapshot,
       unit: ProjectItemUnitJson.fromJson(row.unit),
+      gremiumLineId: row.gremiumLineId,
     );
   }
 

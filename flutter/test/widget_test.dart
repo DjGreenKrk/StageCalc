@@ -72,6 +72,102 @@ void main() {
     expect(find.text('Projekt zapisany lokalnie'), findsOneWidget);
   });
 
+  testWidgets('imports a Gremium pack-list into a new project', (tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final gremiumFile = File(
+      '${Directory.systemTemp.path}/stagecalc_gremium_test_'
+      '${DateTime.now().microsecondsSinceEpoch}.json',
+    );
+    gremiumFile.writeAsStringSync(
+      jsonEncode({
+        'schema': 'gremium.stagecalc.pack-list',
+        'formatVersion': '1.0',
+        'project': {'id': 'event-test-1', 'name': 'Test Gremium'},
+        'items': [
+          {
+            'lineId': 'line-1',
+            'inventoryItemId': 'inv-1',
+            'name': 'DNA Pole One',
+            'quantity': 2,
+            'technical': {'unitWeightKg': 16.6},
+          },
+          {
+            'lineId': 'line-2',
+            'name': 'Rozdzielnia podwykonawcy',
+            'quantity': 1,
+          },
+        ],
+      }),
+    );
+    addTearDown(() {
+      if (gremiumFile.existsSync()) {
+        gremiumFile.deleteSync();
+      }
+    });
+
+    final originalPlatform = FilePickerPlatform.instance;
+    FilePickerPlatform.instance = _FakeFilePickerPlatform(
+      pickedPath: gremiumFile.path,
+    );
+    addTearDown(() => FilePickerPlatform.instance = originalPlatform);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Importuj z Gremium'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Import: Test Gremium').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import: Test Gremium'), findsOneWidget);
+    expect(find.textContaining('DNA Pole One'), findsOneWidget);
+    expect(find.textContaining('Rozdzielnia podwykonawcy'), findsOneWidget);
+
+    // Deselect the second (custom, catalog-free) item.
+    await tester.tap(find.byType(Checkbox).last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Importuj'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Import: Test Gremium').evaluate().isEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Utworzono nowy projekt'), findsOneWidget);
+
+    final projects = await DriftProjectRepository(database).getProjects();
+    final imported = projects.singleWhere(
+      (project) => project.gremiumProjectId == 'event-test-1',
+    );
+    expect(imported.groups.single.items, hasLength(1));
+    expect(imported.groups.single.items.single.gremiumLineId, 'line-1');
+
+    final devices = await DriftCatalogRepository(database).getDevices();
+    expect(
+      devices.any((device) => device.gremiumInventoryItemId == 'inv-1'),
+      isTrue,
+    );
+  });
+
   testWidgets('adds and edits manual item in project editor', (tester) async {
     tester.view.physicalSize = const Size(1000, 1000);
     tester.view.devicePixelRatio = 1;
