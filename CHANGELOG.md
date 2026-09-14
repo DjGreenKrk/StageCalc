@@ -6,6 +6,15 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.1+1 - 2026-09-14
+
+### Naprawiono
+
+- Zgloszenie: "Android nie wstaje" po instalacji v0.3.0. Przegladem kodu (bez potwierdzenia na urzadzeniu - srodowisko sesji nie utrzymywalo stabilnie emulatora Android do weryfikacji) znaleziono dwa realne problemy specyficzne dla Androida wprowadzone/odslonietel przez ADR-028:
+  - `main()` blokowal `runApp()` na nieopakowanym `await PocketBaseClientProvider.initialize()` (otwarcie lokalnej bazy + przywrocenie sesji logowania) - jakikolwiek wyjatek albo spowolnienie w tym kroku (np. wolne uruchomienie tla-izolatu Drift na niektorych urzadzeniach Android) nie pozwalalo aplikacji pokazac zadnego UI. Owiniete w `try`/`timeout(5s)` - awaria tego kroku teraz nigdy nie blokuje startu, tylko cofa do niezalogowanego stanu (zgodnie z zasada ADR-028 "praca lokalna nie jest blokowana logowaniem").
+  - Android 9+ domyslnie blokuje ruch `http://` (bez TLS) dla aplikacji z nowoczesnym `targetSdkVersion` - a adres PocketBase (`http://192.168.0.113`, ADR-017) nigdy nie mial `usesCleartextTraffic`/network security config. To nie blokowalo startu aplikacji, ale kazda proba logowania/synchronizacji na Androidzie konczylaby sie cicha awaria polaczenia. Dodano `network_security_config.xml` zezwalajacy na cleartext wylacznie do tego jednego adresu LAN.
+- `AppMetadata.version` zsynchronizowane z `0.3.1`.
+
 ## v0.3.0+1 - 2026-09-14
 
 ### Dodano

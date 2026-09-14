@@ -2,7 +2,7 @@
 
 ## Status
 
-Ostatnia aktualizacja: 2026-09-13 (2)
+Ostatnia aktualizacja: 2026-09-14
 
 ## Wykonane
 
@@ -269,16 +269,18 @@ Ostatnia aktualizacja: 2026-09-13 (2)
 - Dodano prawdziwa autoryzacje PocketBase (ADR-028), zastepujac puste/publiczne reguly dostepu z ADR-017: konta osobiste (ponownie uzyta domyslna kolekcja `users`, nie nowa), pole `owner` na `clients`/`projects`, trzy poziomy regul dostepu (wspolne dla katalogu/lokacji/presetow, wlasciciel dla klientow/projektow, wlasciciel-rodzica dla ich zagniezdzonych kolekcji) na wszystkich 16 kolekcjach. Nowa karta "Konto" w "O aplikacji" (logowanie/wylogowanie), sesja logowania trwala przez restart (`AsyncAuthStore`, nowa kolumna `AppSettings.authSessionData`), stemplowanie wlasciciela przy pierwszym pushu klienta/projektu, `SyncCoordinator` odmawia synchronizacji (z czytelnym komunikatem), dopoki nikt nie jest zalogowany - praca lokalna nie jest tym blokowana. Schemat bazy podniesiony do wersji `14`. Zweryfikowano recznie pelny przeplyw logowanie -> push -> pull -> odmowa dostepu dla niezalogowanego, na tymczasowym koncie testowym utworzonym i usunietym wylacznie na czas weryfikacji. `tool/sync_demo_data.dart` zaktualizowany o wymagane logowanie (`SYNC_DEMO_EMAIL`/`SYNC_DEMO_PASSWORD`).
 - Dodano wizualny uklad patchera (ADR-029), zamykajac pozycje 1 z poprzedniej listy "Nastepny krok": `_OutletTile` zastapil informacyjne pigulki gniazd klikalna siatka kafelkow (faza, kropki zajetosci L1/L2/L3, obciazenie, podlaczony cel). Dotkniecie pustego gniazda otwiera nowy `_QuickConnectDialog` (cel + fazy dla gniazd "All" + notatka), dotkniecie zajetego otwiera `_OutletDetailsDialog` (lista polaczen, edytowalne notatki, rozlaczenie, "Dodaj kolejne" gdy zostala wolna faza). `PowerConnection.notes` (pole w schemacie od ADR-017) dostal wreszcie UI. Zbiorowy dialog "Polacz" i lista "Polaczenia" zostaly bez zmian jako opcja do podlaczenia jednej grupy do wielu gniazd naraz. Nowy test widgetowy pokrywa pelny cykl tap-connect-details-disconnect.
 - Dodano wielokrotny wybor typow zlacz w katalogu urzadzen (ADR-030): nowy enum `CatalogConnectorType` (23 wartosci, zasilanie + sygnal), `CatalogDevice.connectorTypeIds` (lista) zastapil wolny tekst `connectorTypeId`, formularz katalogu ma teraz siatke `FilterChip` zamiast `TextField`. Odczyt starych/nierozpoznanych wartosci jest zawsze najpierw probowany przez dopasowanie do aliasow (pokrywa dane demo i typowe warianty zapisu), a to, co sie nie dopasuje, jest po cichu pomijane - nigdy zgadywane. Schemat bazy podniesiony do wersji `15` (nowa kolumna `connectorTypeIdsJson`, stara `connectorTypeId` zostaje nieuzywana). Zero zmian schematu PocketBase (pole zdalne juz bylo zwyklym tekstem). `docs/CATALOG_IMPORT_GUIDE.md` zaktualizowany o pelna liste dozwolonych wartosci, zweryfikowana przeciwko `AppBackupImportService`.
+- Naprawiono zgloszenie "Android nie wstaje" po v0.3.0 (v0.3.1): `main()` juz nie blokuje `runApp()` na nieopakowanym `await PocketBaseClientProvider.initialize()` - owiniete w `try`/`timeout(5s)`, awaria/spowolnienie tego kroku (otwarcie lokalnej bazy + przywrocenie sesji logowania) nie moze juz uniemozliwic pokazania UI. Dodano tez `network_security_config.xml` zezwalajacy na `http://` (bez TLS, ADR-017) wylacznie do adresu PocketBase - Android 9+ domyslnie blokuje cleartext dla nowoczesnego `targetSdkVersion`, co psulo logowanie/sync na Androidzie niezaleznie od problemu ze startem. **Nie zweryfikowano na realnym urzadzeniu/emulatorze** - srodowisko tej sesji nie utrzymywalo stabilnie uruchomionego emulatora Android (powtarzajace sie zabicia procesu z powodu niskiej pamieci) - do potwierdzenia przez uzytkownika.
 
 ## Nastepny krok
 
-1. Pelny branding PDF (font Roboto, logo StageCalc) - obecny eksport uzywa domyslnych fontow PDF.
-2. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`. Nie wymaga konta Google Play - to osobna, prostsza sprawa (lokalny keystore przez `keytool`), do zrobienia gdy bedzie potrzebna.
-3. Rozszerzyc `tool/sync_demo_data.dart` o rozdzielnice/polaczenia/kratownice/haki w danych demo - te sciezki syncu uzywaja tego samego wzorca co juz zweryfikowane grupy/pozycje, ale nie sa dzis osobno cwiczone.
-4. Utworzyc rzeczywiste konta PocketBase dla ekipy (obecnie tylko superuser moze je zakladac, ADR-028) i zweryfikowac logowanie z prawdziwego urzadzenia (Android/Windows), nie tylko skryptem testowym.
-5. Przypisac wlasciciela (przez superusera) do klientow/projektow utworzonych przed ADR-028, jesli maja dalej byc synchronizowane - w obecnym stanie sa lokalnie nienaruszone, ale niesynchronizowalne (`owner` puste nie pasuje do zadnego konta).
-6. Usunac tymczasowe konto testowe `crew-test@stagecalc.local` z serwera LXC 113 (zostalo z weryfikacji ADR-028 - narzedzie do usuwania danych zostalo zablokowane przez klasyfikator bezpieczenstwa Claude Code w tej sesji; do usuniecia recznie przez `pocketbase migrate down 1` albo panel admina).
-7. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
+1. Potwierdzic na realnym urzadzeniu/emulatorze Android, ze v0.3.1 faktycznie naprawia "Android nie wstaje" - poprawka jest oparta na przegladzie kodu, nie na powtorzeniu bledu.
+2. Pelny branding PDF (font Roboto, logo StageCalc) - obecny eksport uzywa domyslnych fontow PDF.
+3. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`. Nie wymaga konta Google Play - to osobna, prostsza sprawa (lokalny keystore przez `keytool`), do zrobienia gdy bedzie potrzebna.
+4. Rozszerzyc `tool/sync_demo_data.dart` o rozdzielnice/polaczenia/kratownice/haki w danych demo - te sciezki syncu uzywaja tego samego wzorca co juz zweryfikowane grupy/pozycje, ale nie sa dzis osobno cwiczone.
+5. Utworzyc rzeczywiste konta PocketBase dla ekipy (obecnie tylko superuser moze je zakladac, ADR-028) i zweryfikowac logowanie z prawdziwego urzadzenia (Android/Windows), nie tylko skryptem testowym.
+6. Przypisac wlasciciela (przez superusera) do klientow/projektow utworzonych przed ADR-028, jesli maja dalej byc synchronizowane - w obecnym stanie sa lokalnie nienaruszone, ale niesynchronizowalne (`owner` puste nie pasuje do zadnego konta).
+7. Usunac tymczasowe konto testowe `crew-test@stagecalc.local` z serwera LXC 113 (zostalo z weryfikacji ADR-028 - narzedzie do usuwania danych zostalo zablokowane przez klasyfikator bezpieczenstwa Claude Code w tej sesji; do usuniecia recznie przez `pocketbase migrate down 1` albo panel admina).
+8. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
 ## Zalozenia obowiazujace
 
