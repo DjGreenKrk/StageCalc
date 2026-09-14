@@ -390,6 +390,38 @@ Uzasadnienie:
 - Obecnie PDF jest częścią dużego komponentu kalkulatora.
 - W Flutterze raport powinien używać tych samych serwisów domenowych co UI.
 
+## ADR-034: Import listy sprzętu z Gremium Panel
+
+Status: accepted
+
+Kontekst:
+
+- Gremium Panel (zewnętrzny system magazynowy/checklistowy używany przez użytkownika) eksportuje planowaną listę sprzętu wydarzenia jako jeden plik JSON (`gremium.stagecalc.pack-list`, `formatVersion: "1.0"`) - pełny kontrakt formatu, wraz z przykładowym plikiem, dostarczył użytkownik w `docs/Gremium import/Import_details.md`.
+- Użytkownik poprosił o zaprojektowanie tej integracji i doprecyzował trzy istotne wymagania ponad to, co sam dokument opisuje wprost: (1) nie każda pozycja z checklisty Gremium ma trafić do StageCalc, więc import musi pokazać pełną listę do przejrzenia i odznaczenia zbędnych pozycji, zanim cokolwiek zostanie zapisane; (2) urządzenia i pozycje pochodzące z Gremium mają stać się w pełni natywnymi rekordami StageCalc, nieodróżnialnymi od dodanych ręcznie, jedynie z dopisanym id z systemu Gremium jako zwykłą kolumną - bez żadnej osobnej tabeli powiązań/mapowań ani osobnej "kategorii" importowanych urządzeń; (3) dla pozycji, których Gremium nie potrafi dopasować do katalogu StageCalc, użytkownik musi mieć możliwość ręcznego połączenia jej z urządzeniem, które już ma w swojej bibliotece (np. ręcznie dodaną wcześniej lampą), żeby import nie tworzył bezsensownych duplikatów.
+
+Decyzja:
+
+- Nowy moduł `features/gremium_import/` (domain/presentation, zgodnie z ADR-001): `GremiumImportParser` (parsowanie i walidacja pliku - blokujące błędy: niepoprawny JSON, zła `schema`, nieobsługiwana główna wersja `formatVersion`, brak `project.id`/`project.name`/`items`, pozycja bez nazwy albo z ilością ≤ 0; brak masy/danych elektrycznych NIGDY nie blokuje importu), `GremiumCatalogMatcher` (dopasowanie do katalogu wyłącznie po zapamiętanym id Gremium, nigdy po samej nazwie) i `GremiumImportCommitService` (zapis - patrz niżej).
+- **Id z Gremium jako zwykłe, natywne kolumny na istniejących encjach, nie osobna tabela powiązań** - `CatalogDevice.gremiumInventoryItemId`, `Project.gremiumProjectId`, `ProjectItem.gremiumLineId` (wszystkie `String?`, `null` dla każdego rekordu nie powiązanego z Gremium). To dokładnie ten sam wzorzec, jaki `CatalogDevices`/`Projects`/itd. już mają dla `remoteId` (id w PocketBase, ADR-017) - nullable kolumna tekstowa wprost na rekordzie zamiast osobnego mechanizmu synchronizacji. Schemat lokalny podniesiony do wersji `17` (trzy nowe, niezależne od siebie kolumny dodane jednym krokiem migracji `_addColumnIfMissing`, ten sam idiom co blok `if (from < 14)` z ADR-028).
+- **Jeden interaktywny panel przeglądu (`GremiumImportReviewScreen`), pokazywany zaraz po wczytaniu i dopasowaniu pliku, zanim cokolwiek zostanie zapisane**: każda pozycja ma checkbox "importuj" (domyślnie zaznaczony, odznaczenie całkowicie wyklucza pozycję z importu), edytowalne pole grupy docelowej (domyślnie jedna wspólna grupa nazwana po projekcie Gremium, z akcją "Przypisz zaznaczone do grupy" dla wielu pozycji naraz), a dla pozycji bez istniejącego dopasowania katalogowego - wybór typu urządzenia (odbiornik 1F/3F, urządzenie pasywne, kabel, element riggingowy; zgadywany domyślnie z tekstu kategorii/nazwy Gremium, zawsze poprawialny) ORAZ przycisk "Połącz z istniejącym", który otwiera wyszukiwarkę po obecnym katalogu (`GremiumLinkDeviceDialog`, lekki, samodzielny dialog - nie próbowano na siłę reużywać prywatnego `_CatalogSelectionDialog` z edytora projektu, zgodnie z precedensem ADR-029's `_QuickConnectDialog`). Wybranie istniejącego urządzenia dopisuje mu `gremiumInventoryItemId` zamiast tworzyć duplikat. Podsumowanie na dole ekranu liczy się na żywo wyłącznie z aktualnie zaznaczonych wierszy (w tym listę "wymaga uzupełnienia" mocy/prądu/punktów podwieszenia) - odznaczony kabel nigdy nie wygeneruje ostrzeżenia o brakującej mocy.
+- **Nieznane urządzenia bez ręcznego połączenia: masowe utworzenie w tle, bez blokującego kreatora krok-po-kroku.** Przy dużej liście (np. 29 nowych pozycji w przykładowym pliku od użytkownika) kreator pytający o komplet danych dla każdej pozycji z osobna byłby bardzo długim procesem. Zamiast tego `GremiumImportCommitService` tworzy `CatalogDevice` od razu z tego, co Gremium podało (nazwa, masa, zgadywana kategoria z wybranego typu), zerami/`null` tam gdzie brakuje danych - listę pozycji nadal wymagających uzupełnienia widać w panelu przed importem, a po imporcie można je swobodnie poprawić na zwykłym ekranie Katalogu.
+- **Docelowy projekt**: szukany po `gremiumProjectId == packList.project.id` - jeśli istnieje, aktualizowany; jeśli nie, tworzony nowy (bez klienta/lokacji, jak przy zwykłym "Dodaj projekt"). Zapis całego drzewa projektu jednym wywołaniem `ProjectRepository.saveProject` (ten sam wzorzec reconciliacji co ADR-026), wykonywany "headless" bez otwartego `ProjectEditorController`, analogicznie do `AppBackupImportService.import()`.
+- **Ponowny import tego samego projektu**: pozycje dopasowywane po `gremiumLineId`. Pozycja nadal obecna w nowym pliku i zaznaczona w panelu - aktualizowana jest tylko `quantity` (i grupa, jeśli zmieniona w panelu), **nigdy** `powerWSnapshot`/`currentASnapshot`/`weightKgSnapshot`/inne pola, które użytkownik mógł już ręcznie poprawić w StageCalc. Pozycja, która zniknęła z nowego pliku albo została odznaczona - usuwana z projektu.
+- Wydzielono `infrastructure/files/local_file_reader/` (`readLocalTextFile`, warianty native/web/stub) jako neutralnie nazwaną wersję dotychczasowego `backup_file_reader/` (ADR-019) - ten sam plik-czytający-String trójkąt, tylko bez nazwy przywiązanej do backupu, żeby nie duplikować go po raz trzeci (ten sam argument co uzasadnił ADR-021). `AppBackupImportService` przepięty na wspólną wersję; stary `backup_file_reader/` usunięty.
+
+Uzasadnienie:
+
+- Natywne kolumny (zamiast osobnej tabeli powiązań) były jawnym wymogiem użytkownika: zaimportowane rekordy mają być zwykłymi rekordami StageCalc, nie osobną kategorią bytów - a `remoteId` już dowodzi, że ten wzorzec (nullable kolumna referencji do zewnętrznego systemu wprost na rekordzie) sprawdza się w tym schemacie.
+- Panel przeglądu przed zapisem (zamiast importu "na ślepo") był drugim jawnym wymogiem użytkownika - realna checklista magazynowa z Gremium może zawierać sprzęt, który nie ma trafić do konkretnego projektu StageCalc.
+- Ręczne łączenie z istniejącym urządzeniem był trzecim jawnym wymogiem użytkownika - bez tego każdy import dubluje urządzenia już ręcznie skatalogowane wcześniej, tylko bez zapamiętanego id Gremium.
+- Braki danych elektrycznych liczone per typ urządzenia (nie ślepe "czy pole jest puste") odzwierciedla uwagę użytkownika, że np. kabel nigdy nie będzie miał sensownej mocy w watach - liczenie tego jako braku byłoby fałszywym alarmem.
+
+Konsekwencje:
+
+- Dodanie trzech nowych, niezależnych kolumn `gremium*` do trzech różnych tabel to jednorazowy, addytywny koszt schematu - żadna z nich nie wymaga wypełnienia dla rekordów nie pochodzących z Gremium.
+- Zgadywanie typu urządzenia/kategorii z wolnego tekstu Gremium jest z założenia niedoskonałe (Gremium ma własną, niezależną taksonomię kategorii) - zawsze poprawialne ręcznie w panelu przed importem albo później na ekranie Katalog.
+- `local_file_reader/` jest teraz jedynym miejscem czytającym lokalny plik tekstowy po ścieżce - każda przyszła funkcja importu (kolejny zewnętrzny system, inny format) powinna go reużyć zamiast dodawać czwarty niemal identyczny trójkąt plików.
+
 ## ADR-033: Font Roboto w PDF i pełne polskie znaki diakrytyczne
 
 Status: accepted

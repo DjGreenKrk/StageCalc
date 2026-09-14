@@ -1,0 +1,649 @@
+{
+  "schema": "gremium.stagecalc.pack-list",
+  "formatVersion": "1.0",
+  "sourceApp": "Gremium Panel",
+  "sourceAppVersion": "2.49.3",
+  "exportId": "32b7b53e-6754-45ae-9e61-72972fd86ccb",
+  "generatedAt": "2026-09-14T15:47:17.791Z",
+  "project": {
+    "id": "0fafae70-a33f-4050-91a1-c18b80f770b5",
+    "name": "Konferencja medyczna",
+    "startDate": "2026-09-12",
+    "endDate": "2026-09-12",
+    "location": "UEK",
+    "environment": "indoor"
+  },
+  "units": {
+    "power": "W",
+    "current": "A",
+    "voltage": "V",
+    "weight": "kg"
+  },
+  "items": [
+    {
+      "lineId": "bdee145e-1182-433f-8396-83980df01cf5",
+      "inventoryItemId": "f688fd5c-514b-4ea3-97b6-e4d83c7c60c8",
+      "name": "DNA Pole One",
+      "projectLabel": "DNA Pole One",
+      "manufacturer": null,
+      "model": null,
+      "category": "Statywy",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 16.6,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "71776f16-06fc-4b9b-b809-a59f812c4c4f",
+      "inventoryItemId": "272f1eed-64e5-4160-a0d6-86711721dbba",
+      "name": "Shure QLXD24/Beta58",
+      "projectLabel": "Shure QLXD",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 4,
+      "unit": "szt.",
+      "sourceCase": {
+        "id": "95d4f2a7-cc0a-430f-844c-764daa235939",
+        "name": "Shure QLXD"
+      },
+      "technical": {
+        "unitWeightKg": 0.2,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "71776f16-06fc-4b9b-b809-a59f812c4c4f",
+      "inventoryItemId": "9567a156-eabc-4f63-aade-9363c423b71e",
+      "name": "Shure QLXD Bodypack",
+      "projectLabel": "Shure QLXD",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 4,
+      "unit": "szt.",
+      "sourceCase": {
+        "id": "95d4f2a7-cc0a-430f-844c-764daa235939",
+        "name": "Shure QLXD"
+      },
+      "technical": {
+        "unitWeightKg": 0.2,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "5cebe544-eb95-4dfc-a92d-ef307a9a2032",
+      "inventoryItemId": "2c0f85cb-695d-4ee3-b27a-ca81e82d0d36",
+      "name": "Behringer Wing Rack",
+      "projectLabel": "Behringer Wing Rack",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 14,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "8075423e-32a1-48da-be78-a43a59ea2f31",
+      "inventoryItemId": "64c6ec52-c966-4fc4-a176-dc33eb807702",
+      "name": "Ekran Projekcyjny",
+      "projectLabel": "Ekran Projekcyjny",
+      "manufacturer": null,
+      "model": null,
+      "category": "Multimedia",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 20,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "94d3aa3f-4658-44e9-9a12-c30a19310cc5",
+      "inventoryItemId": "67065df9-18f7-47fd-8458-c52ff7556983",
+      "name": "Projektor laserowy",
+      "projectLabel": "Projektor laserowy",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 15,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "0c1d2c79-4c95-4c34-aec8-13379eab551b",
+      "inventoryItemId": "7c6cb0c9-d544-434c-aa70-867eed8b2008",
+      "name": "Stacja robocza Multimedialna",
+      "projectLabel": "Stacja robocza Multimedialna",
+      "manufacturer": null,
+      "model": null,
+      "category": "Multimedia",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 15,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "6a74c303-bc4b-488a-9a27-447d3e2d5cef",
+      "inventoryItemId": "c35787f2-98d7-4771-b260-21b24e07ccf8",
+      "name": "Monitor podglądowy 24 Cale",
+      "projectLabel": "Monitor podglądowy 24 Cale",
+      "manufacturer": null,
+      "model": null,
+      "category": "Multimedia",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 5,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "c1038777-e6b2-48fa-9b68-03a314f211c1",
+      "inventoryItemId": "9e2a36d9-e2ad-4850-b96a-1206df24dcbb",
+      "name": "Atem Mini Pro",
+      "projectLabel": "Atem Mini Pro",
+      "manufacturer": null,
+      "model": null,
+      "category": "Multimedia",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 1,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "1fe5f0b4-24d1-43e7-9922-00768f27d67b",
+      "inventoryItemId": "762b5fff-9955-48b3-8306-191a9c2c46bc",
+      "name": "Alto TS 315",
+      "projectLabel": "Alto TS 315",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 2,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 19,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "893de90a-e120-4e9f-ac8b-4f63b60662ec",
+      "inventoryItemId": "723e73b6-1287-48b3-8d85-3b364855e944",
+      "name": "Kabel PC",
+      "projectLabel": "Kabel PC",
+      "manufacturer": null,
+      "model": null,
+      "category": "Zasilanie",
+      "quantity": 4,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.25,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "6793349a-fcd4-4559-816e-0ce47f90c8ad",
+      "inventoryItemId": "4717bcb9-0ad6-4d78-95e5-1619de2a90a1",
+      "name": "Alto TS 310",
+      "projectLabel": "Alto TS 310",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 2,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 12,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "99e23ff5-9d71-4452-bd5d-d525bf83cea5",
+      "inventoryItemId": "acc7a077-8c37-4bf5-b2bd-c6b489c42cd9",
+      "name": "Case Kablarka 230V",
+      "projectLabel": "Case Kablarka 230V",
+      "manufacturer": null,
+      "model": null,
+      "category": "Akcesoria",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 12,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "a51e8ba7-9200-4e7d-b8a5-554ea437008a",
+      "inventoryItemId": "6dc322a0-a07e-4e49-a4fc-6c07244c99c4",
+      "name": "Case Kablarka XLR",
+      "projectLabel": "Case Kablarka XLR",
+      "manufacturer": null,
+      "model": null,
+      "category": "Akcesoria",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 12,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "c912f224-5470-4507-add4-438f969bbd02",
+      "inventoryItemId": "79aba763-5f3a-408c-95e8-aca424932198",
+      "name": "Kabel XLR - 2m",
+      "projectLabel": "Kabel XLR - 2m",
+      "manufacturer": null,
+      "model": null,
+      "category": "XLR",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.4,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "385c37da-0ca6-4b1f-994b-d5f420ac00d9",
+      "inventoryItemId": "b8b4f94d-5c93-41ff-8495-f13f7a63eefd",
+      "name": "XLR Audio - 1m",
+      "projectLabel": "XLR Audio - 1m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Mikrofony",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.11,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "971cdcb8-ed77-4af8-a3d7-893e36d58309",
+      "inventoryItemId": "i4",
+      "name": "XLR Audio - 10m",
+      "projectLabel": "XLR Audio - 10m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Mikrofony",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.6,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "ec24342f-5b44-431d-9ac0-9ebff8d7bac4",
+      "inventoryItemId": "6ee1d3a4-538d-4487-a21c-cd184c035cb6",
+      "name": "XLR Audio 3m",
+      "projectLabel": "XLR Audio 3m",
+      "manufacturer": null,
+      "model": null,
+      "category": "XLR",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.23,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "c254cfa1-456e-4095-94d3-b230ee4fe314",
+      "inventoryItemId": "4efad122-53b1-47dd-8b0a-08336c34409f",
+      "name": "XLR Audio 5m",
+      "projectLabel": "XLR Audio 5m",
+      "manufacturer": null,
+      "model": null,
+      "category": "XLR",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.32,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "7e47da11-a76f-43f5-9aa3-7f2cb7186236",
+      "inventoryItemId": "7485eff5-db4c-4e20-aea1-aa72c4548807",
+      "name": "Przedłużacz 230V IP45 - 1m",
+      "projectLabel": "Przedłużacz 230V IP45 - 1m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Zasilanie",
+      "quantity": 5,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 0.8,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "7f8e60dc-e698-4866-80c1-5784b8347249",
+      "inventoryItemId": "a9a93cce-4bc6-46d4-a6e8-f3525067fc47",
+      "name": "Przedłużacz 230V IP45 - 3m",
+      "projectLabel": "Przedłużacz 230V IP45 - 3m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Zasilanie",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 1.4,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "98f47c9f-18ee-4733-ab88-ec121c9722cd",
+      "inventoryItemId": "191febea-a0a2-4d7c-90d5-b94f3d8a9dd1",
+      "name": "Przedłużacz 230V IP45 - 5m",
+      "projectLabel": "Przedłużacz 230V IP45 - 5m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Zasilanie",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 2,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "03502117-6524-432e-8cc0-33dc90385430",
+      "inventoryItemId": "640133b6-3412-457f-ab86-66c2635f9524",
+      "name": "Przedłużacz 230V IP45 - 10m",
+      "projectLabel": "Przedłużacz 230V IP45 - 10m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Zasilanie",
+      "quantity": 10,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 3,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "e12e59c3-0ead-40c5-8d9b-f19218e9fa87",
+      "inventoryItemId": "430b39e3-c715-40ac-954f-ad9300288e2e",
+      "name": "Przedłużacz 230V IP45 - 25m",
+      "projectLabel": "Przedłużacz 230V IP45 - 25m",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 2,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 8,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "bdbc69e9-0eeb-4f76-a82d-c401adbe4f67",
+      "inventoryItemId": "ca07bdc0-3401-4d2b-8a60-85ceff53bdff",
+      "name": "TV LG 32\"",
+      "projectLabel": "TV LG",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 2,
+      "unit": "szt.",
+      "sourceCase": {
+        "id": "e951cd11-2278-4f7c-9cf0-10841ff6fc2b",
+        "name": "TV LG"
+      },
+      "technical": {
+        "unitWeightKg": 10,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "2b0a58d6-c129-47a5-ad3d-7a44a0a5541b",
+      "inventoryItemId": "02e23c89-75d3-438b-bb35-c7dc41616d60",
+      "name": "Multicore 2x XLR",
+      "projectLabel": "Multicore 2x XLR",
+      "manufacturer": null,
+      "model": null,
+      "category": "XLR",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 3,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "0f828595-75e6-4fbd-95e9-a6af53202641",
+      "inventoryItemId": "ab8cff00-7958-40ef-a3c5-b2f163b4aba2",
+      "name": "Taca pod projektor - Gravity SA BTRAY 1",
+      "projectLabel": "Taca pod projektor - Gravity SA BTRAY 1",
+      "manufacturer": null,
+      "model": null,
+      "category": "Statywy",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 3,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "288f08fb-b7fc-4ba7-928d-c294bfd291c2",
+      "inventoryItemId": "f132a491-8a06-4fe3-bcdf-516d04f5cdbb",
+      "name": "Statyw Kolumnowy Gravity SP5211B",
+      "projectLabel": "Statyw Kolumnowy Gravity SP5211B",
+      "manufacturer": null,
+      "model": null,
+      "category": "Statywy",
+      "quantity": 2,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 2,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    },
+    {
+      "lineId": "308ea77b-4e60-4968-8d2f-8afa1c05371c",
+      "inventoryItemId": "19ef3fd7-3498-4ca9-ab44-0b5c7a9c2104",
+      "name": "Redukcja 32A - 3x230V",
+      "projectLabel": "Redukcja 32A - 3x230V",
+      "manufacturer": null,
+      "model": null,
+      "category": "Audio",
+      "quantity": 1,
+      "unit": "szt.",
+      "sourceCase": null,
+      "technical": {
+        "unitWeightKg": 1,
+        "ratedPowerW": null,
+        "ratedCurrentA": null,
+        "voltageV": null,
+        "phases": null,
+        "powerConnectors": [],
+        "riggingPoints": null
+      }
+    }
+  ],
+  "dataCompleteness": {
+    "itemRows": 29,
+    "catalogMatchedRows": 29,
+    "customRows": 0,
+    "rowsWithWeight": 29,
+    "rowsRequiringElectricalSetup": 29
+  }
+}
