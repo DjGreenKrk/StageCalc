@@ -6,6 +6,15 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.4+1 - 2026-09-14
+
+### Naprawiono
+
+- v0.3.3 nie naprawila niczego na prawdziwym urzadzeniu, mimo ze test regresyjny przechodzil: `_addColumnIfMissing`/`_createTableIfMissing` lapaly `on SqliteException`, ale `NativeDatabase.createInBackground` (uzywane w prawdziwej aplikacji - `connection_native.dart`) uruchamia kazde zapytanie w tle-izolacie i **opakowuje kazdy blad przekraczajacy granice izolatu w `DriftRemoteException`** - `catch ... on SqliteException` nigdy nie dopasowywal, bo obiekt, ktorym `Future` faktycznie sie konczy, to opakowanie, nie oryginalny wyjatek. Test w v0.3.3 uzywal zwyklego `NativeDatabase(File(...))` (ten sam izolat, bez opakowania) - dlatego przechodzil, mimo ze poprawka nie dzialala naprawde.
+  - Zmieniono `catch` na dopasowanie po tresci bledu (`error.toString()`) zamiast po typie - dziala niezaleznie od tego, czy wyjatek jest opakowany w `DriftRemoteException`, czy nie, bo `DriftRemoteException.toString()` i tak deleguje do oryginalnego bledu.
+  - Test regresyjny przepisany na `NativeDatabase.createInBackground` (dokladnie ten sam wykonawca co prawdziwa aplikacja) - z powrotem na `on SqliteException` test teraz poprawnie zawodzi, potwierdzajac, ze faktycznie testuje sciezke, ktora sie liczy.
+  - **Zweryfikowano naprawde tym razem**: uruchomiono zbudowany plik `.exe` bezposrednio na tej samej, uszkodzonej lokalnej bazie uzytkownika (nie tylko test) - ekran bledu zniknal, Projekty/Katalog/Lokacje wczytaly prawdziwe dane, a nowo utworzony projekt poprawnie sie zapisal.
+
 ## v0.3.3+1 - 2026-09-14
 
 ### Naprawiono

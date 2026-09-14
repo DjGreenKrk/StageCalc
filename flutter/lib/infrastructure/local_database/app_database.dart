@@ -535,8 +535,8 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _createTableIfMissing(Migrator migrator, TableInfo table) async {
     try {
       await migrator.createTable(table);
-    } on SqliteException catch (error) {
-      if (!error.message.contains('already exists')) {
+    } catch (error) {
+      if (!_isAlreadyAppliedError(error, 'already exists')) {
         rethrow;
       }
     }
@@ -566,10 +566,26 @@ class AppDatabase extends _$AppDatabase {
   ) async {
     try {
       await migrator.addColumn(table, column);
-    } on SqliteException catch (error) {
-      if (!error.message.contains('duplicate column name')) {
+    } catch (error) {
+      if (!_isAlreadyAppliedError(error, 'duplicate column name')) {
         rethrow;
       }
     }
+  }
+
+  /// `NativeDatabase.createInBackground` (used on native platforms, see
+  /// `connection_native.dart`) runs every query in a background isolate and
+  /// wraps *any* error crossing that boundary in a [DriftRemoteException] -
+  /// `catch (error) on SqliteException` never matches, because the object
+  /// the future actually completes with is the wrapper, not the original
+  /// [SqliteException]. This was found the hard way: the first version of
+  /// this idempotency fix used `on SqliteException catch` and, verified live
+  /// against a real build, did not actually catch anything - the exact same
+  /// crash still happened. Matching on the message text of whatever was
+  /// thrown (`error.toString()` already reliably contains it either way,
+  /// wrapped or not - see [DriftRemoteException.toString]) sidesteps needing
+  /// to know or match the exact wrapper type at all.
+  bool _isAlreadyAppliedError(Object error, String needle) {
+    return error.toString().contains(needle);
   }
 }

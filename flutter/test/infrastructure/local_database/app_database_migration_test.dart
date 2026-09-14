@@ -24,6 +24,14 @@ import 'package:stagecalc/infrastructure/local_database/app_database.dart'
 /// connection - not the schema - before reopening through `AppDatabase`,
 /// which forces `onUpgrade` to run migration steps whose columns/tables are
 /// already there.
+///
+/// Uses `NativeDatabase.createInBackground` - the exact executor
+/// `connection_native.dart` uses in the real app, not the plain, same-isolate
+/// `NativeDatabase(File(...))`. That distinction matters a lot here: the
+/// first version of this fix passed against the same-isolate executor but
+/// still failed live, because errors crossing the background isolate used by
+/// `createInBackground` get wrapped in `DriftRemoteException` - a same-isolate
+/// test would never have caught that.
 void main() {
   test(
     'onUpgrade tolerates a stale user_version whose columns/tables already '
@@ -35,7 +43,9 @@ void main() {
 
       // 1. Fresh database: onCreate() builds every table/column at the
       // current schema and Drift records user_version = schemaVersion.
-      final fresh = db.AppDatabase.forTesting(NativeDatabase(File(path)));
+      final fresh = db.AppDatabase.forTesting(
+        NativeDatabase.createInBackground(File(path)),
+      );
       await fresh.customStatement('SELECT 1');
       await fresh.close();
 
@@ -50,7 +60,9 @@ void main() {
       // to: 15) against a file whose columns/tables from steps 11-15
       // already exist. Before the _addColumnIfMissing/_createTableIfMissing
       // fix, this threw SqliteException on the very first such step.
-      final reopened = db.AppDatabase.forTesting(NativeDatabase(File(path)));
+      final reopened = db.AppDatabase.forTesting(
+        NativeDatabase.createInBackground(File(path)),
+      );
       await expectLater(reopened.customStatement('SELECT 1'), completes);
 
       final version = await reopened
