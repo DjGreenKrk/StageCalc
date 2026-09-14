@@ -232,7 +232,9 @@ class _CatalogSelectionDialogState extends State<_CatalogSelectionDialog> {
 
   String _categoryLabel(CatalogDeviceCategory category) {
     return switch (category) {
-      CatalogDeviceCategory.device => 'Urzadzenie',
+      CatalogDeviceCategory.lighting => 'Oswietlenie',
+      CatalogDeviceCategory.sound => 'Naglosnienie',
+      CatalogDeviceCategory.multimedia => 'Multimedia',
       CatalogDeviceCategory.distribution => 'Rozdzielnia',
       CatalogDeviceCategory.cable => 'Kabel',
       CatalogDeviceCategory.rigging => 'Rigging',

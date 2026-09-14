@@ -2,6 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
 
 void main() {
+  group('CatalogDeviceCategoryJson.fromJson', () {
+    test('matches an exact enum name', () {
+      expect(
+        CatalogDeviceCategoryJson.fromJson('lighting'),
+        CatalogDeviceCategory.lighting,
+      );
+    });
+
+    test('falls back to "other" for the pre-split "device" category and any '
+        'other unrecognized value, instead of throwing', () {
+      expect(
+        CatalogDeviceCategoryJson.fromJson('device'),
+        CatalogDeviceCategory.other,
+      );
+      expect(
+        CatalogDeviceCategoryJson.fromJson('totally_unknown'),
+        CatalogDeviceCategory.other,
+      );
+      expect(
+        CatalogDeviceCategoryJson.fromJson(null),
+        CatalogDeviceCategory.other,
+      );
+    });
+  });
+
   group('CatalogConnectorTypeJson.fromJson', () {
     test('matches an exact enum name', () {
       expect(

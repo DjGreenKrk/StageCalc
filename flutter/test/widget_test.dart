@@ -245,6 +245,106 @@ void main() {
     );
   });
 
+  testWidgets('hides fields that dont apply to the selected catalog category', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Dodaj urzadzenie'));
+    await tester.pumpAndSettle();
+
+    // Default category (Oswietlenie) shows the full field set.
+    expect(find.widgetWithText(TextField, 'Producent'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Moc'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Prad'), findsOneWidget);
+    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsOneWidget);
+    expect(
+      find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
+      findsOneWidget,
+    );
+
+    // Rigging hardware itself doesn't draw power, doesn't have its own
+    // connectors, and doesn't need rigging points (it's what other
+    // equipment hangs *from*) - only weight matters for load calculations.
+    await tester.tap(
+      find.byType(DropdownButtonFormField<CatalogDeviceCategory>),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rigging').last);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Moc'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Prad'), findsNothing);
+    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsNothing);
+    expect(
+      find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
+      findsNothing,
+    );
+    expect(find.widgetWithText(TextField, 'Masa'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Producent'), findsOneWidget);
+
+    // Cables don't draw power and aren't meaningfully attributed to a
+    // manufacturer - but they do have connectors and can hang from rigging.
+    await tester.tap(
+      find.byType(DropdownButtonFormField<CatalogDeviceCategory>),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kabel').last);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextField, 'Producent'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Moc'), findsNothing);
+    expect(find.widgetWithText(TextField, 'Prad'), findsNothing);
+    expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsOneWidget);
+    expect(
+      find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('filters catalog devices by category', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('BMFL Spot'), findsOneWidget);
+    expect(find.text('Zacisk hakowy'), findsOneWidget);
+
+    final riggingChip = find.widgetWithText(ChoiceChip, 'Rigging');
+    await tester.ensureVisible(riggingChip);
+    await tester.pumpAndSettle();
+    await tester.tap(riggingChip);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zacisk hakowy'), findsOneWidget);
+    expect(find.text('BMFL Spot'), findsNothing);
+
+    final allChip = find.widgetWithText(ChoiceChip, 'Wszystkie');
+    await tester.ensureVisible(allChip);
+    await tester.pumpAndSettle();
+    await tester.tap(allChip);
+    await tester.pumpAndSettle();
+
+    expect(find.text('BMFL Spot'), findsOneWidget);
+    expect(find.text('Zacisk hakowy'), findsOneWidget);
+  });
+
   testWidgets('switches project editor to patcher view', (tester) async {
     await tester.pumpWidget(const StageCalcApp());
     await tester.pumpAndSettle();

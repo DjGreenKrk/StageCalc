@@ -10,7 +10,7 @@ class CatalogDevice {
     required this.createdAt,
     required this.updatedAt,
     this.manufacturer,
-    this.category = CatalogDeviceCategory.device,
+    this.category = CatalogDeviceCategory.lighting,
     this.powerW = 0,
     this.currentA = 0,
     this.weightKg = 0,
@@ -185,15 +185,28 @@ class TrussLoadChartEntry {
   }
 }
 
-enum CatalogDeviceCategory { device, distribution, cable, rigging, other }
+enum CatalogDeviceCategory {
+  lighting,
+  sound,
+  multimedia,
+  distribution,
+  cable,
+  rigging,
+  other,
+}
 
 extension CatalogDeviceCategoryJson on CatalogDeviceCategory {
   String toJson() => name;
 
+  /// Falls back to [CatalogDeviceCategory.other] for anything unrecognized,
+  /// including the pre-this-decision `device` value (a general "device"
+  /// bucket, replaced by the finer `lighting`/`sound`/`multimedia` split -
+  /// existing devices saved with it still load fine, just re-bucketed as
+  /// "Inne" until someone re-categorizes them).
   static CatalogDeviceCategory fromJson(String? value) {
     return CatalogDeviceCategory.values.firstWhere(
       (category) => category.name == value,
-      orElse: () => CatalogDeviceCategory.device,
+      orElse: () => CatalogDeviceCategory.other,
     );
   }
 }

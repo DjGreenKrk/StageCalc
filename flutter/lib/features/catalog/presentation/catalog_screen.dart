@@ -12,6 +12,18 @@ import '../data/catalog_repository.dart';
 import '../data/drift_catalog_repository.dart';
 import '../domain/entities/catalog_device.dart';
 
+String _categoryLabel(CatalogDeviceCategory category) {
+  return switch (category) {
+    CatalogDeviceCategory.lighting => 'Oswietlenie',
+    CatalogDeviceCategory.sound => 'Naglosnienie',
+    CatalogDeviceCategory.multimedia => 'Multimedia',
+    CatalogDeviceCategory.distribution => 'Rozdzielnia',
+    CatalogDeviceCategory.cable => 'Kabel',
+    CatalogDeviceCategory.rigging => 'Rigging',
+    CatalogDeviceCategory.other => 'Inne',
+  };
+}
+
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
 
@@ -24,16 +36,21 @@ class _CatalogScreenState extends State<CatalogScreen> {
   List<CatalogDevice> _devices = const [];
   var _view = _CatalogView.devices;
   var _query = '';
+  CatalogDeviceCategory? _categoryFilter;
   var _isLoading = true;
   String? _error;
 
   List<CatalogDevice> get _filteredDevices {
     final normalizedQuery = _query.trim().toLowerCase();
-    if (normalizedQuery.isEmpty) {
-      return _devices;
-    }
+    final categoryFilter = _categoryFilter;
 
     return _devices.where((device) {
+      if (categoryFilter != null && device.category != categoryFilter) {
+        return false;
+      }
+      if (normalizedQuery.isEmpty) {
+        return true;
+      }
       final manufacturer = device.manufacturer ?? '';
       return device.name.toLowerCase().contains(normalizedQuery) ||
           manufacturer.toLowerCase().contains(normalizedQuery);
@@ -144,6 +161,30 @@ class _CatalogScreenState extends State<CatalogScreen> {
             GreenCrewSearchBar(
               hintText: 'Szukaj urzadzenia',
               onChanged: (value) => setState(() => _query = value),
+            ),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Wszystkie'),
+                    selected: _categoryFilter == null,
+                    onSelected: (_) => setState(() => _categoryFilter = null),
+                  ),
+                  for (final category in CatalogDeviceCategory.values)
+                    ChoiceChip(
+                      label: Text(_categoryLabel(category)),
+                      selected: _categoryFilter == category,
+                      onSelected: (selected) {
+                        setState(
+                          () => _categoryFilter = selected ? category : null,
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             if (_isLoading)
@@ -379,6 +420,25 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   late CatalogQuantityUnit _quantityUnit;
   var _isUpdatingElectricalFields = false;
 
+  /// Rigging hardware (trusses, clamps, hooks) and cables don't draw power -
+  /// showing "Moc"/"Prad" for them just invites made-up numbers.
+  bool get _showElectrical =>
+      _category != CatalogDeviceCategory.rigging &&
+      _category != CatalogDeviceCategory.cable;
+
+  /// Rigging items aren't fitted with power/signal connectors themselves -
+  /// they're the thing other equipment hangs from or clamps onto.
+  bool get _showConnectors => _category != CatalogDeviceCategory.rigging;
+
+  /// "Rigging points" (hook attachment points) describes what a device
+  /// needs *from* rigging when it hangs on a truss - a rigging item itself
+  /// (the truss, the clamp) doesn't have this.
+  bool get _showRiggingPoints => _category != CatalogDeviceCategory.rigging;
+
+  /// Cables aren't meaningfully attributed to a manufacturer the way
+  /// fixtures/distros are.
+  bool get _showManufacturer => _category != CatalogDeviceCategory.cable;
+
   @override
   void initState() {
     super.initState();
@@ -406,7 +466,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     ];
     _powerController.addListener(_syncCurrentFromPower);
     _currentController.addListener(_syncPowerFromCurrent);
-    _category = device?.category ?? CatalogDeviceCategory.device;
+    _category = device?.category ?? CatalogDeviceCategory.lighting;
     _quantityUnit = device?.quantityUnit ?? CatalogQuantityUnit.pcs;
   }
 
@@ -439,11 +499,13 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
               autofocus: true,
               decoration: const InputDecoration(labelText: 'Nazwa'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _manufacturerController,
-              decoration: const InputDecoration(labelText: 'Producent'),
-            ),
+            if (_showManufacturer) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _manufacturerController,
+                decoration: const InputDecoration(labelText: 'Producent'),
+              ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<CatalogDeviceCategory>(
               initialValue: _category,
@@ -462,26 +524,28 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 }
               },
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _powerController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Moc',
-                suffixText: 'W',
-                helperText: 'Przeliczane dla 230 V',
+            if (_showElectrical) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _powerController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Moc',
+                  suffixText: 'W',
+                  helperText: 'Przeliczane dla 230 V',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _currentController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Prad',
-                suffixText: 'A',
-                helperText: 'Przeliczane dla 230 V',
+              const SizedBox(height: 12),
+              TextField(
+                controller: _currentController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Prad',
+                  suffixText: 'A',
+                  helperText: 'Przeliczane dla 230 V',
+                ),
               ),
-            ),
+            ],
             const SizedBox(height: 12),
             TextField(
               controller: _weightController,
@@ -491,45 +555,49 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 suffixText: 'kg',
               ),
             ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Typy zlacz (mozna wybrac kilka)',
-                style: Theme.of(context).textTheme.titleSmall,
+            if (_showConnectors) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Typy zlacz (mozna wybrac kilka)',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final type in CatalogConnectorType.values)
-                  FilterChip(
-                    label: Text(type.label),
-                    selected: _connectorTypes.contains(type),
-                    onSelected: (selected) {
-                      setState(() {
-                        if (selected) {
-                          _connectorTypes.add(type);
-                        } else {
-                          _connectorTypes.remove(type);
-                        }
-                      });
-                    },
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _riggingPointsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Punkty zaczepienia (opcjonalnie)',
-                helperText:
-                    'Liczba hakow potrzebnych, gdy urzadzenie wisi na kratownicy.',
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final type in CatalogConnectorType.values)
+                    FilterChip(
+                      label: Text(type.label),
+                      selected: _connectorTypes.contains(type),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _connectorTypes.add(type);
+                          } else {
+                            _connectorTypes.remove(type);
+                          }
+                        });
+                      },
+                    ),
+                ],
               ),
-            ),
+            ],
+            if (_showRiggingPoints) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _riggingPointsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Punkty zaczepienia (opcjonalnie)',
+                  helperText:
+                      'Liczba hakow potrzebnych, gdy urzadzenie wisi na kratownicy.',
+                ),
+              ),
+            ],
             if (_category == CatalogDeviceCategory.rigging) ...[
               const SizedBox(height: 16),
               Row(
@@ -645,16 +713,24 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
       return;
     }
 
+    // Hidden fields keep whatever was last typed into their controller even
+    // while not shown (e.g. power/current entered before switching category
+    // to "Rigging") - force them back to their empty/zero state here rather
+    // than silently saving stale, no-longer-applicable values.
     Navigator.of(context).pop(
       _CatalogDeviceFormResult(
         name: name,
-        manufacturer: _emptyToNull(_manufacturerController.text),
+        manufacturer: _showManufacturer
+            ? _emptyToNull(_manufacturerController.text)
+            : null,
         category: _category,
-        powerW: _parseNumber(_powerController.text),
-        currentA: _parseNumber(_currentController.text),
+        powerW: _showElectrical ? _parseNumber(_powerController.text) : 0,
+        currentA: _showElectrical ? _parseNumber(_currentController.text) : 0,
         weightKg: _parseNumber(_weightController.text),
-        connectorTypeIds: _connectorTypes.toList(),
-        riggingPoints: int.tryParse(_riggingPointsController.text.trim()),
+        connectorTypeIds: _showConnectors ? _connectorTypes.toList() : const [],
+        riggingPoints: _showRiggingPoints
+            ? int.tryParse(_riggingPointsController.text.trim())
+            : null,
         loadChart: _category == CatalogDeviceCategory.rigging
             ? _loadChartRows
                   .map((row) => row.toEntry(_parseNumber))
@@ -720,16 +796,6 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   String? _emptyToNull(String value) {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
-  }
-
-  String _categoryLabel(CatalogDeviceCategory category) {
-    return switch (category) {
-      CatalogDeviceCategory.device => 'Urzadzenie',
-      CatalogDeviceCategory.distribution => 'Rozdzielnia',
-      CatalogDeviceCategory.cable => 'Kabel',
-      CatalogDeviceCategory.rigging => 'Rigging',
-      CatalogDeviceCategory.other => 'Inne',
-    };
   }
 
   String _unitLabel(CatalogQuantityUnit unit) {

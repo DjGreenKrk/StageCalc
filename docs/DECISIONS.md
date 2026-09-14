@@ -390,6 +390,38 @@ Uzasadnienie:
 - Obecnie PDF jest czescia duzego komponentu kalkulatora.
 - W Flutterze raport powinien uzywac tych samych serwisow domenowych co UI.
 
+## ADR-031: Kategorie i pola zalezne od kategorii w katalogu urzadzen
+
+Status: accepted
+
+Kontekst:
+
+- Uzytkownik zglosil trzy problemy z formularzem "Dodaj urzadzenie" po realnym uzyciu: (1) kategoria "Rigging" pokazywala pola nieadekwatne do rzeczywistego sprzetu riggingowego - typy zlacz, Moc/Prad, punkty zaczepienia; (2) jedna ogolna kategoria "Urzadzenie" byla za uboga do filtrowania - potrzeba przynajmniej podzialu na oswietlenie/naglosnienie/multimedia; (3) kategoria "Kabel" pokazywala Moc/Prad (kable nie pobieraja mocy) i Producenta (kable nie sa sensownie przypisywane do producenta).
+- `docs/FEATURE_SCOPE.md` od poczatku projektu wymienial dokladnie taki podzial ("oswietlenie, dzwiek, multimedia, okablowanie i dystrybucja, rigging, inne") - uproszczenie do jednej ogolnej kategorii `device` bylo wczesniejsza decyzja implementacyjna, nie celowym odejsciem od tej specyfikacji.
+
+Decyzja:
+
+- `CatalogDeviceCategory` rozszerzony z `{device, distribution, cable, rigging, other}` na `{lighting, sound, multimedia, distribution, cable, rigging, other}` - `device` usuniete, zastapione trzema bardziej szczegolowymi kategoriami. Domyslna kategoria nowego urzadzenia to `lighting` (najczesciej dodawany typ sprzetu).
+- **Wsteczna kompatybilnosc bez migracji schematu**: `category` jest w Drift/PocketBase zwyklym polem tekstowym (nie enumem SQL), wiec usuniecie `device` z enuma Dart nie wymaga zadnej migracji - `CatalogDeviceCategoryJson.fromJson` po prostu mapuje nierozpoznany tekst (w tym stare `device`) na `other` zamiast na usuniety wariant. Istniejace urzadzenia z `category: "device"` nadal sie wczytuja, po prostu jako "Inne", do reczne przekategoryzowania.
+- **Pola formularza zalezne od kategorii** (`_CatalogDeviceDialogState`, nowe gettery `_showElectrical`/`_showConnectors`/`_showRiggingPoints`/`_showManufacturer`):
+  - `rigging`: ukryte Moc/Prad, typy zlacz, punkty zaczepienia. Widoczne: nazwa, producent, masa, jednostka, tabela nosnosci (juz wczesniej warunkowa tylko dla rigging).
+  - `cable`: ukryte Moc/Prad, producent. Widoczne: nazwa, masa, typy zlacz, punkty zaczepienia, jednostka.
+  - Pozostale kategorie: pelny zestaw pol, bez zmian.
+  - `_submit()` **jawnie zeruje/czysci ukryte pola** (nie tylko chowa je wizualnie) - jesli ktos wpisal Moc przed przelaczeniem na "Rigging", zapisana wartosc to `0`, nie zapamietana-ale-niewidoczna liczba z kontrolera tekstowego. Zapobiega to cichemu zapisaniu nieaktualnych danych.
+- **Filtr kategorii na ekranie Katalog** (nie tylko w istniejacym filtrze wewnatrz dialogu wyboru z katalogu przy dodawaniu do projektu): rzad `ChoiceChip` ("Wszystkie" + kazda kategoria) nad lista urzadzen, filtrujacy `_filteredDevices` razem z wyszukiwaniem tekstowym.
+- Dane demo (`DemoCatalogFactory`) zaktualizowane: BMFL Spot i LED Par RGBW (byly `device`) -> `lighting`.
+
+Uzasadnienie:
+
+- Pole tekstowe (nie enum) w warstwie przechowywania to dokladnie ten sam wzorzec co ADR-030 (`connectorTypeIdsJson`) - kolejny dowod, ze ta konwencja (elastycznosc kategorii/wartosci enum bez migracji schematu) sie sprawdza przy realnych zmianach wymagan.
+- Ukrywanie pol per kategoria (zamiast np. osobnych formularzy per kategoria) jest najmniejsza zmiana rozwiazujaca zgloszony problem - te same kontrolery/stan, tylko warunkowe budowanie widgetow, spojne z istniejacym juz wzorcem warunkowej tabeli nosnosci dla rigging.
+- Jawne zerowanie ukrytych pol w `_submit()` (a nie tylko ukrywanie w UI) jest wazne dla poprawnosci danych - `TextEditingController` nie czysci sie sam przy zmianie kategorii, wiec bez tego uzytkownik mogilby przypadkiem zapisac np. Moc dla kabla, ktorej nigdy nie widzial na ekranie w momencie zapisu.
+
+Konsekwencje:
+
+- Istniejace urzadzenia z `category: "device"` (w tym ewentualne realne dane uzytkownika sprzed tej decyzji) staja sie "Inne" do czasu recznego przypisania nowej, bardziej szczegolowej kategorii - jednorazowy koszt, analogiczny do tych juz zaakceptowanych w ADR-028/ADR-030.
+- Podzial na `lighting`/`sound`/`multimedia` jest na razie plaski (bez podkategorii) - zgodnie z tym, o co uzytkownik poprosil ("chociaz na ten moment"), z mozliwoscia dalszego uszczegoławiania w przyszlosci, jesli okaze sie potrzebne.
+
 ## ADR-030: Wielokrotny wybor typow zlacz w katalogu urzadzen
 
 Status: accepted
