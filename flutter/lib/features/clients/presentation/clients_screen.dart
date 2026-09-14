@@ -63,17 +63,46 @@ class _ClientsScreenState extends State<ClientsScreen> {
         _clients = clients;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac klientow. Dane lokalne pozostaly bez zmian.';
+            'Nie udalo sie wczytac klientow. Dane lokalne pozostaly bez zmian.\n$error';
         _isLoading = false;
       });
     }
+  }
+
+  /// The FAB is only disabled while [_isLoading] is `true` on the very
+  /// first load, so a later failure that leaves [_repository] null (an
+  /// exception in [_loadClients], or that load simply not having finished
+  /// yet) would otherwise leave every action silently doing nothing - no
+  /// dialog, no error, nothing visible at all. This retries the load once
+  /// and, only if that also fails, tells the user why instead of staying
+  /// silent.
+  Future<ClientRepository?> _ensureRepository() async {
+    if (_repository != null) {
+      return _repository;
+    }
+
+    await _loadClients();
+    if (_repository != null) {
+      return _repository;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+          ),
+        ),
+      );
+    }
+    return null;
   }
 
   @override
@@ -139,8 +168,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _openClientDialog({Client? client}) async {
-    final repository = _repository;
-    if (repository == null) {
+    final repository = await _ensureRepository();
+    if (repository == null || !mounted) {
       return;
     }
 

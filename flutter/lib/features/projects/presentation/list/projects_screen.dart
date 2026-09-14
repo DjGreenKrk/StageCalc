@@ -71,17 +71,43 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         _locations = locations;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac projektow. Dane lokalne pozostaly bez zmian.';
+            'Nie udalo sie wczytac projektow. Dane lokalne pozostaly bez zmian.\n$error';
         _isLoading = false;
       });
     }
+  }
+
+  /// See `ClientsScreen._ensureRepository` - same reasoning: without this,
+  /// a [_repository] that is still null (failed or not-yet-finished
+  /// [_loadProjects]) let "Dodaj projekt" open a dialog that then silently
+  /// failed to save on submit, with no feedback at all.
+  Future<ProjectRepository?> _ensureRepository() async {
+    if (_repository != null) {
+      return _repository;
+    }
+
+    await _loadProjects();
+    if (_repository != null) {
+      return _repository;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+          ),
+        ),
+      );
+    }
+    return null;
   }
 
   @override
@@ -141,6 +167,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   Future<void> _openCreateProjectDialog() async {
+    final repository = await _ensureRepository();
+    if (repository == null || !mounted) {
+      return;
+    }
+
     final result = await showDialog<_CreateProjectResult>(
       context: context,
       builder: (context) =>

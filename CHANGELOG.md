@@ -6,6 +6,15 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.2+1 - 2026-09-14
+
+### Naprawiono
+
+- Zgloszenie: offline nie dalo sie dodac projektu (panel pokazuje sie, ale nie zapisuje), ani katalogu/lokacji/klienta (przycisk nic nie robi). Kazdy z czterech ekranow list (Projekty/Katalog/Lokacje/Klienci) trzyma wlasne repozytorium jako `_repository`, ustawiane dopiero po udanym poczatkowym wczytaniu danych z lokalnej bazy - jesli to wczytanie sie nie powiodlo albo jeszcze nie skonczylo, `_repository` zostawalo `null`. Kazda z czterech akcji "Dodaj" sprawdzala to pole i po cichu przerywala bez zadnej informacji - dla Klientow/Lokacji/Katalogu sprawdzenie bylo PRZED otwarciem dialogu (wiec przycisk faktycznie nic nie robil), a dla Projektow PO zamknieciu dialogu z wynikiem (wiec dialog sie pokazywal, ale zapis cicho nie wychodzil) - ten sam rdzen problemu, dwa rozne objawy przez niespojne miejsce sprawdzania.
+  - Dodano `_ensureRepository()` do wszystkich czterech ekranow: jesli repozytorium nie jest gotowe, probuje ponownie wczytac dane, a dopiero gdy to tez sie nie powiedzie, pokazuje uzytkownikowi rzeczywisty komunikat bledu (SnackBar) zamiast ciszy. Projekty ujednolicono do tego samego wzorca co reszta (sprawdzenie przed otwarciem dialogu).
+  - Komunikaty bledow wczytywania (`_error` na wszystkich czterech ekranach) pokazuja teraz tresc wyjatku, nie tylko ogolny tekst - potrzebne do zdiagnozowania, co faktycznie idzie nie tak.
+  - **Nie potwierdzono rzeczywistej przyczyny, dla ktorej wczytanie lokalnej bazy mialoby zawodzic offline** - lokalne repozytoria (Drift) nie dotykaja sieci w ogole, wiec bezposredni zwiazek z "offline" pozostaje niejasny. Ta poprawka usuwa cichy brak informacji zwrotnej i dodaje samoleczaca sie probe ponowienia, co powinno pomoc niezaleznie od dokladnej przyczyny - i, jesli problem nadal wystapi, pokazac prawdziwy komunikat bledu zamiast ciszy.
+
 ## v0.3.1+1 - 2026-09-14
 
 ### Naprawiono

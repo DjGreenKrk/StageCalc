@@ -66,17 +66,42 @@ class _CatalogScreenState extends State<CatalogScreen> {
         _devices = devices;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
 
       setState(() {
         _error =
-            'Nie udalo sie wczytac katalogu. Dane lokalne pozostaly bez zmian.';
+            'Nie udalo sie wczytac katalogu. Dane lokalne pozostaly bez zmian.\n$error';
         _isLoading = false;
       });
     }
+  }
+
+  /// See `ClientsScreen._ensureRepository` - same reasoning: without this,
+  /// a [_repository] that is still null (failed or not-yet-finished
+  /// [_loadDevices]) makes every action silently do nothing.
+  Future<CatalogRepository?> _ensureRepository() async {
+    if (_repository != null) {
+      return _repository;
+    }
+
+    await _loadDevices();
+    if (_repository != null) {
+      return _repository;
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _error ?? 'Baza danych nie jest gotowa. Sprobuj ponownie.',
+          ),
+        ),
+      );
+    }
+    return null;
   }
 
   @override
@@ -166,8 +191,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
   }
 
   Future<void> _openDeviceDialog({CatalogDevice? device}) async {
-    final repository = _repository;
-    if (repository == null) {
+    final repository = await _ensureRepository();
+    if (repository == null || !mounted) {
       return;
     }
 
