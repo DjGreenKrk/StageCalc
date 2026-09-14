@@ -2,7 +2,6 @@ import '../../../catalog/data/catalog_repository.dart';
 import '../../../catalog/domain/entities/catalog_device.dart';
 import '../../../projects/data/project_repository.dart';
 import '../../../projects/domain/entities/project_models.dart';
-import '../entities/gremium_device_type.dart';
 import '../entities/gremium_pack_list.dart';
 
 enum GremiumImportAction { useCatalogDevice, createNewDevice, ownItemOnly }
@@ -16,7 +15,7 @@ class GremiumImportDecision {
     required this.action,
     this.existingDeviceId,
     this.linkExistingDevice = false,
-    this.deviceType,
+    this.category,
   });
 
   final GremiumItem item;
@@ -31,8 +30,10 @@ class GremiumImportDecision {
   /// and needs `gremiumInventoryItemId` stamped on it.
   final bool linkExistingDevice;
 
-  /// Required for [GremiumImportAction.createNewDevice].
-  final GremiumDeviceType? deviceType;
+  /// Required for [GremiumImportAction.createNewDevice] - one of the
+  /// existing `CatalogDeviceCategory` values, never a Gremium-specific
+  /// category invented just for this import.
+  final CatalogDeviceCategory? category;
 }
 
 class GremiumImportSummary {
@@ -104,21 +105,21 @@ class GremiumImportCommitService {
           }
           resolvedDeviceByItem[decision.item] = device;
         case GremiumImportAction.createNewDevice:
-          final type = decision.deviceType ?? GremiumDeviceType.singlePhase;
+          final category = decision.category ?? CatalogDeviceCategory.other;
           final technical = decision.item.technical;
           final device = CatalogDevice(
             id: 'catalog_${now.microsecondsSinceEpoch}_$index',
             name: decision.item.name,
             manufacturer: decision.item.manufacturer,
-            category: guessCatalogCategory(type, decision.item.category),
-            powerW: type.requiresElectricalData
+            category: category,
+            powerW: category.showsElectricalFields
                 ? (technical.ratedPowerW ?? 0)
                 : 0,
-            currentA: type.requiresElectricalData
+            currentA: category.showsElectricalFields
                 ? (technical.ratedCurrentA ?? 0)
                 : 0,
             weightKg: technical.unitWeightKg ?? 0,
-            riggingPoints: type.requiresRiggingPoints
+            riggingPoints: category.showsRiggingPoints
                 ? technical.riggingPoints
                 : null,
             quantityUnit: CatalogQuantityUnit.pcs,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../catalog/data/catalog_repository.dart';
 import '../../catalog/domain/entities/catalog_device.dart';
 import '../../projects/data/project_repository.dart';
-import '../domain/entities/gremium_device_type.dart';
+import '../domain/entities/gremium_category_guess.dart';
 import '../domain/entities/gremium_pack_list.dart';
 import '../domain/services/gremium_catalog_matcher.dart';
 import '../domain/services/gremium_import_commit_service.dart';
@@ -12,8 +12,8 @@ import 'gremium_link_device_dialog.dart';
 /// Review panel shown right after a Gremium pack-list file is parsed and
 /// matched, before anything is saved (ADR-034): every item can be excluded,
 /// assigned a target group, and (for items with no existing catalog match)
-/// either linked to an already-existing device or created as a new one with
-/// a chosen device type.
+/// either linked to an already-existing device or created as a new one in
+/// an existing `CatalogDeviceCategory` (never a Gremium-specific category).
 class GremiumImportReviewScreen extends StatefulWidget {
   const GremiumImportReviewScreen({
     required this.packList,
@@ -171,7 +171,7 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
           item: row.item,
           targetGroupName: resolvedGroupName,
           action: GremiumImportAction.createNewDevice,
-          deviceType: row.deviceType,
+          category: row.category,
         );
     }
   }
@@ -266,9 +266,6 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
     final missingElectrical = selectedRows
         .where((row) => row.needsElectricalData)
         .length;
-    final missingRigging = selectedRows
-        .where((row) => row.needsRiggingPoints)
-        .length;
 
     final parts = <String>[
       '${selectedRows.length} do zaimportowania',
@@ -280,7 +277,6 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
 
     final warnings = <String>[
       if (missingElectrical > 0) '$missingElectrical bez mocy/prądu',
-      if (missingRigging > 0) '$missingRigging bez punktów podwieszenia',
     ];
 
     final buffer = StringBuffer(parts.join(' • '));
@@ -293,12 +289,12 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
 
 class _ReviewRow {
   _ReviewRow({required this.match, required this.groupNameController})
-    : deviceType = guessGremiumDeviceType(match.item);
+    : category = guessGremiumCategory(match.item);
 
   final GremiumMatchResult match;
   final TextEditingController groupNameController;
   bool selected = true;
-  GremiumDeviceType deviceType;
+  CatalogDeviceCategory category;
   CatalogDevice? manualLinkDevice;
 
   GremiumItem get item => match.item;
@@ -307,15 +303,9 @@ class _ReviewRow {
   bool get needsElectricalData =>
       isNewDeviceRow &&
       manualLinkDevice == null &&
-      deviceType.requiresElectricalData &&
+      category.showsElectricalFields &&
       item.technical.ratedPowerW == null &&
       item.technical.ratedCurrentA == null;
-
-  bool get needsRiggingPoints =>
-      isNewDeviceRow &&
-      manualLinkDevice == null &&
-      deviceType.requiresRiggingPoints &&
-      item.technical.riggingPoints == null;
 }
 
 class _RowTile extends StatelessWidget {
@@ -368,28 +358,29 @@ class _RowTile extends StatelessWidget {
                       if (row.manualLinkDevice == null) ...[
                         SizedBox(
                           width: 220,
-                          child: DropdownButtonFormField<GremiumDeviceType>(
-                            initialValue: row.deviceType,
+                          child: DropdownButtonFormField<CatalogDeviceCategory>(
+                            initialValue: row.category,
                             isDense: true,
                             isExpanded: true,
                             decoration: const InputDecoration(
-                              labelText: 'Utwórz jako',
+                              labelText: 'Kategoria w katalogu',
                             ),
                             items: [
-                              for (final type in GremiumDeviceType.values)
+                              for (final category
+                                  in CatalogDeviceCategory.values)
                                 DropdownMenuItem(
-                                  value: type,
+                                  value: category,
                                   child: Text(
-                                    type.label,
+                                    category.label,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                             ],
-                            onChanged: (type) {
-                              if (type == null) {
+                            onChanged: (category) {
+                              if (category == null) {
                                 return;
                               }
-                              row.deviceType = type;
+                              row.category = category;
                               onChanged();
                             },
                           ),

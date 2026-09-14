@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/features/catalog/data/drift_catalog_repository.dart';
 import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
-import 'package:stagecalc/features/gremium_import/domain/entities/gremium_device_type.dart';
 import 'package:stagecalc/features/gremium_import/domain/entities/gremium_pack_list.dart';
 import 'package:stagecalc/features/gremium_import/domain/services/gremium_import_commit_service.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
@@ -56,7 +55,7 @@ void main() {
           item: lampItem,
           targetGroupName: 'Import z Gremium',
           action: GremiumImportAction.createNewDevice,
-          deviceType: GremiumDeviceType.singlePhase,
+          category: CatalogDeviceCategory.other,
         ),
         const GremiumImportDecision(
           item: ownItem,
@@ -102,7 +101,7 @@ void main() {
             item: lampItem,
             targetGroupName: 'Import z Gremium',
             action: GremiumImportAction.createNewDevice,
-            deviceType: GremiumDeviceType.singlePhase,
+            category: CatalogDeviceCategory.other,
           ),
         ],
       );
@@ -152,7 +151,7 @@ void main() {
             item: lampItem,
             targetGroupName: 'Import z Gremium',
             action: GremiumImportAction.createNewDevice,
-            deviceType: GremiumDeviceType.singlePhase,
+            category: CatalogDeviceCategory.other,
           ),
           const GremiumImportDecision(
             item: ownItem,

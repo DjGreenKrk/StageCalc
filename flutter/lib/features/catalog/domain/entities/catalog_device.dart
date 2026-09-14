@@ -208,6 +208,36 @@ enum CatalogDeviceCategory {
   other,
 }
 
+/// Shared display/field-visibility rules for [CatalogDeviceCategory],
+/// reused anywhere a category is picked outside the catalog device form
+/// itself (e.g. the Gremium import review panel, ADR-034) so they stay in
+/// sync with the one place these rules are authoritative
+/// (`_CatalogDeviceDialogState` in `catalog_screen.dart`).
+extension CatalogDeviceCategoryFields on CatalogDeviceCategory {
+  String get label => switch (this) {
+    CatalogDeviceCategory.lighting => 'Oświetlenie',
+    CatalogDeviceCategory.sound => 'Nagłośnienie',
+    CatalogDeviceCategory.multimedia => 'Multimedia',
+    CatalogDeviceCategory.distribution => 'Rozdzielnia',
+    CatalogDeviceCategory.cable => 'Kabel',
+    CatalogDeviceCategory.rigging => 'Rigging',
+    CatalogDeviceCategory.other => 'Inne',
+  };
+
+  /// Whether power/current make sense for this category - rigging gear and
+  /// cables don't draw power themselves (ADR-031).
+  bool get showsElectricalFields =>
+      this != CatalogDeviceCategory.rigging &&
+      this != CatalogDeviceCategory.cable;
+
+  /// Whether "rigging points" (hook attachment points needed to hang this
+  /// device from a truss) makes sense for this category - the rigging gear
+  /// itself and cables are never the thing being hung (ADR-031).
+  bool get showsRiggingPoints =>
+      this != CatalogDeviceCategory.rigging &&
+      this != CatalogDeviceCategory.cable;
+}
+
 extension CatalogDeviceCategoryJson on CatalogDeviceCategory {
   String toJson() => name;
 
