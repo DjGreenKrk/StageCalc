@@ -6,6 +6,16 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.3+1 - 2026-09-14
+
+### Naprawiono
+
+- Znaleziono rzeczywista przyczyne zgloszenia "offline nie da sie nic dodac" (v0.3.2 tylko ukrywala objaw): ekran bledu ujawnil `SqliteException: duplicate column name: rigging_points` przy migracji `ALTER TABLE "catalog_devices" ADD COLUMN "rigging_points"` (krok `from < 11`) - kolumna juz fizycznie istniala w pliku bazy, mimo ze sledzona wersja schematu (`PRAGMA user_version`) byla nizsza niz 11. Ten jeden rzucony wyjatek psul wczytanie danych na wszystkich czterech ekranach na raz, bo wszystkie dziela ta sama baze.
+  - Wszystkie kroki migracji (`migrator.addColumn`/`migrator.createTable` w `onUpgrade`, wersje 2-15) sa teraz idempotentne: nowe `_addColumnIfMissing`/`_createTableIfMissing` w `app_database.dart` lapia `SqliteException` z komunikatem "duplicate column name"/"already exists" i po prostu pomijaja ten krok zamiast wywalac cala migracje - krok, ktory okazuje sie juz zastosowany, powinien byc pominiety, nie powinien psuc calej reszty.
+  - Dokladny mechanizm, przez ktory sledzona wersja schematu rozjechala sie z rzeczywistym ksztaltem tabeli na tym urzadzeniu, nie zostal ustalony - poprawka tego nie wymaga: krok migracji, ktory jest juz zastosowany, jest teraz bezpiecznie pomijany niezaleznie od przyczyny.
+  - Dodano test regresyjny (`test/infrastructure/local_database/app_database_migration_test.dart`) odtwarzajacy dokladnie ten scenariusz na prawdziwym pliku sqlite: tworzy swieza baze (wszystko fizycznie istnieje przy aktualnej wersji), recznie cofa TYLKO `user_version` osobnym, surowym polaczeniem (nie ruszajac schematu), po czym otwiera plik ponownie przez `AppDatabase` - przed poprawka rzucalo dokladnie ten sam `SqliteException`, po poprawce migracja konczy sie poprawnie na wersji `15`.
+- Instalacja tej wersji powinna sama naprawic zablokowane urzadzenia bez utraty danych lokalnych - ten sam krok migracji, ktory wczesniej wywalal caly proces, teraz po prostu zostanie pominiety jako juz zastosowany.
+
 ## v0.3.2+1 - 2026-09-14
 
 ### Naprawiono

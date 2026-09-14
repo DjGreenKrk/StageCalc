@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:sqlite3/common.dart';
 
 import 'connection/connection.dart';
 
@@ -427,64 +428,76 @@ class AppDatabase extends _$AppDatabase {
     },
     onUpgrade: (migrator, from, to) async {
       if (from < 2) {
-        await migrator.createTable(clients);
-        await migrator.createTable(locations);
+        await _createTableIfMissing(migrator, clients);
+        await _createTableIfMissing(migrator, locations);
       }
       if (from < 3) {
-        await migrator.addColumn(projects, projects.clientId);
-        await migrator.addColumn(projects, projects.locationId);
+        await _addColumnIfMissing(migrator, projects, projects.clientId);
+        await _addColumnIfMissing(migrator, projects, projects.locationId);
       }
       if (from < 4) {
-        await migrator.createTable(powerPresets);
-        await migrator.createTable(powerOutletTemplates);
+        await _createTableIfMissing(migrator, powerPresets);
+        await _createTableIfMissing(migrator, powerOutletTemplates);
       }
       if (from < 5) {
-        await migrator.createTable(projectDistros);
-        await migrator.createTable(projectOutlets);
+        await _createTableIfMissing(migrator, projectDistros);
+        await _createTableIfMissing(migrator, projectOutlets);
       }
       if (from < 6) {
-        await migrator.createTable(powerConnections);
+        await _createTableIfMissing(migrator, powerConnections);
       }
       if (from < 7) {
-        await migrator.createTable(projectTrusses);
+        await _createTableIfMissing(migrator, projectTrusses);
       }
       if (from < 8) {
-        await migrator.createTable(locationPowerConnectors);
+        await _createTableIfMissing(migrator, locationPowerConnectors);
       }
       if (from < 9) {
-        await migrator.createTable(locationContacts);
+        await _createTableIfMissing(migrator, locationContacts);
       }
       if (from < 10) {
-        await migrator.addColumn(
+        await _addColumnIfMissing(
+          migrator,
           projectDistros,
           projectDistros.manualInputMaxCurrentA,
         );
       }
       if (from < 11) {
-        await migrator.addColumn(catalogDevices, catalogDevices.riggingPoints);
-        await migrator.addColumn(
+        await _addColumnIfMissing(
+          migrator,
+          catalogDevices,
+          catalogDevices.riggingPoints,
+        );
+        await _addColumnIfMissing(
+          migrator,
           projectItems,
           projectItems.riggingPointsSnapshot,
         );
-        await migrator.createTable(projectGroupHookAssignments);
+        await _createTableIfMissing(migrator, projectGroupHookAssignments);
       }
       if (from < 12) {
-        await migrator.addColumn(
+        await _addColumnIfMissing(
+          migrator,
           projectTrusses,
           projectTrusses.trussCatalogDeviceId,
         );
-        await migrator.createTable(trussLoadChartEntries);
+        await _createTableIfMissing(migrator, trussLoadChartEntries);
       }
       if (from < 13) {
-        await migrator.createTable(appSettings);
+        await _createTableIfMissing(migrator, appSettings);
       }
       if (from < 14) {
-        await migrator.addColumn(clients, clients.ownerId);
-        await migrator.addColumn(projects, projects.ownerId);
-        await migrator.addColumn(appSettings, appSettings.authSessionData);
+        await _addColumnIfMissing(migrator, clients, clients.ownerId);
+        await _addColumnIfMissing(migrator, projects, projects.ownerId);
+        await _addColumnIfMissing(
+          migrator,
+          appSettings,
+          appSettings.authSessionData,
+        );
       }
       if (from < 15) {
-        await migrator.addColumn(
+        await _addColumnIfMissing(
+          migrator,
           catalogDevices,
           catalogDevices.connectorTypeIdsJson,
         );
@@ -511,4 +524,52 @@ class AppDatabase extends _$AppDatabase {
       }
     },
   );
+
+  /// Makes `migrator.createTable` idempotent: swallows the "table already
+  /// exists" failure instead of letting the whole migration (and every
+  /// screen's data load that shares this one database) fail because some
+  /// earlier run of this exact step already got applied to the actual file,
+  /// without the tracked schema version (`PRAGMA user_version`) reflecting
+  /// that - which is exactly what happened in practice (see the matching
+  /// `_addColumnIfMissing` doc comment).
+  Future<void> _createTableIfMissing(Migrator migrator, TableInfo table) async {
+    try {
+      await migrator.createTable(table);
+    } on SqliteException catch (error) {
+      if (!error.message.contains('already exists')) {
+        rethrow;
+      }
+    }
+  }
+
+  /// Makes `migrator.addColumn` idempotent: swallows the "duplicate column
+  /// name" failure instead of letting the whole migration fail.
+  ///
+  /// Without this, a user hit exactly this on a real device: `ADD COLUMN
+  /// "rigging_points"` failed with `SqliteException: duplicate column name:
+  /// rigging_points` even though `from < 11` (the guard around that step)
+  /// was true - the column physically already existed in their database
+  /// file, but its tracked schema version had not been bumped past 10. That
+  /// single thrown exception, since every screen's initial data load reads
+  /// from this same shared database, broke every "Dodaj" action app-wide
+  /// (`_repository` never got set - see `ClientsScreen._ensureRepository`
+  /// and its counterparts) with no clear error shown anywhere until this
+  /// exact exception was captured and reported. The exact mechanism that
+  /// desynced the version from the columns wasn't identified, but the fix
+  /// does not depend on knowing it: a migration step that turns out to
+  /// already be applied should just be skipped, not fail the whole
+  /// migration outright.
+  Future<void> _addColumnIfMissing(
+    Migrator migrator,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    try {
+      await migrator.addColumn(table, column);
+    } on SqliteException catch (error) {
+      if (!error.message.contains('duplicate column name')) {
+        rethrow;
+      }
+    }
+  }
 }
