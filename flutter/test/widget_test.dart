@@ -292,8 +292,9 @@ void main() {
     expect(find.widgetWithText(TextField, 'Masa'), findsOneWidget);
     expect(find.widgetWithText(TextField, 'Producent'), findsOneWidget);
 
-    // Cables don't draw power and aren't meaningfully attributed to a
-    // manufacturer - but they do have connectors and can hang from rigging.
+    // Cables don't draw power, aren't meaningfully attributed to a
+    // manufacturer, and don't have rigging points of their own - but they
+    // do have connectors.
     await tester.tap(
       find.byType(DropdownButtonFormField<CatalogDeviceCategory>),
     );
@@ -307,7 +308,7 @@ void main() {
     expect(find.text('Typy zlacz (mozna wybrac kilka)'), findsOneWidget);
     expect(
       find.widgetWithText(TextField, 'Punkty zaczepienia (opcjonalnie)'),
-      findsOneWidget,
+      findsNothing,
     );
   });
 

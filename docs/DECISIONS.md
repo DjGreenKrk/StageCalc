@@ -396,7 +396,7 @@ Status: accepted
 
 Kontekst:
 
-- Uzytkownik zglosil trzy problemy z formularzem "Dodaj urzadzenie" po realnym uzyciu: (1) kategoria "Rigging" pokazywala pola nieadekwatne do rzeczywistego sprzetu riggingowego - typy zlacz, Moc/Prad, punkty zaczepienia; (2) jedna ogolna kategoria "Urzadzenie" byla za uboga do filtrowania - potrzeba przynajmniej podzialu na oswietlenie/naglosnienie/multimedia; (3) kategoria "Kabel" pokazywala Moc/Prad (kable nie pobieraja mocy) i Producenta (kable nie sa sensownie przypisywane do producenta).
+- Uzytkownik zglosil trzy problemy z formularzem "Dodaj urzadzenie" po realnym uzyciu: (1) kategoria "Rigging" pokazywala pola nieadekwatne do rzeczywistego sprzetu riggingowego - typy zlacz, Moc/Prad, punkty zaczepienia; (2) jedna ogolna kategoria "Urzadzenie" byla za uboga do filtrowania - potrzeba przynajmniej podzialu na oswietlenie/naglosnienie/multimedia; (3) kategoria "Kabel" pokazywala Moc/Prad (kable nie pobieraja mocy) i Producenta (kable nie sa sensownie przypisywane do producenta). Po pierwszym wdrozeniu i zywej weryfikacji na Windows uzytkownik doprecyzowal, ze punkty zaczepienia sa zbedne rowniez dla kabla (kabel, tak jak sprzet riggingowy, nie jest tym, co wpina sie w hak).
 - `docs/FEATURE_SCOPE.md` od poczatku projektu wymienial dokladnie taki podzial ("oswietlenie, dzwiek, multimedia, okablowanie i dystrybucja, rigging, inne") - uproszczenie do jednej ogolnej kategorii `device` bylo wczesniejsza decyzja implementacyjna, nie celowym odejsciem od tej specyfikacji.
 
 Decyzja:
@@ -405,7 +405,7 @@ Decyzja:
 - **Wsteczna kompatybilnosc bez migracji schematu**: `category` jest w Drift/PocketBase zwyklym polem tekstowym (nie enumem SQL), wiec usuniecie `device` z enuma Dart nie wymaga zadnej migracji - `CatalogDeviceCategoryJson.fromJson` po prostu mapuje nierozpoznany tekst (w tym stare `device`) na `other` zamiast na usuniety wariant. Istniejace urzadzenia z `category: "device"` nadal sie wczytuja, po prostu jako "Inne", do reczne przekategoryzowania.
 - **Pola formularza zalezne od kategorii** (`_CatalogDeviceDialogState`, nowe gettery `_showElectrical`/`_showConnectors`/`_showRiggingPoints`/`_showManufacturer`):
   - `rigging`: ukryte Moc/Prad, typy zlacz, punkty zaczepienia. Widoczne: nazwa, producent, masa, jednostka, tabela nosnosci (juz wczesniej warunkowa tylko dla rigging).
-  - `cable`: ukryte Moc/Prad, producent. Widoczne: nazwa, masa, typy zlacz, punkty zaczepienia, jednostka.
+  - `cable`: ukryte Moc/Prad, producent, punkty zaczepienia. Widoczne: nazwa, masa, typy zlacz, jednostka.
   - Pozostale kategorie: pelny zestaw pol, bez zmian.
   - `_submit()` **jawnie zeruje/czysci ukryte pola** (nie tylko chowa je wizualnie) - jesli ktos wpisal Moc przed przelaczeniem na "Rigging", zapisana wartosc to `0`, nie zapamietana-ale-niewidoczna liczba z kontrolera tekstowego. Zapobiega to cichemu zapisaniu nieaktualnych danych.
 - **Filtr kategorii na ekranie Katalog** (nie tylko w istniejacym filtrze wewnatrz dialogu wyboru z katalogu przy dodawaniu do projektu): rzad `ChoiceChip` ("Wszystkie" + kazda kategoria) nad lista urzadzen, filtrujacy `_filteredDevices` razem z wyszukiwaniem tekstowym.

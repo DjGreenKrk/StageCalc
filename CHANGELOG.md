@@ -8,7 +8,7 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ### Dodano
 
-- Dodano kategorie oswietlenie/naglosnienie/multimedia w katalogu urzadzen (ADR-031), zastepujac jedna ogolna kategorie "Urzadzenie" - zgodnie z pierwotnym podzialem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urzadzenie" pokazuje teraz tylko pola sensowne dla wybranej kategorii: "Rigging" nie pokazuje juz Mocy/Pradu/typow zlacz/punktow zaczepienia, "Kabel" nie pokazuje Mocy/Pradu/Producenta. Dodano tez filtr kategorii (rzad chipow) na ekranie Katalog, obok istniejacego wyszukiwania tekstowego. Bez migracji schematu (kategoria to zwykle pole tekstowe, ten sam wzorzec co ADR-030) - istniejace urzadzenia z kategoria "Urzadzenie" wczytuja sie jako "Inne".
+- Dodano kategorie oswietlenie/naglosnienie/multimedia w katalogu urzadzen (ADR-031), zastepujac jedna ogolna kategorie "Urzadzenie" - zgodnie z pierwotnym podzialem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urzadzenie" pokazuje teraz tylko pola sensowne dla wybranej kategorii: "Rigging" nie pokazuje juz Mocy/Pradu/typow zlacz/punktow zaczepienia, "Kabel" nie pokazuje Mocy/Pradu/Producenta/punktow zaczepienia. Dodano tez filtr kategorii (rzad chipow) na ekranie Katalog, obok istniejacego wyszukiwania tekstowego. Bez migracji schematu (kategoria to zwykle pole tekstowe, ten sam wzorzec co ADR-030) - istniejace urzadzenia z kategoria "Urzadzenie" wczytuja sie jako "Inne".
 
 ## v0.3.4+1 - 2026-09-14
 

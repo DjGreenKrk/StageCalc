@@ -432,8 +432,10 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
 
   /// "Rigging points" (hook attachment points) describes what a device
   /// needs *from* rigging when it hangs on a truss - a rigging item itself
-  /// (the truss, the clamp) doesn't have this.
-  bool get _showRiggingPoints => _category != CatalogDeviceCategory.rigging;
+  /// (the truss, the clamp) doesn't have this, and neither does a cable.
+  bool get _showRiggingPoints =>
+      _category != CatalogDeviceCategory.rigging &&
+      _category != CatalogDeviceCategory.cable;
 
   /// Cables aren't meaningfully attributed to a manufacturer the way
   /// fixtures/distros are.
