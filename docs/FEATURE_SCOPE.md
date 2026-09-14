@@ -2,17 +2,17 @@
 
 ## Cel dokumentu
 
-Ten dokument opisuje aktualny zakres funkcjonalny StageCalc na podstawie wersji legacy w `legacy/pwa/app` oraz wskazuje, co powinno wejsc do pierwszej czystej wersji Flutter + Dart.
+Ten dokument opisuje aktualny zakres funkcjonalny StageCalc na podstawie wersji legacy w `legacy/pwa/app` oraz wskazuje, co powinno wejść do pierwszej czystej wersji Flutter + Dart.
 
 ## Aktualna aplikacja
 
-StageCalc jest aplikacja do planowania technicznego produkcji eventowych. Obecna wersja jest zbudowana jako PWA w Next.js/React/TypeScript z PocketBase jako backendem. Najwazniejszym bytem domenowym jest `Calculation`, czyli zapisany projekt techniczny. Jeden projekt jest uzywany przez modul zasilania i modul kratownic.
+StageCalc jest aplikacją do planowania technicznego produkcji eventowych. Obecna wersja jest zbudowana jako PWA w Next.js/React/TypeScript z PocketBase jako backendem. Najważniejszym bytem domenowym jest `Calculation`, czyli zapisany projekt techniczny. Jeden projekt jest używany przez moduł zasilania i moduł kratownic.
 
-Na etapie migracji Flutter obecna aplikacja legacy jest zrodlem wymagan domenowych, ale nie jest kontraktem kompatybilnosci. Nowa aplikacja nie musi zachowywac starych tras, nazw pol, formatow JSON ani backward compatibility z historycznymi strukturami danych.
+Na etapie migracji Flutter obecna aplikacja legacy jest źródłem wymagań domenowych, ale nie jest kontraktem kompatybilności. Nowa aplikacja nie musi zachowywać starych tras, nazw pól, formatów JSON ani backward compatibility z historycznymi strukturami danych.
 
 ## Kontekst GreenCrew Tools
 
-StageCalc jest czescia ekosystemu GreenCrew Tools. Nowa aplikacja Flutter powinna byc projektowana zgodnie z dokumentami:
+StageCalc jest częścią ekosystemu GreenCrew Tools. Nowa aplikacja Flutter powinna być projektowana zgodnie z dokumentami:
 
 - `docs/greencrew_docs/branding/GREENCREW_BRANDING.md`
 - `docs/greencrew_docs/branding/DESIGN_SYSTEM.md`
@@ -23,40 +23,40 @@ StageCalc jest czescia ekosystemu GreenCrew Tools. Nowa aplikacja Flutter powinn
 - `docs/greencrew_docs/development/FLUTTER_STANDARDS.md`
 - `docs/greencrew_docs/development/CODING_STANDARDS.md`
 
-Najwazniejsze konsekwencje:
+Najważniejsze konsekwencje:
 
-- domyslny dark mode,
-- paleta GreenCrew: `#00C853`, `#00E676`, `#00B248`, czarne tlo i neutralne powierzchnie,
+- domyślny dark mode,
+- paleta GreenCrew: `#00C853`, `#00E676`, `#00B248`, czarne tło i neutralne powierzchnie,
 - techniczny, terenowy charakter UI,
 - telefon jako platforma referencyjna,
 - Material Design i Material Icons/Symbols,
-- krotkie, konkretne polskie komunikaty,
-- brak stylistyki lifestyle, CAD, ERP i korporacyjnych dashboardow,
-- ikona StageCalc: heksagon GreenCrew z geometryczna blyskawica.
+- krótkie, konkretne polskie komunikaty,
+- brak stylistyki lifestyle, CAD, ERP i korporacyjnych dashboardów,
+- ikona StageCalc: heksagon GreenCrew z geometryczną błyskawicą.
 
 ## Aktualne funkcje
 
 ### Autoryzacja i profil
 
-To jest funkcjonalnosc obecnej aplikacji legacy, nie wymaganie MVP Flutter.
+To jest funkcjonalność obecnej aplikacji legacy, nie wymaganie MVP Flutter.
 
-- Logowanie, rejestracja i reset hasla przez PocketBase.
-- Role uzytkownika: `admin`, `technician`, `viewer`.
-- Profil uzytkownika z nazwa, avatarem i ulubionymi urzadzeniami.
-- Obecna warstwa profilu nosi slady migracji z Firebase, wiec w Flutterze powinna byc uproszczona.
+- Logowanie, rejestracja i reset hasła przez PocketBase.
+- Role użytkownika: `admin`, `technician`, `viewer`.
+- Profil użytkownika z nazwą, avatarem i ulubionymi urządzeniami.
+- Obecna warstwa profilu nosi ślady migracji z Firebase, więc w Flutterze powinna być uproszczona.
 
-W Flutter MVP podstawowa praca lokalna nie wymaga logowania. Konto, role i synchronizacja moga zostac dodane pozniej jako osobna warstwa.
+W Flutter MVP podstawowa praca lokalna nie wymaga logowania. Konto, role i synchronizacja mogą zostać dodane później jako osobna warstwa.
 
 ### Kalkulacje zasilania
 
 - Tworzenie nowej kalkulacji i edycja zapisanej kalkulacji.
-- Grupowanie urzadzen w grupy robocze.
-- Dodawanie urzadzen katalogowych do grup.
-- Scalanie ilosci dla zwyklych urzadzen i osobne traktowanie kabli jako pozycji metrazowych.
-- Reczne pozycje wagowe uzywane glownie w module kratownic.
+- Grupowanie urządzeń w grupy robocze.
+- Dodawanie urządzeń katalogowych do grup.
+- Scalanie ilości dla zwykłych urządzeń i osobne traktowanie kabli jako pozycji metrażowych.
+- Ręczne pozycje wagowe używane głównie w module kratownic.
 - Obliczanie sum:
   - moc `W`,
-  - prad `A`,
+  - prąd `A`,
   - masa `kg`.
 - Typ zasilania grupy:
   - `1F`,
@@ -64,137 +64,137 @@ W Flutter MVP podstawowa praca lokalna nie wymaga logowania. Konto, role i synch
 - Przypisywanie grup do gniazd starszym sposobem przez `assignedConnectorIds`.
 - Eksport kalkulacji do PDF.
 
-### Rozdzielnice, przylacza i patchowanie
+### Rozdzielnice, przyłącza i patchowanie
 
-- Wybieranie lokalizacji i import jej grup przylaczy do kalkulacji.
+- Wybieranie lokalizacji i import jej grup przyłączy do kalkulacji.
 - Dodawanie rozdzielnic z katalogu.
 - Dodawanie szybkich rozdzielnic tymczasowych:
   - gniazdo 16A,
-  - przedluzacz/listwa 4x16A,
+  - przedłużacz/listwa 4x16A,
   - rozdzielnica 32A na 6x16A.
-- Tworzenie i zarzadzanie presetami gniazd rozdzielnic.
+- Tworzenie i zarządzanie presetami gniazd rozdzielnic.
 - Wizualny patcher:
   - pokazuje gniazda rozdzielnicy,
-  - laczy gniazdo z grupa urzadzen,
-  - laczy gniazdo z inna rozdzielnica,
-  - wybiera fazy `L1/L2/L3` dla grup 1F podlaczanych do gniazda `All`,
-  - wykrywa zajetosc faz,
-  - pozwala dodawac notatki do polaczen.
-- Rekurencyjne liczenie obciazenia rozdzielnic i globalnego obciazenia faz.
-- Ostrzeganie przed przeciazeniem faz/gniazd.
+  - łączy gniazdo z grupą urządzeń,
+  - łączy gniazdo z inną rozdzielnicą,
+  - wybiera fazy `L1/L2/L3` dla grup 1F podłączanych do gniazda `All`,
+  - wykrywa zajętość faz,
+  - pozwala dodawać notatki do połączeń.
+- Rekurencyjne liczenie obciążenia rozdzielnic i globalnego obciążenia faz.
+- Ostrzeganie przed przeciążeniem faz/gniazd.
 
-### Katalog urzadzen
+### Katalog urządzeń
 
 - Kategorie:
-  - oswietlenie,
-  - dzwiek,
+  - oświetlenie,
+  - dźwięk,
   - multimedia,
   - okablowanie i dystrybucja,
   - rigging,
   - inne.
-- CRUD katalogu w zaleznosci od roli.
-- Pola wspolne:
+- CRUD katalogu w zależności od roli.
+- Pola wspólne:
   - nazwa,
   - producent,
   - podkategoria,
   - moc,
-  - prad,
+  - prąd,
   - masa,
   - IP rating,
   - notatki.
-- Pola specjalistyczne, np. DMX, jasnosc, rozdzielczosc, typ kabla, wejscia/wyjscia dystrybucji, dane kratownic, WLL, typ sterowania wciagarki.
+- Pola specjalistyczne, np. DMX, jasność, rozdzielczość, typ kabla, wejścia/wyjścia dystrybucji, dane kratownic, WLL, typ sterowania wciągarki.
 
 ### Lokacje
 
 - Lista i formularz lokacji.
-- Dane podstawowe: nazwa, adres, pojemnosc, notatki.
+- Dane podstawowe: nazwa, adres, pojemność, notatki.
 - Kontakty lokacji.
 - Linkowane dokumenty.
-- Grupy przylaczy energetycznych lokacji.
-- Obliczanie dostepnej mocy lokacji z przylaczy:
+- Grupy przyłączy energetycznych lokacji.
+- Obliczanie dostępnej mocy lokacji z przyłączy:
   - 1F: `230 V * A`,
   - 3F: `400 V * A * sqrt(3)`.
-- Historyczna obsluga starszego pola `powerConnectors` nie jest wymaganiem Flutter MVP.
+- Historyczna obsługa starszego pola `powerConnectors` nie jest wymaganiem Flutter MVP.
 
 ### Klienci
 
-- Lista i formularz klientow.
+- Lista i formularz klientów.
 - Dane: nazwa, osoba kontaktowa, email, telefon, adres, NIP, notatki.
-- Klienci sa przypisani do wlasciciela/uzytkownika.
+- Klienci są przypisani do właściciela/użytkownika.
 
 ### Kratownice
 
-- Modul kratownic otwiera te sama kalkulacje co modul zasilania.
+- Moduł kratownic otwiera tę samą kalkulację co moduł zasilania.
 - Dodawanie kratownic do projektu.
-- Przypisywanie grup urzadzen do kratownic.
-- Dodawanie obciazen recznych.
-- Obliczanie masy grup z urzadzen, recznych pozycji i hakow.
-- Liczenie wymaganej liczby hakow na podstawie `riggingPoints`.
-- Interpolacja tabeli nosnosci producenta po dlugosci kratownicy.
-- Ostrzeganie, gdy dlugosc wymaga ekstrapolacji albo brakuje danych.
+- Przypisywanie grup urządzeń do kratownic.
+- Dodawanie obciążeń ręcznych.
+- Obliczanie masy grup z urządzeń, ręcznych pozycji i haków.
+- Liczenie wymaganej liczby haków na podstawie `riggingPoints`.
+- Interpolacja tabeli nośności producenta po długości kratownicy.
+- Ostrzeganie, gdy długość wymaga ekstrapolacji albo brakuje danych.
 - Kontrola:
-  - calkowitego limitu obciazenia,
-  - obciazenia rozlozonego `kg/m`,
+  - całkowitego limitu obciążenia,
+  - obciążenia rozłożonego `kg/m`,
   - informacyjnego limitu punktowego.
 
 ### Ustawienia, i18n i shell aplikacji
 
 - Sidebar i nawigacja.
 - Motyw i podstawowa internacjonalizacja PL/EN.
-- Strony ustawien/profilu.
-- Istnieja tez trasy eventow, ale sa placeholderami lub kodem historycznym i nie powinny wyznaczac MVP Fluttera.
+- Strony ustawień/profilu.
+- Istnieją też trasy eventów, ale są placeholderami lub kodem historycznym i nie powinny wyznaczać MVP Fluttera.
 
 ## Zakres MVP Flutter
 
-Pierwsza wersja Flutter powinna objac:
+Pierwsza wersja Flutter powinna objąć:
 
 - lokalna baza offline-first,
-- lista projektow/kalkulacji,
+- lista projektów/kalkulacji,
 - edycja projektu,
-- katalog urzadzen,
+- katalog urządzeń,
 - klienci,
 - lokacje,
-- grupy urzadzen,
+- grupy urządzeń,
 - rozdzielnice i presety gniazd,
 - wizualne patchowanie w wersji funkcjonalnej,
-- silnik obliczen mocy/pradu/masy,
-- modul kratownic na poziomie obecnej funkcjonalnosci,
-- eksport danych lub PDF w prostszej formie, jesli PDF opoznia MVP.
+- silnik obliczeń mocy/prądu/masy,
+- moduł kratownic na poziomie obecnej funkcjonalności,
+- eksport danych lub PDF w prostszej formie, jeśli PDF opóźnia MVP.
 - ekran "O aplikacji" zgodny z GreenCrew Tools,
-- bazowy motyw GreenCrew i komponenty wspolne.
+- bazowy motyw GreenCrew i komponenty wspólne.
 - backup JSON w nowym formacie aplikacji,
 - praca bez konta i bez Internetu,
-- obsluga stanow: pusty, blad, offline, brak wynikow.
+- obsługa stanów: pusty, błąd, offline, brak wyników.
 
 ## Poza MVP
 
-- Synchronizacja miedzy urzadzeniami.
-- Pelny system kont i uprawnien online.
-- Wspoldzielenie projektow.
+- Synchronizacja między urządzeniami.
+- Pełny system kont i uprawnień online.
+- Współdzielenie projektów.
 - Zaawansowane konflikty sync.
 - Import historycznej bazy PocketBase jako automatyczny migrator produkcyjny.
-- Pelny model `Gniazdo -> konkretne pozycje z grupy`, jesli nie jest wymagany od razu.
-- Kompatybilnosc z formatami danych legacy.
-- Zachowanie starych tras, nazw kolekcji i nazw pol PocketBase.
+- Pełny model `Gniazdo -> konkretne pozycje z grupy`, jeśli nie jest wymagany od razu.
+- Kompatybilność z formatami danych legacy.
+- Zachowanie starych tras, nazw kolekcji i nazw pól PocketBase.
 - Wymagane logowanie do podstawowej pracy lokalnej.
-- Uprawnienia systemowe niezwiązane z konkretna funkcja.
+- Uprawnienia systemowe niezwiązane z konkretną funkcją.
 
 ## Elementy do zachowania jako wymagania
 
-- Jedna kalkulacja/projekt jako wspolny kontener dla zasilania i kratownic.
-- Katalog jako zrodlo danych technicznych.
-- Lokacje jako zrodlo infrastruktury energetycznej.
-- Presety rozdzielnic jako wielokrotnego uzytku definicje gniazd.
-- Polaczenia jako osobne byty domenowe, a nie tylko stan UI.
-- Obliczenia fazowe `L1/L2/L3` z obsluga `All`.
-- Pole na przyszle fazy projektu, ale bez implementowania workflow faz teraz.
+- Jedna kalkulacja/projekt jako wspólny kontener dla zasilania i kratownic.
+- Katalog jako źródło danych technicznych.
+- Lokacje jako źródło infrastruktury energetycznej.
+- Presety rozdzielnic jako wielokrotnego użytku definicje gniazd.
+- Połączenia jako osobne byty domenowe, a nie tylko stan UI.
+- Obliczenia fazowe `L1/L2/L3` z obsługą `All`.
+- Pole na przyszłe fazy projektu, ale bez implementowania workflow faz teraz.
 
-## Elementy do pominiecia lub przeprojektowania
+## Elementy do pominięcia lub przeprojektowania
 
 - Dziedzictwo Firebase/Firestore.
-- Nazwy katalogow i hookow sugerujace Firestore.
-- Eventy jako osobny stary modul, dopoki nie zostanie zdefiniowany od nowa.
-- Nadmiernie duzy komponent kalkulatora jako wzorzec architektoniczny.
-- Pelne kasowanie i odtwarzanie wszystkich polaczen przy zapisie.
-- Mieszanie ID katalogowych, ID runtime i ID polaczen w jednym znaczeniu.
-- Backward compatibility ze starymi polami i formatami danych, o ile nie zostanie osobno zamowiona.
+- Nazwy katalogów i hooków sugerujące Firestore.
+- Eventy jako osobny stary moduł, dopóki nie zostanie zdefiniowany od nowa.
+- Nadmiernie duży komponent kalkulatora jako wzorzec architektoniczny.
+- Pełne kasowanie i odtwarzanie wszystkich połączeń przy zapisie.
+- Mieszanie ID katalogowych, ID runtime i ID połączeń w jednym znaczeniu.
+- Backward compatibility ze starymi polami i formatami danych, o ile nie zostanie osobno zamówiona.

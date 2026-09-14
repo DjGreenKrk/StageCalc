@@ -7,14 +7,14 @@ Ostatnia aktualizacja: 2026-09-14
 ## Wykonane
 
 - Utworzono katalog `flutter/` poleceniem `flutter create`.
-- Projekt Flutter ma nazwe pakietu Dart `stagecalc`.
+- Projekt Flutter ma nazwę pakietu Dart `stagecalc`.
 - Wygenerowano platformy:
   - Android,
   - Windows,
   - Web.
-- Zweryfikowano dostepnosc Flutter SDK `3.44.3`.
-- Dodano Flutter SDK do `PATH` uzytkownika Windows.
-- Zastapiono starterowy counter app szkieletem StageCalc.
+- Zweryfikowano dostępność Flutter SDK `3.44.3`.
+- Dodano Flutter SDK do `PATH` użytkownika Windows.
+- Zastąpiono starterowy counter app szkieletem StageCalc.
 - Dodano motyw GreenCrew Tools:
   - dark mode,
   - zielony akcent,
@@ -29,7 +29,7 @@ Ostatnia aktualizacja: 2026-09-14
   - Lokacje,
   - Klienci,
   - Info / O aplikacji.
-- Dodano pierwsze wspolne komponenty GreenCrew.
+- Dodano pierwsze wspólne komponenty GreenCrew.
 - Dodano pierwsze modele i serwisy domenowe:
   - `Project`,
   - `ProjectGroup`,
@@ -37,260 +37,256 @@ Ostatnia aktualizacja: 2026-09-14
   - `ProjectTotalsService`,
   - `PowerCalculationService`.
 - Dodano testy domenowe i widgetowe.
-- Dodano docelowa lokalna baze Drift/SQLite.
+- Dodano docelową lokalną bazę Drift/SQLite.
 - Dodano schemat Drift dla:
-  - projektow,
+  - projektów,
   - grup projektu,
   - pozycji projektu,
-  - katalogu urzadzen,
-  - klientow,
+  - katalogu urządzeń,
+  - klientów,
   - lokacji.
-- Schemat Drift zawiera pola przygotowane pod przyszly sync:
+- Schemat Drift zawiera pola przygotowane pod przyszły sync:
   - `workspaceId`,
   - `remoteId`,
   - `deletedAt`,
   - `revision`,
   - `syncState`,
   - `lastSyncedAt`.
-- Dodano serializacje JSON dla pierwszych modeli projektu.
-- Ekran projektow wczytuje dane lokalne, seeduje projekt demo i pozwala dodac prosty projekt lokalny.
-- Dodano formularz tworzenia projektu z nazwa.
+- Dodano serializację JSON dla pierwszych modeli projektu.
+- Ekran projektów wczytuje dane lokalne, seeduje projekt demo i pozwala dodać prosty projekt lokalny.
+- Dodano formularz tworzenia projektu z nazwą.
 - Dodano prosty edytor projektu.
 - Dodano dodawanie grup projektu.
-- Dodano dodawanie recznych pozycji do grup z polami:
-  - ilosc,
+- Dodano dodawanie ręcznych pozycji do grup z polami:
+  - ilość,
   - moc W,
-  - prad A,
+  - prąd A,
   - masa kg.
-- Dodano edycje i usuwanie grup projektu.
-- Dodano edycje i usuwanie recznych pozycji w grupach.
-- Dodano pierwszy lokalny katalog urzadzen.
+- Dodano edycję i usuwanie grup projektu.
+- Dodano edycję i usuwanie ręcznych pozycji w grupach.
+- Dodano pierwszy lokalny katalog urządzeń.
 - Dodano model `CatalogDevice` z miejscem na:
   - producenta,
-  - kategorie,
+  - kategorię,
   - moc W,
-  - prad A,
-  - mase kg,
-  - typ zlacza,
-  - jednostke ilosci.
+  - prąd A,
+  - masę kg,
+  - typ złącza,
+  - jednostkę ilości.
 - Dodano lokalne repozytorium katalogu na Drift/SQLite.
-- Dodano seed przykladowych urzadzen katalogowych.
+- Dodano seed przykładowych urządzeń katalogowych.
 - Ekran katalogu pozwala:
-  - wyszukiwac urzadzenia,
-  - dodawac urzadzenia,
-  - edytowac urzadzenia,
-  - usuwac urzadzenia.
-- Edytor projektu pozwala dodac pozycje z katalogu do grupy.
-- Pozycja dodana z katalogu zapisuje snapshot danych urzadzenia w projekcie.
+  - wyszukiwać urządzenia,
+  - dodawać urządzenia,
+  - edytować urządzenia,
+  - usuwać urządzenia.
+- Edytor projektu pozwala dodać pozycję z katalogu do grupy.
+- Pozycja dodana z katalogu zapisuje snapshot danych urządzenia w projekcie.
 - Edytor projektu zapisuje zmiany lokalnie przez repozytorium.
 - Dodano test widgetowy tworzenia projektu.
-- Dodano test widgetowy dodawania i edycji recznej pozycji w edytorze projektu.
+- Dodano test widgetowy dodawania i edycji ręcznej pozycji w edytorze projektu.
 - Dodano test repozytorium katalogu.
 - Przeniesiono projekty i katalog ze `shared_preferences` do Drift/SQLite.
-- Usunieto repozytoria i testy oparte o `shared_preferences`.
-- Usunieto zaleznosc `shared_preferences` z projektu Flutter.
-- Dodano testy repozytoriow Drift/SQLite w bazie pamieciowej.
-- `flutter analyze` przechodzi bez problemow.
+- Usunięto repozytoria i testy oparte o `shared_preferences`.
+- Usunięto zależność `shared_preferences` z projektu Flutter.
+- Dodano testy repozytoriów Drift/SQLite w bazie pamięciowej.
+- `flutter analyze` przechodzi bez problemów.
 - `flutter test` przechodzi.
-
-## Nie wykonano jeszcze
-
-- Nie dodano jeszcze pelnego modelu domenowego ani lokalnej bazy.
-- Nie dodano jeszcze pelnej lokalnej bazy relacyjnej.
-- Dodano podstawowy lokalny CRUD klientow.
+- Dodano podstawowy lokalny CRUD klientów.
 - Dodano podstawowy lokalny CRUD lokacji.
-- Ekran klientow pozwala:
-  - wyszukiwac klientow,
-  - dodawac klientow,
-  - edytowac klientow,
-  - usuwac klientow.
+- Ekran klientów pozwala:
+  - wyszukiwać klientów,
+  - dodawać klientów,
+  - edytować klientów,
+  - usuwać klientów.
 - Ekran lokacji pozwala:
-  - wyszukiwac lokacje,
-  - dodawac lokacje,
-  - edytowac lokacje,
-  - usuwac lokacje.
-- Podniesiono wersje schematu Drift do `2`.
-- Dodano migracje schematu tworzaca tabele klientow i lokacji.
-- Dodano testy repozytoriow klientow i lokacji na Drift/SQLite.
-- Powiazano projekt z klientem i lokacja przez `clientId` oraz `locationId`.
-- Podniesiono wersje schematu Drift do `3`.
-- Dodano migracje schematu dodajaca `clientId` i `locationId` do tabeli projektow.
-- Formularz tworzenia projektu pozwala wybrac klienta i lokacje.
-- Edytor projektu pokazuje karte danych projektu z klientem i lokacja.
-- Edytor projektu pozwala zmienic nazwe projektu, klienta i lokacje.
-- Lista projektow pokazuje przypisanego klienta i lokacje.
+  - wyszukiwać lokacje,
+  - dodawać lokacje,
+  - edytować lokacje,
+  - usuwać lokacje.
+- Podniesiono wersję schematu Drift do `2`.
+- Dodano migrację schematu tworzącą tabele klientów i lokacji.
+- Dodano testy repozytoriów klientów i lokacji na Drift/SQLite.
+- Powiązano projekt z klientem i lokacją przez `clientId` oraz `locationId`.
+- Podniesiono wersję schematu Drift do `3`.
+- Dodano migrację schematu dodającą `clientId` i `locationId` do tabeli projektów.
+- Formularz tworzenia projektu pozwala wybrać klienta i lokację.
+- Edytor projektu pokazuje kartę danych projektu z klientem i lokacją.
+- Edytor projektu pozwala zmienić nazwę projektu, klienta i lokację.
+- Lista projektów pokazuje przypisanego klienta i lokację.
 - Dodano test repozytorium projektu dla relacji klient/lokacja.
-- Dodano model presetow rozdzielnic:
+- Dodano model presetów rozdzielnic:
   - `PowerPreset`,
   - `PowerOutletTemplate`.
-- Dodano tabele Drift/SQLite dla presetow rozdzielnic i szablonow gniazd.
-- Podniesiono wersje schematu Drift do `4`.
-- Dodano migracje schematu tworzaca tabele presetow i gniazd.
-- Dodano lokalne repozytorium presetow rozdzielnic na Drift/SQLite.
+- Dodano tabele Drift/SQLite dla presetów rozdzielnic i szablonów gniazd.
+- Podniesiono wersję schematu Drift do `4`.
+- Dodano migrację schematu tworzącą tabele presetów i gniazd.
+- Dodano lokalne repozytorium presetów rozdzielnic na Drift/SQLite.
 - Dodano seed presetu `Rozdzielnia 32 A / 6x Schuko`.
-- Katalog ma teraz przelacznik:
-  - Urzadzenia,
+- Katalog ma teraz przełącznik:
+  - Urządzenia,
   - Presety.
-- Dodano podstawowy widok presetow rozdzielnic.
-- Widok presetow pozwala:
-  - zobaczyc gniazda presetu,
-  - dodac prosty preset z automatycznie rozlozonymi fazami,
-  - usunac preset.
-- Dodano test repozytorium presetow rozdzielnic.
+- Dodano podstawowy widok presetów rozdzielnic.
+- Widok presetów pozwala:
+  - zobaczyć gniazda presetu,
+  - dodać prosty preset z automatycznie rozłożonymi fazami,
+  - usunąć preset.
+- Dodano test repozytorium presetów rozdzielnic.
 - Dodano model runtime rozdzielnic w projekcie:
   - `ProjectDistro`,
   - `ProjectOutlet`.
 - Dodano tabele Drift/SQLite dla rozdzielnic projektu i runtime gniazd.
-- Podniesiono wersje schematu Drift do `5`.
-- Dodano migracje schematu tworzaca tabele `project_distros` i `project_outlets`.
-- Repozytorium projektow zapisuje i odczytuje rozdzielnice razem z projektem.
-- Edytor projektu pozwala utworzyc rozdzielnice z presetu.
-- Edytor projektu pokazuje runtime gniazda rozdzielnicy z faza i limitem pradu.
-- Edytor projektu pozwala usunac rozdzielnice z projektu.
+- Podniesiono wersję schematu Drift do `5`.
+- Dodano migrację schematu tworzącą tabele `project_distros` i `project_outlets`.
+- Repozytorium projektów zapisuje i odczytuje rozdzielnice razem z projektem.
+- Edytor projektu pozwala utworzyć rozdzielnicę z presetu.
+- Edytor projektu pokazuje runtime gniazda rozdzielnicy z fazą i limitem prądu.
+- Edytor projektu pozwala usunąć rozdzielnicę z projektu.
 - Dodano test repozytorium projektu dla runtime rozdzielnic i gniazd.
-- Dodano model `PowerConnection` dla polaczen patchera.
+- Dodano model `PowerConnection` dla połączeń patchera.
 - Dodano tabele Drift/SQLite `power_connections`.
-- Podniesiono wersje schematu Drift do `6`.
-- Repozytorium projektow zapisuje i odczytuje polaczenia razem z projektem.
-- Edytor projektu ma sekcje `Polaczenia`.
-- Edytor projektu pozwala polaczyc grupe z gniazdem rozdzielnicy.
-- Edytor projektu pozwala polaczyc rozdzielnice nadrzedna z rozdzielnica podrzedna.
-- Edytor projektu pokazuje polaczenia grupa -> rozdzielnica / gniazdo.
-- Edytor projektu pozwala usunac polaczenie.
-- Dodano test repozytorium projektu dla polaczen.
-- `PowerCalculationService` liczy obciazenia gniazd i sumaryczne obciazenia faz rozdzielnicy.
-- `PowerCalculationService` dzieli obciazenie grupy rowno miedzy wiele polaczen tej samej grupy.
-- `PowerCalculationService` propaguje obciazenie rozdzielnicy podrzednej do gniazda rozdzielnicy nadrzednej.
-- Rozdzielnica sprawdza przeciazenie wejscia na podstawie typu zlacza wejsciowego.
-- Karta rozdzielnicy pokazuje ostrzezenie, gdy obciazenie fazy przekracza limit wejscia.
-- Chipy faz `L1`, `L2`, `L3` pokazuja teraz `aktualne/limit A` i osobno oznaczaja przeciazona faze.
-- Gniazda, fazy i wejscie rozdzielnicy maja zolty stan ostrzegawczy, gdy zostaje 10% lub mniej zapasu do limitu.
-- Formularze urzadzen i pozycji recznych automatycznie przeliczaja `W <-> A` przy zalozeniu `230 V`.
-- Edytor projektu pokazuje przy rozdzielnicy obciazenia `L1`, `L2`, `L3`.
-- Edytor projektu pokazuje przy gniazdach wartosc `aktualne A / limit A`.
-- Gniazda z obciazeniem i przeciazeniem maja osobny status wizualny.
-- Dodano testy obciazenia gniazda i wykrywania przeciazenia.
-- Dodano testy podzialu obciazenia grupy miedzy wiele gniazd, wykrywania przeciazenia wejscia rozdzielnicy i wskazania przeciazonej fazy.
-- Dodano testy zoltego progu ostrzegawczego dla gniazda, wejscia i fazy rozdzielnicy.
-- Dodano test propagacji obciazenia rozdzielnicy podrzednej do rozdzielnicy nadrzednej.
+- Podniesiono wersję schematu Drift do `6`.
+- Repozytorium projektów zapisuje i odczytuje połączenia razem z projektem.
+- Edytor projektu ma sekcję `Połączenia`.
+- Edytor projektu pozwala połączyć grupę z gniazdem rozdzielnicy.
+- Edytor projektu pozwala połączyć rozdzielnicę nadrzędną z rozdzielnicą podrzędną.
+- Edytor projektu pokazuje połączenia grupa -> rozdzielnica / gniazdo.
+- Edytor projektu pozwala usunąć połączenie.
+- Dodano test repozytorium projektu dla połączeń.
+- `PowerCalculationService` liczy obciążenia gniazd i sumaryczne obciążenia faz rozdzielnicy.
+- `PowerCalculationService` dzieli obciążenie grupy równo między wiele połączeń tej samej grupy.
+- `PowerCalculationService` propaguje obciążenie rozdzielnicy podrzędnej do gniazda rozdzielnicy nadrzędnej.
+- Rozdzielnica sprawdza przeciążenie wejścia na podstawie typu złącza wejściowego.
+- Karta rozdzielnicy pokazuje ostrzeżenie, gdy obciążenie fazy przekracza limit wejścia.
+- Chipy faz `L1`, `L2`, `L3` pokazują teraz `aktualne/limit A` i osobno oznaczają przeciążoną fazę.
+- Gniazda, fazy i wejście rozdzielnicy mają żółty stan ostrzegawczy, gdy zostaje 10% lub mniej zapasu do limitu.
+- Formularze urządzeń i pozycji ręcznych automatycznie przeliczają `W <-> A` przy założeniu `230 V`.
+- Edytor projektu pokazuje przy rozdzielnicy obciążenia `L1`, `L2`, `L3`.
+- Edytor projektu pokazuje przy gniazdach wartość `aktualne A / limit A`.
+- Gniazda z obciążeniem i przeciążeniem mają osobny status wizualny.
+- Dodano testy obciążenia gniazda i wykrywania przeciążenia.
+- Dodano testy podziału obciążenia grupy między wiele gniazd, wykrywania przeciążenia wejścia rozdzielnicy i wskazania przeciążonej fazy.
+- Dodano testy żółtego progu ostrzegawczego dla gniazda, wejścia i fazy rozdzielnicy.
+- Dodano test propagacji obciążenia rozdzielnicy podrzędnej do rozdzielnicy nadrzędnej.
 - Dodano `PatchValidationService`.
-- Walidacja patchera wykrywa wielokrotne uzycie tego samego gniazda.
-- Edytor projektu pokazuje konflikt wielokrotnego uzycia gniazda przy gniezdzie i przy polaczeniu.
+- Walidacja patchera wykrywa wielokrotne użycie tego samego gniazda.
+- Edytor projektu pokazuje konflikt wielokrotnego użycia gniazda przy gnieździe i przy połączeniu.
 - Dodano test walidacji duplikatu gniazda.
-- Edytor projektu ma teraz przelacznik widoku:
-  - `Sprzet`,
+- Edytor projektu ma teraz przełącznik widoku:
+  - `Sprzęt`,
   - `Patcher`.
-- Widok `Sprzet` zawiera grupy i pozycje projektu.
-- Widok `Patcher` zawiera rozdzielnice, obciazenia, polaczenia i ostrzezenia patchera.
-- Dodano test widgetowy przejscia do widoku patchera.
-- Patcher pozwala utworzyc rozdzielnice na szybko bez zapisywania presetu:
+- Widok `Sprzęt` zawiera grupy i pozycje projektu.
+- Widok `Patcher` zawiera rozdzielnice, obciążenia, połączenia i ostrzeżenia patchera.
+- Dodano test widgetowy przejścia do widoku patchera.
+- Patcher pozwala utworzyć rozdzielnicę na szybko bez zapisywania presetu:
   - `Gniazdo 16 A`,
   - `Listwa 4x16 A`,
   - `Rozdzielnia 32 A / 6x Schuko`,
-  - `Przedluzka 32 A CEE`.
+  - `Przedłużka 32 A CEE`.
 - Dialog dodawania rozdzielnicy ma tryby:
   - `Szybka`,
   - `Preset`,
   - `Custom`.
-- Rozdzielnica `Custom` moze miec wiele sekcji wyjsc z roznymi typami zlacz, iloscia i rozkladem faz.
-- Presety rozdzielnic w katalogu moga miec wiele sekcji wyjsc z roznymi typami zlacz.
-- Edytory rozdzielnic respektuja fazowosc zlacz:
-  - zlacza 3F wymuszaja faze `All`,
-  - wejscie 1F wymusza jedna faze dla wyjsc 1F,
-  - obslugiwane sa rozdzielnice typu `WE 1F16A CEE / WY 6x Schuko`.
-- Istniejaca rozdzielnice mozna edytowac:
-  - nazwe,
-  - typ wejscia,
-  - liste gniazd,
-  - typ zlacza gniazda,
-  - faze gniazda.
-- Automatyczne nazwy szybkich gniazd sa bardziej techniczne, np. `Schuko L1.1`.
-- Dialog tworzenia polaczenia preferuje pierwsze wolne gniazdo.
-- Zajete gniazda sa oznaczone w wyborze gniazda.
-- Ponowne uzycie zajetego gniazda wymaga wlaczenia przelacznika `Uzyc zajetego gniazda`.
-- Dialog tworzenia polaczenia pozwala wybrac cel:
+- Rozdzielnica `Custom` może mieć wiele sekcji wyjść z różnymi typami złącz, ilością i rozkładem faz.
+- Presety rozdzielnic w katalogu mogą mieć wiele sekcji wyjść z różnymi typami złącz.
+- Edytory rozdzielnic respektują fazowość złącz:
+  - złącza 3F wymuszają fazę `All`,
+  - wejście 1F wymusza jedną fazę dla wyjść 1F,
+  - obsługiwane są rozdzielnice typu `WE 1F16A CEE / WY 6x Schuko`.
+- Istniejącą rozdzielnicę można edytować:
+  - nazwę,
+  - typ wejścia,
+  - listę gniazd,
+  - typ złącza gniazda,
+  - fazę gniazda.
+- Automatyczne nazwy szybkich gniazd są bardziej techniczne, np. `Schuko L1.1`.
+- Dialog tworzenia połączenia preferuje pierwsze wolne gniazdo.
+- Zajęte gniazda są oznaczone w wyborze gniazda.
+- Ponowne użycie zajętego gniazda wymaga włączenia przełącznika `Użyj zajętego gniazda`.
+- Dialog tworzenia połączenia pozwala wybrać cel:
   - `Grupa`,
   - `Rozdzielnica`.
-- Przy laczeniu rozdzielnic lista gniazd jest filtrowana po typie wejscia rozdzielnicy podrzednej.
+- Przy łączeniu rozdzielnic lista gniazd jest filtrowana po typie wejścia rozdzielnicy podrzędnej.
 - Dialog `Dodaj z katalogu` w edytorze projektu ma:
   - wyszukiwanie po nazwie i producencie,
   - filtrowanie po kategorii,
-  - liste wynikow z wyborem urzadzenia,
-  - szybkie chipy ilosci `1`, `2`, `4`, `6`, `8`, `12`.
-- Dodano test widgetowy dodawania pozycji z katalogu przez wyszukiwanie i szybka ilosc.
-- Klient i lokacja w karcie projektu sa klikalne i otwieraja podsumowanie danych.
-- Lokacje maja model przylaczy energetycznych.
-- Ekran lokacji pozwala dodac, edytowac i usunac przylacza.
-- Ekran lokacji pozwala dodac wiele kontaktow do jednej lokacji.
-- Lokacja pokazuje maksymalna dostepna moc obiektu wyliczona z przylaczy.
-- Grupy zlaczy z lokacji mozna dodac do patchera jako zrodla zasilania projektu.
+  - listę wyników z wyborem urządzenia,
+  - szybkie chipy ilości `1`, `2`, `4`, `6`, `8`, `12`.
+- Dodano test widgetowy dodawania pozycji z katalogu przez wyszukiwanie i szybką ilość.
+- Klient i lokacja w karcie projektu są klikalne i otwierają podsumowanie danych.
+- Lokacje mają model przyłączy energetycznych.
+- Ekran lokacji pozwala dodać, edytować i usunąć przyłącza.
+- Ekran lokacji pozwala dodać wiele kontaktów do jednej lokacji.
+- Lokacja pokazuje maksymalną dostępną moc obiektu wyliczoną z przyłączy.
+- Grupy złączy z lokacji można dodać do patchera jako źródła zasilania projektu.
 - Dodano pierwszy model danych kratownic w projekcie:
   - `ProjectTruss`,
   - nazwa,
   - system kratownicy,
-  - dlugosc,
-  - limit calkowity,
-  - limit rozlozony kg/m,
-  - reczne obciazenie,
+  - długość,
+  - limit całkowity,
+  - limit rozłożony kg/m,
+  - ręczne obciążenie,
   - przypisane grupy,
   - notatki.
 - Dodano tabele Drift/SQLite `project_trusses`.
-- Podniesiono wersje schematu Drift do `7`.
-- Repozytorium projektow zapisuje i odczytuje kratownice razem z projektem.
+- Podniesiono wersję schematu Drift do `7`.
+- Repozytorium projektów zapisuje i odczytuje kratownice razem z projektem.
 - Dodano test repozytorium projektu dla kratownic.
-- Nie dodano jeszcze pelnego wizualnego patchera ani modulu kratownic.
+- Nie dodano jeszcze pełnego wizualnego patchera ani modułu kratownic.
 - Nie dodano jeszcze backupu JSON.
-- Naprawiono blad osieroconych polaczen: usuniecie grupy usuwa teraz takze `PowerConnection` wskazujace na te grupe (analogicznie do usuwania rozdzielnicy). Ten sam blad byl znanym problemem legacy (`docs/legacy_stagecalc_debug_context.md`) i mimo przepisania na Fluttera przeszedl niezauwazony przez niespojnosc miedzy `_deleteGroup` a `_deleteDistro`.
-- Dodano test widgetowy regresyjny dla usuwania grupy z aktywnymi polaczeniami.
-- Rozbito `project_editor_screen.dart` zgodnie z ADR-015: dodano `ProjectEditorController` (`ChangeNotifier`) z pelna logika mutacji projektu i ladowania danych referencyjnych, a klasy dialogow/kart przeniesiono do 9 plikow tematycznych w `presentation/project_editor/` (metadane projektu, karty rozdzielnic, dialog tworzenia rozdzielnicy, edytor sekcji custom, dialog ukladu/edycji gniazd, polaczenia, grupy/pozycje, katalog, wspolne helpery), polaczonych z ekranem przez `part`/`part of`. Kazdy plik miesci sie w przedziale ok. 100-560 linii.
-- `flutter analyze`, `flutter test` (27/27) i `flutter build windows` przechodza po refaktorze bez zmiany zachowania UI.
-- Dodano wsparcie bazy Drift na Web (ADR-016): `flutter build web` wczesniej sie nie kompilowal (`dart:io`/`dart:ffi` w `app_database.dart`). Rozdzielono polaczenie z baza na `connection_native.dart`/`connection_web.dart`/`connection_stub.dart` wybierane conditional importem. Web uzywa `drift/wasm.dart` + `sqlite3.wasm`/`drift_worker.js` w `web/`.
-- Zweryfikowano dzialanie w przegladarce (Chrome): demo projekt laduje sie z poprawnymi sumami, dodawanie projektu dziala w ramach sesji. Bez HTTPS trwalosc zapisu miedzy sesjami nie jest gwarantowana (patrz ADR-016, znane ograniczenie).
-- Wdrozono StageCalc jako projekt Flutter web pod Caddy na LXC 113 (`stagecalc`, 192.168.0.113), zastepujac placeholder w `/var/www/stagecalc`.
-- Na tym samym serwerze dziala PocketBase (`/opt/pocketbase`, systemd, port 8090 za Caddy `/api` i `/_`). Utworzono konto superusera i pelny schemat 13 kolekcji odzwierciedlajacy obecne tabele Drift (ADR-017).
-- Dodano `PocketBaseProjectSyncService` — pierwszy prawdziwy, jednokierunkowy push lokalnego `Project` (z grupami/pozycjami/rozdzielnicami/gniazdami/polaczeniami/kratownicami oraz opcjonalnym klientem/lokacja) do PocketBase, idempotentny (upsert po `local_id`), bez UI i bez obslugi konfliktow. Zweryfikowano recznie: `dart run tool/push_demo_project.dart` poprawnie tworzy i aktualizuje powiazane rekordy w PocketBase.
-- Reguly dostepu wszystkich kolekcji PocketBase sa na razie puste (publiczne) — do zaadresowania przed jakimkolwiek wyjsciem poza prywatna siec LAN.
-- Naprawiono blad kaskady rozdzielnica -> rozdzielnica: obciazenie dziecka trafialo na wewnetrzna etykiete fazy dziecka zamiast na faze gniazda rodzica, przez ktore dziecko jest podpiete. Dodano test regresyjny.
-- Zablokowano (jako ostrzezenie w patcherze) cykle w grafie rozdzielnic — `PatchValidationService` wykrywa cykl i `_DistroCard` pokazuje chip "Cykl w polaczeniach rozdzielnic". Odhaczono pkt 1 z poprzedniej listy "Nastepny krok".
-- `PatchValidationService.validate` przyjmuje teraz `ProjectPowerLoad` i wystawia przeciazenie gniazda/wejscia rozdzielnicy jako czesc `PatchValidationResult` (`isOutletOverloaded`, `isDistroOverloaded`), a nie tylko jako kolor chipa w UI.
-- Dodano limit wejscia dla rozdzielnic bez `inputConnectorTypeId` (suma gniazd, jak w legacy) oraz `manualInputMaxCurrentA` jako reczny override. Podniesiono schemat bazy do wersji `10` (nowa kolumna `manual_input_max_current_a` w `project_distros`), z migracja i polem w dialogu edycji rozdzielnicy.
-- Dodano pierwszy backup JSON (ADR-018): `AppBackupService` eksportuje projekty, klientow, lokacje, katalog i presety do jednego pliku JSON. Dostepny z ekranu "O aplikacji" na Android/Windows (zapis do `Documents/StageCalc/backups/`); na Web swiadomie niewspierany. Dodano brakujace `toJson`/`fromJson` do `Client`, `Location` i `PowerPreset`.
-- Zaktualizowano `docs/MIGRATION_PLAN.md` do aktualnego stanu (kilka wpisow bylo nieaktualnych, np. Etap 6A pokazywal jako "kolejny krok" cos, co juz dzialalo).
-- Dodano import backupu JSON (ADR-019): `AppBackupImportService` z osobnymi krokami `validate` (nic nie zapisuje, odrzuca caly import przy pierwszym niepoprawnym rekordzie) i `import` (zapisuje przez istniejace repozytoria, upsert po ID). UI na ekranie "O aplikacji": pole na sciezke pliku, przycisk "Wczytaj i zwaliduj", dialog potwierdzenia z liczba rekordow i ostrzezeniem o nadpisaniu. Bez file pickera na razie - uzytkownik wkleja sciezke.
-- Dodano `TrussLoadService` i trzeci widok "Kratownice" w edytorze projektu (ADR-020): lista, dodawanie/edycja (nazwa, dlugosc, reczne obciazenie, opcjonalne limity, notatki, przypisanie grup), usuwanie. Masa = suma wagi przypisanych grup + reczne obciazenie; porownanie z limitem calkowitym i rozlozonym kg/m, prog ostrzegawczy 90%. Bez hakow i interpolacji tabel nosnosci - to wymaga nowego schematu (pole `riggingPoints` w katalogu, tabele nosnosci producenta), ktorego jeszcze nie ma.
-- Naprawiono ten sam wzorzec osieroconych referencji co przy polaczeniach (ADR-015): usuniecie grupy czysci teraz tez jej ID z `assignedGroupIds` kazdej kratownicy.
-- Dodano `ProjectReportService.buildTextReport` (ADR-021): raport tekstowy projektu (podsumowanie, grupy, rozdzielnice z obciazeniem i ostrzezeniami, kratownice z masa i limitami), uzywajacy tych samych serwisow domenowych co UI. Ikona w AppBar edytora projektu, zapis do `Documents/StageCalc/reports/`. Wydzielono wspolny `writeLocalFile` (`infrastructure/files/local_file_writer/`) uzywany teraz przez backup i raport zamiast osobnych kopii tego samego kodu.
-- Etap 11 (ADR-022): przy przegladzie uprawnien platformowych okazalo sie, ze `AndroidManifest.xml` nie mial `android.permission.INTERNET`, mimo ze `PocketBaseProjectSyncService` juz laczy sie z siecia - zweryfikowano w scalonym manifescie release builda, ze uprawnienia faktycznie nigdzie nie bylo. Dodano brakujace uprawnienie. Dodano tez `tool/package_release.dart`, ktory buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip` (ADR-012F), zweryfikowane realnym buildem obu platform.
-- Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" w ekranie "O aplikacji" otwiera natywny wybor pliku zamiast wymagac recznego wklejenia sciezki. Bez nowych uprawnien Android (SAF, zgodnie z ADR-012E). Testy widgetowe podmieniaja `FilePickerPlatform.instance` na fake, bo `flutter test` nie potrafi wyswietlic prawdziwego natywnego dialogu.
-- Dodano haki kratownic (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) daja wymagana liczbe hakow na grupe; nowa tabela `project_group_hook_assignments` trzyma przypisane haki (wybierane z katalogu, waga dolicza sie do masy grupy w `TrussLoadService`). Nowa sekcja "Haki grup urzadzen" w widoku Kratownice. Schemat bazy podniesiony do wersji `11`.
-- Dodano eksport raportu do PDF (ADR-027), uzupelniajac raport tekstowy (ADR-021): `ProjectPdfReportService` uzywa tych samych serwisow domenowych co UI i raport tekstowy, pakiet `pdf` (czysty Dart), uklad tabelaryczny z akcentem GreenCrew. Nowa ikona w AppBar edytora projektu obok eksportu tekstowego. `local_file_writer` rozszerzony o `writeLocalBytesFile` dla pierwszego binarnego pliku. Testy ograniczone do poprawnosci pliku (sygnatura `%PDF-`) - pakiet `pdf` nie ma API do odczytu tresci z powrotem.
-- Dodano dwukierunkowa synchronizacje z PocketBase (ADR-026), zamykajac Etap 10: piec serwisow synchronizujacych (`PocketBase{Client,Location,PowerPreset,Catalog,Project}SyncService`) + `SyncCoordinator`. Strategia konfliktow: ostatni zapis wygrywa po `updatedAt` (`decideSyncDirection`), reconciliacja na poziomie calego agregatu (caly projekt/lokacja/preset/katalog na raz, nie pojedyncze zagniezdzone rekordy). Nic nigdy nie jest twardo usuwane - upsert z flaga `deleted`/`deleted_at` po obu stronach, zgodnie z juz istniejacym soft-delete lokalnie. Nowa tabela `AppSettings` + karta "Synchronizacja" w "O aplikacji" (przelacznik automatycznej synchronizacji, przycisk "Synchronizuj teraz" w trybie recznym, status ostatniej proby); automatyczny sync co 15 minut w `StageCalcShell`, gdy wlaczony. Dopisano brakujace pola/kolekcje do zdalnego schematu PocketBase (z ADR-020/024/025) jako pliki migracji, teraz wersjonowane w repozytorium (`pocketbase/pb_migrations/`), zweryfikowane realnym push+pull przeciwko serwerowi LXC 113 (`tool/sync_demo_data.dart`, uruchamiane przez `flutter test`, nie `dart run` - `AppDatabase` importuje teraz `path_provider`, ktorego zwykla maszyna Dart nie skompiluje). Zastepuje jednokierunkowy `pushProject` z ADR-017.
-- Dodano interpolacje tabel nosnosci kratownic (ADR-025), zamykajac Etap 7 w calosci: `ProjectTruss.trussCatalogDeviceId` linkuje kratownice do modelu z katalogu, `CatalogDevice.loadChart` trzyma tabele nosnosci (edytowalna w formularzu katalogu dla kategorii Rigging). `TrussLoadService` interpoluje limit punktowy/rozlozony po dlugosci - dokladne trafienie, interpolacja miedzy punktami, ekstrapolacja z ostrzezeniem poza zakres tabeli (port logiki z legacy). Reczne limity dzialaja jako override per pole, tak jak `manualInputMaxCurrentA`. Schemat bazy podniesiony do wersji `12`.
-- Dodano prawdziwa autoryzacje PocketBase (ADR-028), zastepujac puste/publiczne reguly dostepu z ADR-017: konta osobiste (ponownie uzyta domyslna kolekcja `users`, nie nowa), pole `owner` na `clients`/`projects`, trzy poziomy regul dostepu (wspolne dla katalogu/lokacji/presetow, wlasciciel dla klientow/projektow, wlasciciel-rodzica dla ich zagniezdzonych kolekcji) na wszystkich 16 kolekcjach. Nowa karta "Konto" w "O aplikacji" (logowanie/wylogowanie), sesja logowania trwala przez restart (`AsyncAuthStore`, nowa kolumna `AppSettings.authSessionData`), stemplowanie wlasciciela przy pierwszym pushu klienta/projektu, `SyncCoordinator` odmawia synchronizacji (z czytelnym komunikatem), dopoki nikt nie jest zalogowany - praca lokalna nie jest tym blokowana. Schemat bazy podniesiony do wersji `14`. Zweryfikowano recznie pelny przeplyw logowanie -> push -> pull -> odmowa dostepu dla niezalogowanego, na tymczasowym koncie testowym utworzonym i usunietym wylacznie na czas weryfikacji. `tool/sync_demo_data.dart` zaktualizowany o wymagane logowanie (`SYNC_DEMO_EMAIL`/`SYNC_DEMO_PASSWORD`).
-- Dodano wizualny uklad patchera (ADR-029), zamykajac pozycje 1 z poprzedniej listy "Nastepny krok": `_OutletTile` zastapil informacyjne pigulki gniazd klikalna siatka kafelkow (faza, kropki zajetosci L1/L2/L3, obciazenie, podlaczony cel). Dotkniecie pustego gniazda otwiera nowy `_QuickConnectDialog` (cel + fazy dla gniazd "All" + notatka), dotkniecie zajetego otwiera `_OutletDetailsDialog` (lista polaczen, edytowalne notatki, rozlaczenie, "Dodaj kolejne" gdy zostala wolna faza). `PowerConnection.notes` (pole w schemacie od ADR-017) dostal wreszcie UI. Zbiorowy dialog "Polacz" i lista "Polaczenia" zostaly bez zmian jako opcja do podlaczenia jednej grupy do wielu gniazd naraz. Nowy test widgetowy pokrywa pelny cykl tap-connect-details-disconnect.
-- Dodano wielokrotny wybor typow zlacz w katalogu urzadzen (ADR-030): nowy enum `CatalogConnectorType` (23 wartosci, zasilanie + sygnal), `CatalogDevice.connectorTypeIds` (lista) zastapil wolny tekst `connectorTypeId`, formularz katalogu ma teraz siatke `FilterChip` zamiast `TextField`. Odczyt starych/nierozpoznanych wartosci jest zawsze najpierw probowany przez dopasowanie do aliasow (pokrywa dane demo i typowe warianty zapisu), a to, co sie nie dopasuje, jest po cichu pomijane - nigdy zgadywane. Schemat bazy podniesiony do wersji `15` (nowa kolumna `connectorTypeIdsJson`, stara `connectorTypeId` zostaje nieuzywana). Zero zmian schematu PocketBase (pole zdalne juz bylo zwyklym tekstem). `docs/CATALOG_IMPORT_GUIDE.md` zaktualizowany o pelna liste dozwolonych wartosci, zweryfikowana przeciwko `AppBackupImportService`.
-- Naprawiono zgloszenie "Android nie wstaje" po v0.3.0 (v0.3.1): `main()` juz nie blokuje `runApp()` na nieopakowanym `await PocketBaseClientProvider.initialize()` - owiniete w `try`/`timeout(5s)`, awaria/spowolnienie tego kroku (otwarcie lokalnej bazy + przywrocenie sesji logowania) nie moze juz uniemozliwic pokazania UI. Dodano tez `network_security_config.xml` zezwalajacy na `http://` (bez TLS, ADR-017) wylacznie do adresu PocketBase - Android 9+ domyslnie blokuje cleartext dla nowoczesnego `targetSdkVersion`, co psulo logowanie/sync na Androidzie niezaleznie od problemu ze startem. **Nie zweryfikowano na realnym urzadzeniu/emulatorze** - srodowisko tej sesji nie utrzymywalo stabilnie uruchomionego emulatora Android (powtarzajace sie zabicia procesu z powodu niskiej pamieci) - do potwierdzenia przez uzytkownika.
-- Naprawiono zgloszenie "offline nie da sie dodac projektu/katalogu/lokacji/klienta" (v0.3.2): wszystkie cztery ekrany list mialy ten sam blad - akcja "Dodaj" cicho przerywala, gdy lokalne repozytorium nie zdazylo/nie udalo sie wczytac (`_repository == null`), bez zadnej informacji zwrotnej. Miejsce sprawdzenia bylo niespojne (Klienci/Lokacje/Katalog sprawdzaly przed otwarciem dialogu - przycisk "nic nie robil"; Projekty sprawdzaly dopiero po zamknieciu dialogu - panel sie pokazywal, ale zapis cicho nie wychodzil), co dawalo dwa rozne objawy tego samego rdzenia problemu. Dodano `_ensureRepository()` na wszystkich czterech ekranach (probuje ponownie wczytac, a jesli to tez zawiedzie, pokazuje prawdziwy komunikat bledu) i ujednolicono Projekty do tego samego wzorca sprawdzania co reszta. Komunikaty bledow wczytywania pokazuja teraz tresc wyjatku.
-- Ustalono i naprawiono rzeczywista przyczyne zgloszenia "offline nie da sie nic dodac" (v0.3.3), dzieki komunikatowi bledu, ktory v0.3.2 zaczela pokazywac: `SqliteException: duplicate column name: rigging_points` przy `ALTER TABLE "catalog_devices" ADD COLUMN "rigging_points"` (krok migracji `from < 11`) - kolumna juz fizycznie istniala, mimo ze `PRAGMA user_version` bylo nizsze niz 11 na tym urzadzeniu. Wszystkie kroki `migrator.addColumn`/`migrator.createTable` w `onUpgrade` (wersje 2-15) sa teraz idempotentne (`_addColumnIfMissing`/`_createTableIfMissing` w `app_database.dart` lapia i pomijaja "duplicate column name"/"already exists" zamiast wywalac cala migracje). Dokladny mechanizm rozjazdu sledzonej wersji z rzeczywistym schematem nie zostal ustalony, ale poprawka tego nie wymaga. Nowy test regresyjny (`test/infrastructure/local_database/app_database_migration_test.dart`) odtwarza dokladnie ten scenariusz na prawdziwym pliku sqlite.
-- v0.3.3 **nie dzialala naprawde** mimo zielonego testu (v0.3.4): `_addColumnIfMissing`/`_createTableIfMissing` lapaly `on SqliteException`, ale prawdziwa aplikacja uzywa `NativeDatabase.createInBackground` (osobny izolat), ktory opakowuje kazdy blad przekraczajacy granice izolatu w `DriftRemoteException` - dopasowanie po typie nigdy nie trafialo. Test w v0.3.3 uzywal zwyklego `NativeDatabase(File(...))` (bez izolatu, bez opakowania), wiec przechodzil mimo ze poprawka byla martwa na produkcji. Naprawiono dopasowaniem po tresci bledu (`error.toString()`) zamiast po typie, i przepisano test na `NativeDatabase.createInBackground`, dokladnie jak w `connection_native.dart` - z powrotem na dopasowanie po typie test teraz poprawnie wykrywa regresje. **Zweryfikowano tym razem naprawde**: uruchomiono zbudowany `.exe` bezposrednio na tej samej, uszkodzonej lokalnej bazie uzytkownika (nie tylko test) przez zdalne sterowanie pulpitem - ekran bledu zniknal, Projekty/Katalog/Lokacje wczytaly prawdziwe dane, nowo utworzony projekt poprawnie sie zapisal.
-- Dodano kategorie oswietlenie/naglosnienie/multimedia w katalogu urzadzen (ADR-031), zastepujac jedna ogolna kategorie "Urzadzenie" - zgodnie z pierwotnym podzialem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urzadzenie" pokazuje tylko pola sensowne dla wybranej kategorii (Rigging: bez Mocy/Pradu/zlacz/punktow zaczepienia; Kabel: bez Mocy/Pradu/Producenta) - ukryte pola sa tez jawnie zerowane przy zapisie, nie tylko chowane wizualnie. Dodano filtr kategorii (chipy) na ekranie Katalog. Bez migracji schematu (kategoria to zwykle pole tekstowe) - stare urzadzenia z kategoria "Urzadzenie" wczytuja sie jako "Inne".
-- Dodano wiele typow zlacz w jednej grupie zlaczy lokacji (ADR-032): `LocationPowerConnector` (grupa) ma teraz `entries: List<LocationConnectorEntry>` zamiast pojedynczego `connectorTypeId`/`quantity`, wiec np. "Rozdzielnia sceny" moze byc jednoczesnie 2x CEE 32A 5P + 4x Schuko. Dialog edycji grupy dostal liste wierszy typ+ilosc z przyciskiem "Dodaj typ zlacza". `distro_create_dialog.dart` (tworzenie rozdzielnicy projektu z grupy lokacji) generuje teraz gniazda dla kazdego typu z osobna. Lokalna baza: nowa kolumna `entriesJson` (schemat `16`), stare kolumny zostaja fizycznie `NOT NULL` bez zmian (aplikacja nadal je wypelnia pierwszym wpisem, tylko po to zeby ten warunek zostal spelniony) - swiadoma decyzja po doswiadczeniu z v0.3.3/v0.3.4, zeby nie polegac na nullability, ktorej nie da sie zweryfikowac na juz-zmigrowanych bazach uzytkownikow. PocketBase: zero migracji, ponowne uzycie pola `connector_type_id` na JSON, jak w ADR-030/031.
+- Naprawiono błąd osieroconych połączeń: usunięcie grupy usuwa teraz także `PowerConnection` wskazujące na tę grupę (analogicznie do usuwania rozdzielnicy). Ten sam błąd był znanym problemem legacy (`docs/legacy_stagecalc_debug_context.md`) i mimo przepisania na Fluttera przeszedł niezauważony przez niespójność między `_deleteGroup` a `_deleteDistro`.
+- Dodano test widgetowy regresyjny dla usuwania grupy z aktywnymi połączeniami.
+- Rozbito `project_editor_screen.dart` zgodnie z ADR-015: dodano `ProjectEditorController` (`ChangeNotifier`) z pełną logiką mutacji projektu i ładowania danych referencyjnych, a klasy dialogów/kart przeniesiono do 9 plików tematycznych w `presentation/project_editor/` (metadane projektu, karty rozdzielnic, dialog tworzenia rozdzielnicy, edytor sekcji custom, dialog układu/edycji gniazd, połączenia, grupy/pozycje, katalog, wspólne helpery), połączonych z ekranem przez `part`/`part of`. Każdy plik mieści się w przedziale ok. 100-560 linii.
+- `flutter analyze`, `flutter test` (27/27) i `flutter build windows` przechodzą po refaktorze bez zmiany zachowania UI.
+- Dodano wsparcie bazy Drift na Web (ADR-016): `flutter build web` wcześniej się nie kompilował (`dart:io`/`dart:ffi` w `app_database.dart`). Rozdzielono połączenie z bazą na `connection_native.dart`/`connection_web.dart`/`connection_stub.dart` wybierane conditional importem. Web używa `drift/wasm.dart` + `sqlite3.wasm`/`drift_worker.js` w `web/`.
+- Zweryfikowano działanie w przeglądarce (Chrome): demo projekt ładuje się z poprawnymi sumami, dodawanie projektu działa w ramach sesji. Bez HTTPS trwałość zapisu między sesjami nie jest gwarantowana (patrz ADR-016, znane ograniczenie).
+- Wdrożono StageCalc jako projekt Flutter web pod Caddy na LXC 113 (`stagecalc`, 192.168.0.113), zastępując placeholder w `/var/www/stagecalc`.
+- Na tym samym serwerze działa PocketBase (`/opt/pocketbase`, systemd, port 8090 za Caddy `/api` i `/_`). Utworzono konto superusera i pełny schemat 13 kolekcji odzwierciedlający obecne tabele Drift (ADR-017).
+- Dodano `PocketBaseProjectSyncService` — pierwszy prawdziwy, jednokierunkowy push lokalnego `Project` (z grupami/pozycjami/rozdzielnicami/gniazdami/połączeniami/kratownicami oraz opcjonalnym klientem/lokacją) do PocketBase, idempotentny (upsert po `local_id`), bez UI i bez obsługi konfliktów. Zweryfikowano ręcznie: `dart run tool/push_demo_project.dart` poprawnie tworzy i aktualizuje powiązane rekordy w PocketBase.
+- Reguły dostępu wszystkich kolekcji PocketBase są na razie puste (publiczne) — do zaadresowania przed jakimkolwiek wyjściem poza prywatną sieć LAN.
+- Naprawiono błąd kaskady rozdzielnica -> rozdzielnica: obciążenie dziecka trafiało na wewnętrzną etykietę fazy dziecka zamiast na fazę gniazda rodzica, przez które dziecko jest podpięte. Dodano test regresyjny.
+- Zablokowano (jako ostrzeżenie w patcherze) cykle w grafie rozdzielnic — `PatchValidationService` wykrywa cykl i `_DistroCard` pokazuje chip "Cykl w połączeniach rozdzielnic". Odhaczono pkt 1 z poprzedniej listy "Następny krok".
+- `PatchValidationService.validate` przyjmuje teraz `ProjectPowerLoad` i wystawia przeciążenie gniazda/wejścia rozdzielnicy jako część `PatchValidationResult` (`isOutletOverloaded`, `isDistroOverloaded`), a nie tylko jako kolor chipa w UI.
+- Dodano limit wejścia dla rozdzielnic bez `inputConnectorTypeId` (suma gniazd, jak w legacy) oraz `manualInputMaxCurrentA` jako ręczny override. Podniesiono schemat bazy do wersji `10` (nowa kolumna `manual_input_max_current_a` w `project_distros`), z migracją i polem w dialogu edycji rozdzielnicy.
+- Dodano pierwszy backup JSON (ADR-018): `AppBackupService` eksportuje projekty, klientów, lokacje, katalog i presety do jednego pliku JSON. Dostępny z ekranu "O aplikacji" na Android/Windows (zapis do `Documents/StageCalc/backups/`); na Web na razie świadomie niewspierany. Dodano brakujące `toJson`/`fromJson` do `Client`, `Location` i `PowerPreset`.
+- Zaktualizowano `docs/MIGRATION_PLAN.md` do aktualnego stanu (kilka wpisów było nieaktualnych, np. Etap 6A pokazywał jako "kolejny krok" coś, co już działało).
+- Dodano import backupu JSON (ADR-019): `AppBackupImportService` z osobnymi krokami `validate` (nic nie zapisuje, odrzuca cały import przy pierwszym niepoprawnym rekordzie) i `import` (zapisuje przez istniejące repozytoria, upsert po ID). UI na ekranie "O aplikacji": pole na ścieżkę pliku, przycisk "Wczytaj i zwaliduj", dialog potwierdzenia z liczbą rekordów i ostrzeżeniem o nadpisaniu. Bez file pickera na razie - użytkownik wkleja ścieżkę.
+- Dodano `TrussLoadService` i trzeci widok "Kratownice" w edytorze projektu (ADR-020): lista, dodawanie/edycja (nazwa, długość, ręczne obciążenie, opcjonalne limity, notatki, przypisanie grup), usuwanie. Masa = suma wagi przypisanych grup + ręczne obciążenie; porównanie z limitem całkowitym i rozłożonym kg/m, próg ostrzegawczy 90%. Bez haków i interpolacji tabel nośności - to wymaga nowego schematu (pole `riggingPoints` w katalogu, tabele nośności producenta), którego jeszcze nie ma.
+- Naprawiono ten sam wzorzec osieroconych referencji co przy połączeniach (ADR-015): usunięcie grupy czyści teraz też jej ID z `assignedGroupIds` każdej kratownicy.
+- Dodano `ProjectReportService.buildTextReport` (ADR-021): raport tekstowy projektu (podsumowanie, grupy, rozdzielnice z obciążeniem i ostrzeżeniami, kratownice z masą i limitami), używający tych samych serwisów domenowych co UI. Ikona w AppBar edytora projektu, zapis do `Documents/StageCalc/reports/`. Wydzielono wspólny `writeLocalFile` (`infrastructure/files/local_file_writer/`) używany teraz przez backup i raport zamiast osobnych kopii tego samego kodu.
+- Etap 11 (ADR-022): przy przeglądzie uprawnień platformowych okazało się, że `AndroidManifest.xml` nie miał `android.permission.INTERNET`, mimo że `PocketBaseProjectSyncService` już łączy się z siecią - zweryfikowano w scalonym manifeście release builda, że uprawnienia faktycznie nigdzie nie było. Dodano brakujące uprawnienie. Dodano też `tool/package_release.dart`, który buduje i pakuje release Android/Windows do `dist/StageCalc-vX_Y_Z-android.apk` / `-windows.zip` (ADR-012F), zweryfikowane realnym buildem obu platform.
+- Dodano file picker dla importu backupu (ADR-023): przycisk "Wybierz plik" w ekranie "O aplikacji" otwiera natywny wybór pliku zamiast wymagać ręcznego wklejenia ścieżki. Bez nowych uprawnień Android (SAF, zgodnie z ADR-012E). Testy widgetowe podmieniają `FilePickerPlatform.instance` na fake, bo `flutter test` nie potrafi wyświetlić prawdziwego natywnego dialogu.
+- Dodano haki kratownic (ADR-024): `CatalogDevice.riggingPoints` + `ProjectItem.riggingPointsSnapshot` (per ADR-008) dają wymaganą liczbę haków na grupę; nowa tabela `project_group_hook_assignments` trzyma przypisane haki (wybierane z katalogu, waga dolicza się do masy grupy w `TrussLoadService`). Nowa sekcja "Haki grup urządzeń" w widoku Kratownice. Schemat bazy podniesiony do wersji `11`.
+- Dodano eksport raportu do PDF (ADR-027), uzupełniając raport tekstowy (ADR-021): `ProjectPdfReportService` używa tych samych serwisów domenowych co UI i raport tekstowy, pakiet `pdf` (czysty Dart), układ tabelaryczny z akcentem GreenCrew. Nowa ikona w AppBar edytora projektu obok eksportu tekstowego. `local_file_writer` rozszerzony o `writeLocalBytesFile` dla pierwszego binarnego pliku. Testy ograniczone do poprawności pliku (sygnatura `%PDF-`) - pakiet `pdf` nie ma API do odczytu treści z powrotem.
+- Dodano dwukierunkową synchronizację z PocketBase (ADR-026), zamykając Etap 10: pięć serwisów synchronizujących (`PocketBase{Client,Location,PowerPreset,Catalog,Project}SyncService`) + `SyncCoordinator`. Strategia konfliktów: ostatni zapis wygrywa po `updatedAt` (`decideSyncDirection`), reconciliacja na poziomie całego agregatu (cały projekt/lokacja/preset/katalog na raz, nie pojedyncze zagnieżdżone rekordy). Nic nigdy nie jest twardo usuwane - upsert z flagą `deleted`/`deleted_at` po obu stronach, zgodnie z już istniejącym soft-delete lokalnie. Nowa tabela `AppSettings` + karta "Synchronizacja" w "O aplikacji" (przełącznik automatycznej synchronizacji, przycisk "Synchronizuj teraz" w trybie ręcznym, status ostatniej próby); automatyczny sync co 15 minut w `StageCalcShell`, gdy włączony. Dopisano brakujące pola/kolekcje do zdalnego schematu PocketBase (z ADR-020/024/025) jako pliki migracji, teraz wersjonowane w repozytorium (`pocketbase/pb_migrations/`), zweryfikowane realnym push+pull przeciwko serwerowi LXC 113 (`tool/sync_demo_data.dart`, uruchamiane przez `flutter test`, nie `dart run` - `AppDatabase` importuje teraz `path_provider`, którego zwykła maszyna Dart nie skompiluje). Zastępuje jednokierunkowy `pushProject` z ADR-017.
+- Dodano interpolację tabel nośności kratownic (ADR-025), zamykając Etap 7 w całości: `ProjectTruss.trussCatalogDeviceId` linkuje kratownicę do modelu z katalogu, `CatalogDevice.loadChart` trzyma tabelę nośności (edytowalną w formularzu katalogu dla kategorii Rigging). `TrussLoadService` interpoluje limit punktowy/rozłożony po długości - dokładne trafienie, interpolacja między punktami, ekstrapolacja z ostrzeżeniem poza zakres tabeli (port logiki z legacy). Ręczne limity działają jako override per pole, tak jak `manualInputMaxCurrentA`. Schemat bazy podniesiony do wersji `12`.
+- Dodano prawdziwą autoryzację PocketBase (ADR-028), zastępując puste/publiczne reguły dostępu z ADR-017: konta osobiste (ponownie użyta domyślna kolekcja `users`, nie nowa), pole `owner` na `clients`/`projects`, trzy poziomy reguł dostępu (wspólne dla katalogu/lokacji/presetów, właściciel dla klientów/projektów, właściciel-rodzica dla ich zagnieżdżonych kolekcji) na wszystkich 16 kolekcjach. Nowa karta "Konto" w "O aplikacji" (logowanie/wylogowanie), sesja logowania trwała przez restart (`AsyncAuthStore`, nowa kolumna `AppSettings.authSessionData`), stemplowanie właściciela przy pierwszym pushu klienta/projektu, `SyncCoordinator` odmawia synchronizacji (z czytelnym komunikatem), dopóki nikt nie jest zalogowany - praca lokalna nie jest tym blokowana. Schemat bazy podniesiony do wersji `14`. Zweryfikowano ręcznie pełny przepływ logowanie -> push -> pull -> odmowa dostępu dla niezalogowanego, na tymczasowym koncie testowym utworzonym i usuniętym wyłącznie na czas weryfikacji. `tool/sync_demo_data.dart` zaktualizowany o wymagane logowanie (`SYNC_DEMO_EMAIL`/`SYNC_DEMO_PASSWORD`).
+- Dodano wizualny układ patchera (ADR-029), zamykając pozycję 1 z poprzedniej listy "Następny krok": `_OutletTile` zastąpił informacyjne pigułki gniazd klikalną siatką kafelków (faza, kropki zajętości L1/L2/L3, obciążenie, podłączony cel). Dotknięcie pustego gniazda otwiera nowy `_QuickConnectDialog` (cel + fazy dla gniazd "All" + notatka), dotknięcie zajętego otwiera `_OutletDetailsDialog` (lista połączeń, edytowalne notatki, rozłączenie, "Dodaj kolejne" gdy została wolna faza). `PowerConnection.notes` (pole w schemacie od ADR-017) dostał wreszcie UI. Zbiorowy dialog "Połącz" i lista "Połączenia" zostały bez zmian jako opcja do podłączenia jednej grupy do wielu gniazd naraz. Nowy test widgetowy pokrywa pełny cykl tap-connect-details-disconnect.
+- Dodano wielokrotny wybór typów złącz w katalogu urządzeń (ADR-030): nowy enum `CatalogConnectorType` (23 wartości, zasilanie + sygnał), `CatalogDevice.connectorTypeIds` (lista) zastąpił wolny tekst `connectorTypeId`, formularz katalogu ma teraz siatkę `FilterChip` zamiast `TextField`. Odczyt starych/nierozpoznanych wartości jest zawsze najpierw próbowany przez dopasowanie do aliasów (pokrywa dane demo i typowe warianty zapisu), a to, co się nie dopasuje, jest po cichu pomijane - nigdy zgadywane. Schemat bazy podniesiony do wersji `15` (nowa kolumna `connectorTypeIdsJson`, stara `connectorTypeId` zostaje nieużywana). Zero zmian schematu PocketBase (pole zdalne już było zwykłym tekstem). `docs/CATALOG_IMPORT_GUIDE.md` zaktualizowany o pełną listę dozwolonych wartości, zweryfikowana przeciwko `AppBackupImportService`.
+- Naprawiono zgłoszenie "Android nie wstaje" po v0.3.0 (v0.3.1): `main()` już nie blokuje `runApp()` na nieopakowanym `await PocketBaseClientProvider.initialize()` - owinięte w `try`/`timeout(5s)`, awaria/spowolnienie tego kroku (otwarcie lokalnej bazy + przywrócenie sesji logowania) nie może już uniemożliwić pokazania UI. Dodano też `network_security_config.xml` zezwalający na `http://` (bez TLS, ADR-017) wyłącznie do adresu PocketBase - Android 9+ domyślnie blokuje cleartext dla nowoczesnego `targetSdkVersion`, co psuło logowanie/sync na Androidzie niezależnie od problemu ze startem. **Nie zweryfikowano na realnym urządzeniu/emulatorze** - środowisko tej sesji nie utrzymywało stabilnie uruchomionego emulatora Android (powtarzające się zabicia procesu z powodu niskiej pamięci) - do potwierdzenia przez użytkownika.
+- Naprawiono zgłoszenie "offline nie da się dodać projektu/katalogu/lokacji/klienta" (v0.3.2): wszystkie cztery ekrany list miały ten sam błąd - akcja "Dodaj" cicho przerywała, gdy lokalne repozytorium nie zdążyło/nie udało się wczytać (`_repository == null`), bez żadnej informacji zwrotnej. Miejsce sprawdzenia było niespójne (Klienci/Lokacje/Katalog sprawdzały przed otwarciem dialogu - przycisk "nic nie robił"; Projekty sprawdzały dopiero po zamknięciu dialogu - panel się pokazywał, ale zapis cicho nie wychodził), co dawało dwa różne objawy tego samego rdzenia problemu. Dodano `_ensureRepository()` na wszystkich czterech ekranach (próbuje ponownie wczytać, a jeśli to też zawiedzie, pokazuje prawdziwy komunikat błędu) i ujednolicono Projekty do tego samego wzorca sprawdzania co reszta. Komunikaty błędów wczytywania pokazują teraz treść wyjątku.
+- Ustalono i naprawiono rzeczywistą przyczynę zgłoszenia "offline nie da się nic dodać" (v0.3.3), dzięki komunikatowi błędu, który v0.3.2 zaczęła pokazywać: `SqliteException: duplicate column name: rigging_points` przy `ALTER TABLE "catalog_devices" ADD COLUMN "rigging_points"` (krok migracji `from < 11`) - kolumna już fizycznie istniała, mimo że `PRAGMA user_version` było niższe niż 11 na tym urządzeniu. Wszystkie kroki `migrator.addColumn`/`migrator.createTable` w `onUpgrade` (wersje 2-15) są teraz idempotentne (`_addColumnIfMissing`/`_createTableIfMissing` w `app_database.dart` łapią i pomijają "duplicate column name"/"already exists" zamiast wywalać całą migrację). Dokładny mechanizm rozjazdu śledzonej wersji z rzeczywistym schematem nie został ustalony, ale poprawka tego nie wymaga. Nowy test regresyjny (`test/infrastructure/local_database/app_database_migration_test.dart`) odtwarza dokładnie ten scenariusz na prawdziwym pliku sqlite.
+- v0.3.3 **nie działała naprawdę** mimo zielonego testu (v0.3.4): `_addColumnIfMissing`/`_createTableIfMissing` łapały `on SqliteException`, ale prawdziwa aplikacja używa `NativeDatabase.createInBackground` (osobny izolat), który opakowuje każdy błąd przekraczający granicę izolatu w `DriftRemoteException` - dopasowanie po typie nigdy nie trafiało. Test w v0.3.3 używał zwykłego `NativeDatabase(File(...))` (bez izolatu, bez opakowania), więc przechodził mimo że poprawka była martwa na produkcji. Naprawiono dopasowaniem po treści błędu (`error.toString()`) zamiast po typie, i przepisano test na `NativeDatabase.createInBackground`, dokładnie jak w `connection_native.dart` - z powrotem na dopasowanie po typie test teraz poprawnie wykrywa regresję. **Zweryfikowano tym razem naprawdę**: uruchomiono zbudowany `.exe` bezpośrednio na tej samej, uszkodzonej lokalnej bazie użytkownika (nie tylko test) przez zdalne sterowanie pulpitem - ekran błędu zniknął, Projekty/Katalog/Lokacje wczytały prawdziwe dane, nowo utworzony projekt poprawnie się zapisał.
+- Dodano kategorie oświetlenie/nagłośnienie/multimedia w katalogu urządzeń (ADR-031), zastępując jedną ogólną kategorię "Urządzenie" - zgodnie z pierwotnym podziałem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urządzenie" pokazuje tylko pola sensowne dla wybranej kategorii (Rigging: bez Mocy/Prądu/złącz/punktów zaczepienia; Kabel: bez Mocy/Prądu/Producenta) - ukryte pola są też jawnie zerowane przy zapisie, nie tylko chowane wizualnie. Dodano filtr kategorii (chipy) na ekranie Katalog. Bez migracji schematu (kategoria to zwykłe pole tekstowe) - stare urządzenia z kategorią "Urządzenie" wczytują się jako "Inne".
+- Dodano wiele typów złącz w jednej grupie złączy lokacji (ADR-032): `LocationPowerConnector` (grupa) ma teraz `entries: List<LocationConnectorEntry>` zamiast pojedynczego `connectorTypeId`/`quantity`, więc np. "Rozdzielnia sceny" może być jednocześnie 2x CEE 32A 5P + 4x Schuko. Dialog edycji grupy dostał listę wierszy typ+ilość z przyciskiem "Dodaj typ złącza". `distro_create_dialog.dart` (tworzenie rozdzielnicy projektu z grupy lokacji) generuje teraz gniazda dla każdego typu z osobna. Lokalna baza: nowa kolumna `entriesJson` (schemat `16`), stare kolumny zostają fizycznie `NOT NULL` bez zmian (aplikacja nadal je wypełnia pierwszym wpisem, tylko po to żeby ten warunek został spełniony) - świadoma decyzja po doświadczeniu z v0.3.3/v0.3.4, żeby nie polegać na nullability, której nie da się zweryfikować na już-zmigrowanych bazach użytkowników. PocketBase: zero migracji, ponowne użycie pola `connector_type_id` na JSON, jak w ADR-030/031.
+- Dodano font Roboto (`assets/fonts/`, licencja OFL-1.1) do eksportu PDF (ADR-033), zastępując domyślny Helvetica pakietu `pdf`, który nie ma wsparcia Unicode - bez tego każdy polski znak diakrytyczny w raporcie PDF renderowałby się jako brakujący/uszkodzony glif. Przy okazji dodano polskie znaki diakrytyczne we wszystkich tekstach UI Fluttera i w dokumentacji tej sesji (dotąd celowo pisanych czystym ASCII właśnie z myślą o tym ograniczeniu PDF-a) - zweryfikowano zarówno w UI, jak i w realnie wyeksportowanym pliku PDF.
 
-## Nastepny krok
+## Następny krok
 
-1. Potwierdzic na realnym urzadzeniu/emulatorze Android, ze v0.3.1 faktycznie naprawia "Android nie wstaje" - poprawka jest oparta na przegladzie kodu, nie na powtorzeniu bledu.
-2. Pelny branding PDF (font Roboto, logo StageCalc) - obecny eksport uzywa domyslnych fontow PDF.
-3. Podpisywanie APK wlasnym kluczem release (obecnie klucz debug) i ewentualny CI wokol `tool/package_release.dart`. Nie wymaga konta Google Play - to osobna, prostsza sprawa (lokalny keystore przez `keytool`), do zrobienia gdy bedzie potrzebna.
-4. Rozszerzyc `tool/sync_demo_data.dart` o rozdzielnice/polaczenia/kratownice/haki w danych demo - te sciezki syncu uzywaja tego samego wzorca co juz zweryfikowane grupy/pozycje, ale nie sa dzis osobno cwiczone.
-5. Utworzyc rzeczywiste konta PocketBase dla ekipy (obecnie tylko superuser moze je zakladac, ADR-028) i zweryfikowac logowanie z prawdziwego urzadzenia (Android/Windows), nie tylko skryptem testowym.
-6. Przypisac wlasciciela (przez superusera) do klientow/projektow utworzonych przed ADR-028, jesli maja dalej byc synchronizowane - w obecnym stanie sa lokalnie nienaruszone, ale niesynchronizowalne (`owner` puste nie pasuje do zadnego konta).
-7. Usunac tymczasowe konto testowe `crew-test@stagecalc.local` z serwera LXC 113 (zostalo z weryfikacji ADR-028 - narzedzie do usuwania danych zostalo zablokowane przez klasyfikator bezpieczenstwa Claude Code w tej sesji; do usuniecia recznie przez `pocketbase migrate down 1` albo panel admina).
-8. Utrzymac zielona sciezke `flutter analyze`, `flutter test` i okresowy build Windows/Web.
+1. Potwierdzić na realnym urządzeniu/emulatorze Android, że v0.3.1 faktycznie naprawia "Android nie wstaje" - poprawka jest oparta na przeglądzie kodu, nie na powtórzeniu błędu.
+2. Pełny branding PDF (logo StageCalc w nagłówku raportu) - font Roboto już dodany (ADR-033), zostaje tylko logo.
+3. Podpisywanie APK własnym kluczem release (obecnie klucz debug) i ewentualny CI wokół `tool/package_release.dart`. Nie wymaga konta Google Play - to osobna, prostsza sprawa (lokalny keystore przez `keytool`), do zrobienia gdy będzie potrzebna.
+4. Rozszerzyć `tool/sync_demo_data.dart` o rozdzielnice/połączenia/kratownice/haki w danych demo - te ścieżki syncu używają tego samego wzorca co już zweryfikowane grupy/pozycje, ale nie są dziś osobno ćwiczone.
+5. Utworzyć rzeczywiste konta PocketBase dla ekipy (obecnie tylko superuser może je zakładać, ADR-028) i zweryfikować logowanie z prawdziwego urządzenia (Android/Windows), nie tylko skryptem testowym.
+6. Przypisać właściciela (przez superusera) do klientów/projektów utworzonych przed ADR-028, jeśli mają dalej być synchronizowane - w obecnym stanie są lokalnie nienaruszone, ale niesynchronizowalne (`owner` puste nie pasuje do żadnego konta).
+7. Usunąć tymczasowe konto testowe `crew-test@stagecalc.local` z serwera LXC 113 (zostało z weryfikacji ADR-028 - narzędzie do usuwania danych zostało zablokowane przez klasyfikator bezpieczeństwa Claude Code w tej sesji; do usunięcia ręcznie przez `pocketbase migrate down 1` albo panel admina).
+8. Utrzymać zieloną ścieżkę `flutter analyze`, `flutter test` i okresowy build Windows/Web.
 
-## Zalozenia obowiazujace
+## Założenia obowiązujące
 
-- Legacy StageCalc jest zrodlem wymagan, ale nie kontraktem kompatybilnosci.
-- Import legacy nie jest czescia MVP.
+- Legacy StageCalc jest źródłem wymagań, ale nie kontraktem kompatybilności.
+- Import legacy nie jest częścią MVP.
 - Podstawowa praca lokalna nie wymaga logowania.
-- Telefon/Android jest platforma referencyjna UI.
-- Aplikacja ma dzialac offline-first.
+- Telefon/Android jest platformą referencyjną UI.
+- Aplikacja ma działać offline-first.
