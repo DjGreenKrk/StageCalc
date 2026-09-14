@@ -3,14 +3,14 @@ class AppMetadata {
 
   static const name = 'StageCalc';
   static const description =
-      'Profesjonalne narzedzie do planowania zasilania, masy oraz infrastruktury technicznej wydarzen.';
-  static const version = '0.3.4';
-  static const author = 'Julian Szymanski';
+      'Profesjonalne narzędzie do planowania zasilania, masy oraz infrastruktury technicznej wydarzeń.';
+  static const version = '0.3.5';
+  static const author = 'Julian Szymański';
   static const organization = 'GreenCrew';
   static const website = 'greencrew.pl';
   static const repository = 'GitHub';
   static const license = 'MIT';
   static const packageId = 'pl.greencrew.tools.stagecalc';
-  static const ecosystem = 'Czesc ekosystemu GreenCrew Tools.';
-  static const copyright = '© Julian Szymanski / GreenCrew';
+  static const ecosystem = 'Część ekosystemu GreenCrew Tools.';
+  static const copyright = '© Julian Szymański / GreenCrew';
 }

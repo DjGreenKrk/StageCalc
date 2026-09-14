@@ -6,6 +6,8 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.5+1 - 2026-09-14
+
 ### Dodano
 
 - Dodano kategorie oświetlenie/nagłośnienie/multimedia w katalogu urządzeń (ADR-031), zastępując jedną ogólną kategorię "Urządzenie" - zgodnie z pierwotnym podziałem z `docs/FEATURE_SCOPE.md`. Formularz "Dodaj urządzenie" pokazuje teraz tylko pola sensowne dla wybranej kategorii: "Rigging" nie pokazuje już Mocy/Prądu/typów złącz/punktów zaczepienia, "Kabel" nie pokazuje Mocy/Prądu/Producenta/punktów zaczepienia. Dodano też filtr kategorii (rząd chipów) na ekranie Katalog, obok istniejącego wyszukiwania tekstowego. Bez migracji schematu (kategoria to zwykłe pole tekstowe, ten sam wzorzec co ADR-030) - istniejące urządzenia z kategorią "Urządzenie" wczytują się jako "Inne".
