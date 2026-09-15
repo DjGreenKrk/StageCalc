@@ -6,6 +6,12 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.4.0+1 - 2026-09-15
+
+### Zmieniono
+
+- Określono jednoznacznie licencję projektu: **PolyForm Shield License 1.0.0** (patrz [LICENSE](LICENSE) i [LICENSING.md](LICENSING.md)). Dodano ekran „Licencje komponentów zewnętrznych” w Info.
+
 ## v0.3.7+1 - 2026-09-15
 
 ### Dodano

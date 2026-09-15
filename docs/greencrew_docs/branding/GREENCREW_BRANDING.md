@@ -242,7 +242,9 @@ https://greencrew.pl
 
 Licencja:
 
-MIT
+Licencja nie jest częścią wspólnego brandingu - każda aplikacja ustala ją
+osobno, w swoim własnym pliku LICENSE. Dla StageCalc: PolyForm Shield
+License 1.0.0 (patrz LICENSE i LICENSING.md w repozytorium StageCalc).
 
 Copyright:
 

@@ -85,7 +85,7 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const GreenCrewCard(
+        GreenCrewCard(
           child: Column(
             children: [
               _InfoRow(label: 'Wersja', value: AppMetadata.version),
@@ -95,6 +95,17 @@ class _AboutScreenState extends State<AboutScreen> {
               _InfoRow(label: 'Repozytorium', value: AppMetadata.repository),
               _InfoRow(label: 'Licencja', value: AppMetadata.license),
               _InfoRow(label: 'Pakiet', value: AppMetadata.packageId),
+              const SizedBox(height: 12),
+              GreenCrewButton(
+                label: 'Licencje komponentów zewnętrznych',
+                icon: Icons.description_outlined,
+                secondary: true,
+                onPressed: () => showLicensePage(
+                  context: context,
+                  applicationName: AppMetadata.name,
+                  applicationVersion: AppMetadata.version,
+                ),
+              ),
             ],
           ),
         ),

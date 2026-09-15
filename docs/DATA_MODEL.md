@@ -616,7 +616,7 @@ Branding nie powinien zanieczyszczac encji domenowych, ale wymaga kilku danych a
   - package id: `pl.greencrew.tools.stagecalc`,
   - autor: `Julian Szymanski`,
   - organizacja: `GreenCrew`,
-  - licencja: `MIT`,
+  - licencja: ustalana per aplikacja (dla StageCalc: PolyForm Shield License 1.0.0),
   - strona: `https://greencrew.pl`;
 - ustawienia UI:
   - domyslny dark mode,

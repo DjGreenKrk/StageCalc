@@ -1,51 +1,48 @@
 # StageCalc
 
-StageCalc to techniczny kalkulator wydarzenia z ekosystemu GreenCrew Tools. Aplikacja jest migrowana do Flutter + Dart jako czystsza, lokalna wersja offline-first dla pracy terenowej na Androidzie i Windows.
+StageCalc to techniczny kalkulator wydarzeń dla ekipy GreenCrew Tools — pomaga zaplanować zasilanie, masę i infrastrukturę techniczną (oświetlenie, nagłośnienie, multimedia, rigging) dla konkretnego wydarzenia, zanim sprzęt trafi na plac budowy.
 
-Obecna wersja w tym repozytorium jest w trakcie budowy. Legacy StageCalc jest źródłem wymagań domenowych, ale nowy Flutter nie zachowuje kompatybilności ze starymi formatami danych, trasami ani strukturą PocketBase.
+Działa **offline-first**: wszystkie dane są zapisywane lokalnie na urządzeniu, więc aplikacja działa bez internetu w hali, w terenie czy w trasie. Dostępna na **Androida** i **Windows**.
 
-## Status
+## Co potrafi
 
-Aktualnie działa:
+- **Projekty** — dla każdego wydarzenia lista grup sprzętu z pozycjami, automatyczne sumowanie mocy, prądu (z rozbiciem na fazy L1/L2/L3) i masy.
+- **Katalog urządzeń** — biblioteka sprzętu z kategoriami (oświetlenie, nagłośnienie, multimedia, rozdzielnia, kabel, rigging, inne), gotowa do użycia w dowolnym projekcie.
+- **Import GDTF** — wczytanie jednego lub wielu plików `.gdtf` (branżowy format opisu urządzeń oświetleniowych) prosto do katalogu, z podglądem przed zapisem.
+- **Import z Gremium Panel** — wczytanie listy sprzętu z eksportu Gremium do projektu, z panelem wyboru, co faktycznie zaimportować.
+- **Rozdzielnice i patcher** — tworzenie rozdzielnic z gniazdami, wizualne łączenie grup sprzętu z gniazdami, kontrola obciążenia i wielokrotnego użycia gniazda.
+- **Kratownice (rigging)** — dobór udźwigu kratownicy na podstawie danych producenta i przypisanych haków/grup.
+- **Lokacje i klienci** — dane obiektu (w tym dostępna moc z przyłączy energetycznych) i baza klientów, wielokrotnego użytku między projektami.
+- **Raporty** — eksport podsumowania projektu do PDF lub tekstu, gotowe do wysłania klientowi albo wydruku.
+- **Kopia zapasowa** — eksport/import całej bazy do jednego pliku JSON.
+- **Tryb offline z opcjonalną synchronizacją** — praca lokalna nie wymaga konta; synchronizacja z serwerem zespołu jest opcjonalna, dla ekip pracujących na wspólnych danych.
 
-- aplikacja Flutter w katalogu `flutter/`,
-- responsywny shell GreenCrew Tools,
-- tryb ciemny i zielony akcent GreenCrew,
-- ekrany: Projekty, Katalog, Lokacje, Klienci, Info,
-- lokalna baza Drift/SQLite,
-- projekty z grupami i pozycjami,
-- ręczne pozycje sprzętowe,
-- dodawanie pozycji z katalogu,
-- wyszukiwanie i filtrowanie katalogu,
-- klienci i lokacje jako dane lokalne,
-- presety rozdzielnic,
-- rozdzielnice runtime w projekcie,
-- podstawowy patcher z połączeniami grupa -> gniazdo,
-- liczenie obciążeń gniazd i faz `L1/L2/L3`,
-- walidacja wielokrotnego użycia gniazda,
-- testy domenowe, repozytoryjne i widgetowe.
+Pełna lista zmian w kolejnych wersjach: [CHANGELOG.md](CHANGELOG.md).
 
-Jeszcze nie jest gotowe:
+## Pobieranie
 
-- pełny wizualny patcher,
-- moduł kratownic,
-- backup JSON,
-- eksport PDF,
-- synchronizacja z hostowaną bazą,
-- konta użytkowników i role.
+Najnowsza wersja jest zawsze dostępna na stronie [Releases](https://github.com/DjGreenKrk/StageCalc/releases/latest):
 
-Szczegółowy stan prac jest w [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
+- **Android** — pobierz `StageCalc-vX_Y_Z-android.apk`, otwórz plik na telefonie/tablecie i zainstaluj (może być potrzebne włączenie instalacji z nieznanych źródeł dla przeglądarki/menedżera plików, z którego pobierasz).
+- **Windows** — pobierz `StageCalc-vX_Y_Z-windows.zip`, rozpakuj do dowolnego folderu i uruchom `stagecalc.exe`. Nie wymaga instalacji.
 
-## Założenia produktu
+## Pierwsze kroki
 
-- Offline-first: lokalna baza jest źródłem prawdy.
-- Android i Windows są platformami priorytetowymi.
-- Web/iOS są możliwe później, ale nie blokują modelu offline-first.
-- Synchronizacja zostanie dodana jako osobna warstwa.
-- Podstawowa praca nie wymaga logowania.
-- UI ma być zgodny z GreenCrew Tools: techniczny, terenowy, krótki w komunikatach i domyślnie ciemny.
+1. Utwórz nowy projekt na ekranie **Projekty**.
+2. Dodaj grupy i pozycje sprzętu — ręcznie, z **Katalogu**, albo importem z pliku GDTF/Gremium.
+3. Sprawdź podsumowanie mocy, prądu i masy na bieżąco aktualizowane w projekcie.
+4. Jeśli sprzęt wymaga podłączenia — utwórz rozdzielnicę i połącz grupy z gniazdami w patcherze.
+5. Wyeksportuj gotowy raport (PDF/tekst) albo zrób kopię zapasową danych z ekranu **Info**.
 
-## Struktura repozytorium
+## Licencja
+
+StageCalc jest udostępniany na warunkach [PolyForm Shield License 1.0.0](https://polyformproject.org/licenses/shield/1.0.0) - pełny tekst w pliku [LICENSE](LICENSE), a co to oznacza w praktyce (co wolno, czego nie, marki/branding, stan historyczny sprzed wersji 0.4.0) w [LICENSING.md](LICENSING.md).
+
+---
+
+## Dla deweloperów
+
+### Struktura repozytorium
 
 ```text
 .
@@ -63,10 +60,9 @@ Szczegółowy stan prac jest w [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATI
     └── README.md
 ```
 
-## Wymagania deweloperskie
+### Wymagania
 
-- Flutter SDK `3.44.3` lub zgodny z projektem,
-- Dart z Flutter SDK,
+- Flutter SDK `3.44.x` lub nowszy (Dart dołączony w SDK),
 - Visual Studio z narzędziami C++ do buildu Windows,
 - Android toolchain, jeśli budujesz APK.
 
@@ -76,7 +72,7 @@ Na tej maszynie Flutter jest dostępny po dodaniu do sesji PowerShell:
 $env:PATH = "C:\Users\julek\SDK\flutter_windows_3.44.3-stable\flutter\bin;$env:PATH"
 ```
 
-## Uruchomienie
+### Uruchomienie
 
 ```powershell
 cd flutter
@@ -91,7 +87,7 @@ cd flutter
 flutter run -d android
 ```
 
-## Testy i analiza
+### Testy i analiza
 
 ```powershell
 cd flutter
@@ -100,45 +96,42 @@ flutter analyze
 flutter test
 ```
 
-Build Windows:
+### Build
 
 ```powershell
 cd flutter
 flutter build windows
+flutter build apk --release
 ```
 
-Plik wynikowy:
+Podpisywanie release APK własnym kluczem wymaga lokalnego `android/key.properties` (nieobecnego w repo, patrz `docs/DECISIONS.md`) — bez niego build automatycznie wraca do klucza debug.
+
+Plik wynikowy (Windows):
 
 ```text
 flutter/build/windows/x64/runner/Release/stagecalc.exe
 ```
 
-## Dokumentacja
-
-- [Plan migracji](docs/MIGRATION_PLAN.md)
-- [Model danych](docs/DATA_MODEL.md)
-- [Zakres funkcji](docs/FEATURE_SCOPE.md)
-- [Decyzje architektoniczne](docs/DECISIONS.md)
-- [Status implementacji](docs/IMPLEMENTATION_STATUS.md)
-- [Changelog](CHANGELOG.md)
-
-## Release
+### Release
 
 Nazewnictwo artefaktów:
 
 - `StageCalc-vX_Y_Z-android.apk`
 - `StageCalc-vX_Y_Z-windows.zip`
 
-Przed wydaniem release należy uruchomić:
+Budowane jednym poleceniem:
 
 ```powershell
 cd flutter
-dart format .
-flutter analyze
-flutter test
-flutter build windows
+dart run tool/package_release.dart
 ```
 
-## Licencja
+Przed wydaniem release należy upewnić się, że przechodzą testy i analiza (patrz "Testy i analiza" wyżej).
 
-Projekt prywatny / wewnętrzny GreenCrew Tools. Licencja publiczna nie została jeszcze określona.
+### Dokumentacja projektowa
+
+- [Plan migracji](docs/MIGRATION_PLAN.md)
+- [Model danych](docs/DATA_MODEL.md)
+- [Zakres funkcji](docs/FEATURE_SCOPE.md)
+- [Decyzje architektoniczne](docs/DECISIONS.md)
+- [Status implementacji](docs/IMPLEMENTATION_STATUS.md)
