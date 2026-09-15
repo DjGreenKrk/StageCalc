@@ -103,6 +103,7 @@ W Flutter MVP podstawowa praca lokalna nie wymaga logowania. Konto, role i synch
   - IP rating,
   - notatki.
 - Pola specjalistyczne, np. DMX, jasność, rozdzielczość, typ kabla, wejścia/wyjścia dystrybucji, dane kratownic, WLL, typ sterowania wciągarki.
+- Import plików GDTF (ADR-035): wybór jednego lub wielu plików `.gdtf` naraz, panel przeglądu przed zapisem, dopasowanie do istniejących urządzeń po id GDTF (`FixtureTypeID`) albo ręczne połączenie zamiast duplikowania.
 
 ### Lokacje
 

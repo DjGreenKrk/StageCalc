@@ -59,6 +59,7 @@ class DriftCatalogRepository implements CatalogRepository {
               riggingPoints: Value(device.riggingPoints),
               quantityUnit: Value(device.quantityUnit.toJson()),
               gremiumInventoryItemId: Value(device.gremiumInventoryItemId),
+              gdtfFixtureTypeId: Value(device.gdtfFixtureTypeId),
               createdAt: Value(device.createdAt),
               updatedAt: Value(device.updatedAt),
               deletedAt: const Value(null),
@@ -164,6 +165,7 @@ class DriftCatalogRepository implements CatalogRepository {
       updatedAt: row.updatedAt,
       syncStatus: OfflineSyncStatusJson.fromJson(row.syncState),
       gremiumInventoryItemId: row.gremiumInventoryItemId,
+      gdtfFixtureTypeId: row.gdtfFixtureTypeId,
     );
   }
 
@@ -191,6 +193,7 @@ class DriftCatalogRepository implements CatalogRepository {
       riggingPoints: Value(device.riggingPoints),
       quantityUnit: Value(device.quantityUnit.toJson()),
       gremiumInventoryItemId: Value(device.gremiumInventoryItemId),
+      gdtfFixtureTypeId: Value(device.gdtfFixtureTypeId),
       createdAt: Value(device.createdAt),
       updatedAt: Value(device.updatedAt),
       syncState: Value(device.syncStatus.toJson()),

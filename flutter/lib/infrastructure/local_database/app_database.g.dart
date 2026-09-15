@@ -7826,6 +7826,18 @@ class $CatalogDevicesTable extends CatalogDevices
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _gdtfFixtureTypeIdMeta = const VerificationMeta(
+    'gdtfFixtureTypeId',
+  );
+  @override
+  late final GeneratedColumn<String> gdtfFixtureTypeId =
+      GeneratedColumn<String>(
+        'gdtf_fixture_type_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -7910,6 +7922,7 @@ class $CatalogDevicesTable extends CatalogDevices
     riggingPoints,
     quantityUnit,
     gremiumInventoryItemId,
+    gdtfFixtureTypeId,
     createdAt,
     updatedAt,
     deletedAt,
@@ -8035,6 +8048,15 @@ class $CatalogDevicesTable extends CatalogDevices
         ),
       );
     }
+    if (data.containsKey('gdtf_fixture_type_id')) {
+      context.handle(
+        _gdtfFixtureTypeIdMeta,
+        gdtfFixtureTypeId.isAcceptableOrUnknown(
+          data['gdtf_fixture_type_id']!,
+          _gdtfFixtureTypeIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -8143,6 +8165,10 @@ class $CatalogDevicesTable extends CatalogDevices
         DriftSqlType.string,
         data['${effectivePrefix}gremium_inventory_item_id'],
       ),
+      gdtfFixtureTypeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gdtf_fixture_type_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -8203,6 +8229,11 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   /// linked to (ADR-034) - `null` for every device added manually or not yet
   /// linked to a Gremium import item.
   final String? gremiumInventoryItemId;
+
+  /// `FixtureTypeID` (GUID) from a GDTF file this device is linked to
+  /// (ADR-035) - `null` for every device added manually or not yet linked to
+  /// a GDTF import.
+  final String? gdtfFixtureTypeId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -8224,6 +8255,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     this.riggingPoints,
     required this.quantityUnit,
     this.gremiumInventoryItemId,
+    this.gdtfFixtureTypeId,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -8259,6 +8291,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       map['gremium_inventory_item_id'] = Variable<String>(
         gremiumInventoryItemId,
       );
+    }
+    if (!nullToAbsent || gdtfFixtureTypeId != null) {
+      map['gdtf_fixture_type_id'] = Variable<String>(gdtfFixtureTypeId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -8299,6 +8334,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gremiumInventoryItemId: gremiumInventoryItemId == null && nullToAbsent
           ? const Value.absent()
           : Value(gremiumInventoryItemId),
+      gdtfFixtureTypeId: gdtfFixtureTypeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gdtfFixtureTypeId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -8336,6 +8374,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gremiumInventoryItemId: serializer.fromJson<String?>(
         json['gremiumInventoryItemId'],
       ),
+      gdtfFixtureTypeId: serializer.fromJson<String?>(
+        json['gdtfFixtureTypeId'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -8364,6 +8405,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       'gremiumInventoryItemId': serializer.toJson<String?>(
         gremiumInventoryItemId,
       ),
+      'gdtfFixtureTypeId': serializer.toJson<String?>(gdtfFixtureTypeId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -8388,6 +8430,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     Value<int?> riggingPoints = const Value.absent(),
     String? quantityUnit,
     Value<String?> gremiumInventoryItemId = const Value.absent(),
+    Value<String?> gdtfFixtureTypeId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -8415,6 +8458,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     gremiumInventoryItemId: gremiumInventoryItemId.present
         ? gremiumInventoryItemId.value
         : this.gremiumInventoryItemId,
+    gdtfFixtureTypeId: gdtfFixtureTypeId.present
+        ? gdtfFixtureTypeId.value
+        : this.gdtfFixtureTypeId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -8452,6 +8498,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gremiumInventoryItemId: data.gremiumInventoryItemId.present
           ? data.gremiumInventoryItemId.value
           : this.gremiumInventoryItemId,
+      gdtfFixtureTypeId: data.gdtfFixtureTypeId.present
+          ? data.gdtfFixtureTypeId.value
+          : this.gdtfFixtureTypeId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -8480,6 +8529,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
+          ..write('gdtfFixtureTypeId: $gdtfFixtureTypeId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8491,7 +8541,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     workspaceId,
     remoteId,
@@ -8506,13 +8556,14 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     riggingPoints,
     quantityUnit,
     gremiumInventoryItemId,
+    gdtfFixtureTypeId,
     createdAt,
     updatedAt,
     deletedAt,
     revision,
     syncState,
     lastSyncedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8531,6 +8582,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           other.riggingPoints == this.riggingPoints &&
           other.quantityUnit == this.quantityUnit &&
           other.gremiumInventoryItemId == this.gremiumInventoryItemId &&
+          other.gdtfFixtureTypeId == this.gdtfFixtureTypeId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -8554,6 +8606,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
   final Value<int?> riggingPoints;
   final Value<String> quantityUnit;
   final Value<String?> gremiumInventoryItemId;
+  final Value<String?> gdtfFixtureTypeId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -8576,6 +8629,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     this.gremiumInventoryItemId = const Value.absent(),
+    this.gdtfFixtureTypeId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -8599,6 +8653,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.riggingPoints = const Value.absent(),
     this.quantityUnit = const Value.absent(),
     this.gremiumInventoryItemId = const Value.absent(),
+    this.gdtfFixtureTypeId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -8625,6 +8680,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Expression<int>? riggingPoints,
     Expression<String>? quantityUnit,
     Expression<String>? gremiumInventoryItemId,
+    Expression<String>? gdtfFixtureTypeId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -8650,6 +8706,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       if (quantityUnit != null) 'quantity_unit': quantityUnit,
       if (gremiumInventoryItemId != null)
         'gremium_inventory_item_id': gremiumInventoryItemId,
+      if (gdtfFixtureTypeId != null) 'gdtf_fixture_type_id': gdtfFixtureTypeId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -8675,6 +8732,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Value<int?>? riggingPoints,
     Value<String>? quantityUnit,
     Value<String?>? gremiumInventoryItemId,
+    Value<String?>? gdtfFixtureTypeId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -8699,6 +8757,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       quantityUnit: quantityUnit ?? this.quantityUnit,
       gremiumInventoryItemId:
           gremiumInventoryItemId ?? this.gremiumInventoryItemId,
+      gdtfFixtureTypeId: gdtfFixtureTypeId ?? this.gdtfFixtureTypeId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -8758,6 +8817,9 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
         gremiumInventoryItemId.value,
       );
     }
+    if (gdtfFixtureTypeId.present) {
+      map['gdtf_fixture_type_id'] = Variable<String>(gdtfFixtureTypeId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8799,6 +8861,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('riggingPoints: $riggingPoints, ')
           ..write('quantityUnit: $quantityUnit, ')
           ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
+          ..write('gdtfFixtureTypeId: $gdtfFixtureTypeId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -20868,6 +20931,7 @@ typedef $$CatalogDevicesTableCreateCompanionBuilder =
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
       Value<String?> gremiumInventoryItemId,
+      Value<String?> gdtfFixtureTypeId,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -20892,6 +20956,7 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<int?> riggingPoints,
       Value<String> quantityUnit,
       Value<String?> gremiumInventoryItemId,
+      Value<String?> gdtfFixtureTypeId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -21015,6 +21080,11 @@ class $$CatalogDevicesTableFilterComposer
 
   ColumnFilters<String> get gremiumInventoryItemId => $composableBuilder(
     column: $table.gremiumInventoryItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gdtfFixtureTypeId => $composableBuilder(
+    column: $table.gdtfFixtureTypeId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21154,6 +21224,11 @@ class $$CatalogDevicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get gdtfFixtureTypeId => $composableBuilder(
+    column: $table.gdtfFixtureTypeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -21250,6 +21325,11 @@ class $$CatalogDevicesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get gdtfFixtureTypeId => $composableBuilder(
+    column: $table.gdtfFixtureTypeId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -21341,6 +21421,7 @@ class $$CatalogDevicesTableTableManager
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 Value<String?> gremiumInventoryItemId = const Value.absent(),
+                Value<String?> gdtfFixtureTypeId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21363,6 +21444,7 @@ class $$CatalogDevicesTableTableManager
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 gremiumInventoryItemId: gremiumInventoryItemId,
+                gdtfFixtureTypeId: gdtfFixtureTypeId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -21387,6 +21469,7 @@ class $$CatalogDevicesTableTableManager
                 Value<int?> riggingPoints = const Value.absent(),
                 Value<String> quantityUnit = const Value.absent(),
                 Value<String?> gremiumInventoryItemId = const Value.absent(),
+                Value<String?> gdtfFixtureTypeId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21409,6 +21492,7 @@ class $$CatalogDevicesTableTableManager
                 riggingPoints: riggingPoints,
                 quantityUnit: quantityUnit,
                 gremiumInventoryItemId: gremiumInventoryItemId,
+                gdtfFixtureTypeId: gdtfFixtureTypeId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

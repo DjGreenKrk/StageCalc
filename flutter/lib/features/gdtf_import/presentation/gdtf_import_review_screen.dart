@@ -3,63 +3,44 @@ import 'package:flutter/material.dart';
 import '../../catalog/data/catalog_repository.dart';
 import '../../catalog/domain/entities/catalog_device.dart';
 import '../../catalog/presentation/catalog_link_device_dialog.dart';
-import '../../projects/data/project_repository.dart';
-import '../domain/entities/gremium_category_guess.dart';
-import '../domain/entities/gremium_pack_list.dart';
-import '../domain/services/gremium_catalog_matcher.dart';
-import '../domain/services/gremium_import_commit_service.dart';
+import '../domain/entities/gdtf_category_guess.dart';
+import '../domain/entities/gdtf_fixture_type.dart';
+import '../domain/entities/gdtf_import_failure.dart';
+import '../domain/services/gdtf_catalog_matcher.dart';
+import '../domain/services/gdtf_import_commit_service.dart';
 
-/// Review panel shown right after a Gremium pack-list file is parsed and
-/// matched, before anything is saved (ADR-034): every item can be excluded,
-/// assigned a target group, and (for items with no existing catalog match)
-/// either linked to an already-existing device or created as a new one in
-/// an existing `CatalogDeviceCategory` (never a Gremium-specific category).
-class GremiumImportReviewScreen extends StatefulWidget {
-  const GremiumImportReviewScreen({
-    required this.packList,
+/// Review panel shown right after picked GDTF files are parsed and matched,
+/// before anything is saved (ADR-035): every fixture can be excluded, and
+/// (for fixtures with no existing catalog match) either linked to an
+/// already-existing device or created as a new one in an existing
+/// `CatalogDeviceCategory`. Purely catalog-scoped - unlike the Gremium
+/// import review (ADR-034) there is no project/group concept here.
+class GdtfImportReviewScreen extends StatefulWidget {
+  const GdtfImportReviewScreen({
     required this.matches,
+    required this.failures,
     required this.catalogDevices,
     required this.catalogRepository,
-    required this.projectRepository,
     super.key,
   });
 
-  final GremiumPackList packList;
-  final List<GremiumMatchResult> matches;
+  final List<GdtfMatchResult> matches;
+  final List<GdtfImportFailure> failures;
   final List<CatalogDevice> catalogDevices;
   final CatalogRepository catalogRepository;
-  final ProjectRepository projectRepository;
 
   @override
-  State<GremiumImportReviewScreen> createState() =>
-      _GremiumImportReviewScreenState();
+  State<GdtfImportReviewScreen> createState() => _GdtfImportReviewScreenState();
 }
 
-class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
-  late final String _defaultGroupName;
+class _GdtfImportReviewScreenState extends State<GdtfImportReviewScreen> {
   late final List<_ReviewRow> _rows;
   var _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _defaultGroupName = 'Import z Gremium (${widget.packList.project.name})';
-    _rows = widget.matches
-        .map(
-          (match) => _ReviewRow(
-            match: match,
-            groupNameController: TextEditingController(text: _defaultGroupName),
-          ),
-        )
-        .toList();
-  }
-
-  @override
-  void dispose() {
-    for (final row in _rows) {
-      row.groupNameController.dispose();
-    }
-    super.dispose();
+    _rows = widget.matches.map((match) => _ReviewRow(match: match)).toList();
   }
 
   List<_ReviewRow> get _selectedRows =>
@@ -75,54 +56,16 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
     }
   }
 
-  Future<void> _bulkAssignGroup() async {
-    final controller = TextEditingController(text: _defaultGroupName);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Przypisz zaznaczone do grupy'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Nazwa grupy'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: const Text('Przypisz'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (name == null || name.isEmpty) {
-      return;
-    }
-    setState(() {
-      for (final row in _selectedRows) {
-        row.groupNameController.text = name;
-      }
-    });
-  }
-
   Future<void> _submit() async {
     setState(() => _isSubmitting = true);
 
     final decisions = _selectedRows.map(_decisionFor).toList();
-    final service = GremiumImportCommitService(
+    final service = GdtfImportCommitService(
       catalogRepository: widget.catalogRepository,
-      projectRepository: widget.projectRepository,
     );
 
     try {
-      final summary = await service.commit(
-        gremiumProject: widget.packList.project,
-        decisions: decisions,
-      );
+      final summary = await service.commit(decisions);
       if (!mounted) {
         return;
       }
@@ -138,39 +81,27 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
     }
   }
 
-  GremiumImportDecision _decisionFor(_ReviewRow row) {
-    final groupName = row.groupNameController.text.trim();
-    final resolvedGroupName = groupName.isEmpty ? _defaultGroupName : groupName;
-
+  GdtfImportDecision _decisionFor(_ReviewRow row) {
     switch (row.match.status) {
-      case GremiumMatchStatus.ownItem:
-        return GremiumImportDecision(
-          item: row.item,
-          targetGroupName: resolvedGroupName,
-          action: GremiumImportAction.ownItemOnly,
-        );
-      case GremiumMatchStatus.linked:
-        return GremiumImportDecision(
-          item: row.item,
-          targetGroupName: resolvedGroupName,
-          action: GremiumImportAction.useCatalogDevice,
+      case GdtfMatchStatus.linked:
+        return GdtfImportDecision(
+          fixture: row.fixture,
+          action: GdtfImportAction.useCatalogDevice,
           existingDeviceId: row.match.matchedDevice!.id,
         );
-      case GremiumMatchStatus.newDevice:
+      case GdtfMatchStatus.newDevice:
         final manual = row.manualLinkDevice;
         if (manual != null) {
-          return GremiumImportDecision(
-            item: row.item,
-            targetGroupName: resolvedGroupName,
-            action: GremiumImportAction.useCatalogDevice,
+          return GdtfImportDecision(
+            fixture: row.fixture,
+            action: GdtfImportAction.useCatalogDevice,
             existingDeviceId: manual.id,
             linkExistingDevice: true,
           );
         }
-        return GremiumImportDecision(
-          item: row.item,
-          targetGroupName: resolvedGroupName,
-          action: GremiumImportAction.createNewDevice,
+        return GdtfImportDecision(
+          fixture: row.fixture,
+          action: GdtfImportAction.createNewDevice,
           category: row.category,
         );
     }
@@ -179,30 +110,26 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final selectedRows = _selectedRows;
+    final failures = widget.failures;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Import: ${widget.packList.project.name}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.drive_file_move_outline),
-            tooltip: 'Przypisz zaznaczone do grupy',
-            onPressed: selectedRows.isEmpty ? null : _bulkAssignGroup,
-          ),
-        ],
-      ),
-      body: ListView.separated(
+      appBar: AppBar(title: const Text('Import GDTF')),
+      body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-        itemCount: _rows.length,
-        separatorBuilder: (context, _) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final row = _rows[index];
-          return _RowTile(
-            row: row,
-            onChanged: () => setState(() {}),
-            onPickExisting: () => _pickExistingDevice(row),
-          );
-        },
+        children: [
+          if (failures.isNotEmpty) ...[
+            _FailuresCard(failures: failures),
+            const SizedBox(height: 8),
+          ],
+          for (final row in _rows) ...[
+            _RowTile(
+              row: row,
+              onChanged: () => setState(() {}),
+              onPickExisting: () => _pickExistingDevice(row),
+            ),
+            const Divider(height: 1),
+          ],
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -252,16 +179,13 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
 
   String _summaryText(List<_ReviewRow> selectedRows) {
     final linked = selectedRows
-        .where((row) => row.match.status == GremiumMatchStatus.linked)
+        .where((row) => row.match.status == GdtfMatchStatus.linked)
         .length;
     final manuallyLinked = selectedRows
         .where((row) => row.isNewDeviceRow && row.manualLinkDevice != null)
         .length;
     final toCreate = selectedRows
         .where((row) => row.isNewDeviceRow && row.manualLinkDevice == null)
-        .length;
-    final ownItems = selectedRows
-        .where((row) => row.match.status == GremiumMatchStatus.ownItem)
         .length;
     final missingElectrical = selectedRows
         .where((row) => row.needsElectricalData)
@@ -272,11 +196,10 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
       if (linked > 0) '$linked w katalogu',
       if (manuallyLinked > 0) '$manuallyLinked połączonych ręcznie',
       if (toCreate > 0) '$toCreate nowych w katalogu',
-      if (ownItems > 0) '$ownItems pozycji własnych',
     ];
 
     final warnings = <String>[
-      if (missingElectrical > 0) '$missingElectrical bez mocy/prądu',
+      if (missingElectrical > 0) '$missingElectrical bez mocy',
     ];
 
     final buffer = StringBuffer(parts.join(' • '));
@@ -288,24 +211,53 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
 }
 
 class _ReviewRow {
-  _ReviewRow({required this.match, required this.groupNameController})
-    : category = guessGremiumCategory(match.item);
+  _ReviewRow({required this.match})
+    : category = guessGdtfCategory(match.fixture);
 
-  final GremiumMatchResult match;
-  final TextEditingController groupNameController;
+  final GdtfMatchResult match;
   bool selected = true;
   CatalogDeviceCategory category;
   CatalogDevice? manualLinkDevice;
 
-  GremiumItem get item => match.item;
-  bool get isNewDeviceRow => match.status == GremiumMatchStatus.newDevice;
+  GdtfFixtureType get fixture => match.fixture;
+  bool get isNewDeviceRow => match.status == GdtfMatchStatus.newDevice;
 
   bool get needsElectricalData =>
       isNewDeviceRow &&
       manualLinkDevice == null &&
       category.showsElectricalFields &&
-      item.technical.ratedPowerW == null &&
-      item.technical.ratedCurrentA == null;
+      fixture.powerW == null;
+}
+
+class _FailuresCard extends StatelessWidget {
+  const _FailuresCard({required this.failures});
+
+  final List<GdtfImportFailure> failures;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nie udało się wczytać (${failures.length})',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            for (final failure in failures)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text('${failure.fileName}: ${failure.reason}'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _RowTile extends StatelessWidget {
@@ -321,10 +273,11 @@ class _RowTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final quantity = row.item.quantity;
-    final quantityLabel = quantity == quantity.roundToDouble()
-        ? quantity.toStringAsFixed(0)
-        : quantity.toStringAsFixed(1);
+    final fixture = row.fixture;
+    final subtitle = [
+      if (fixture.manufacturer != null) fixture.manufacturer,
+      fixture.sourceFileName,
+    ].join(' • ');
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -343,9 +296,10 @@ class _RowTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${row.item.displayLabel} (${quantityLabel}x)',
+                  fixture.name,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
+                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 4),
                 _StatusChip(row: row),
                 if (row.isNewDeviceRow && row.selected) ...[
@@ -403,19 +357,6 @@ class _RowTile extends StatelessWidget {
                     ],
                   ),
                 ],
-                if (row.selected) ...[
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 280,
-                    child: TextField(
-                      controller: row.groupNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Grupa docelowa',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -433,15 +374,11 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, icon) = switch (row.match.status) {
-      GremiumMatchStatus.linked => (
+      GdtfMatchStatus.linked => (
         'W katalogu: ${row.match.matchedDevice!.name}',
         Icons.check_circle_outline,
       ),
-      GremiumMatchStatus.ownItem => (
-        'Pozycja własna',
-        Icons.inventory_2_outlined,
-      ),
-      GremiumMatchStatus.newDevice => (
+      GdtfMatchStatus.newDevice => (
         'Nowe urządzenie',
         Icons.fiber_new_outlined,
       ),

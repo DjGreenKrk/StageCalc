@@ -231,6 +231,11 @@ class CatalogDevices extends Table {
   /// linked to (ADR-034) - `null` for every device added manually or not yet
   /// linked to a Gremium import item.
   TextColumn get gremiumInventoryItemId => text().nullable()();
+
+  /// `FixtureTypeID` (GUID) from a GDTF file this device is linked to
+  /// (ADR-035) - `null` for every device added manually or not yet linked to
+  /// a GDTF import.
+  TextColumn get gdtfFixtureTypeId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -444,7 +449,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -595,6 +600,17 @@ class AppDatabase extends _$AppDatabase {
           migrator,
           projectItems,
           projectItems.gremiumLineId,
+        );
+      }
+      if (from < 18) {
+        // Nullable column for linking a native CatalogDevice to the GDTF
+        // file (FixtureTypeID GUID) it was imported from or manually matched
+        // to (ADR-035) - no backfill needed, every pre-existing row simply
+        // stays unlinked.
+        await _addColumnIfMissing(
+          migrator,
+          catalogDevices,
+          catalogDevices.gdtfFixtureTypeId,
         );
       }
     },

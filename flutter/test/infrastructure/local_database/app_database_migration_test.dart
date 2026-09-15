@@ -57,7 +57,7 @@ void main() {
       raw.close();
 
       // 3. Reopen through AppDatabase: this must run onUpgrade(from: 10,
-      // to: 17) against a file whose columns/tables from steps 11-17
+      // to: 18) against a file whose columns/tables from steps 11-18
       // already exist. Before the _addColumnIfMissing/_createTableIfMissing
       // fix, this threw SqliteException on the very first such step.
       final reopened = db.AppDatabase.forTesting(
@@ -68,7 +68,7 @@ void main() {
       final version = await reopened
           .customSelect('PRAGMA user_version')
           .getSingle();
-      expect(version.data.values.single, 17);
+      expect(version.data.values.single, 18);
 
       await reopened.close();
     },

@@ -7,6 +7,7 @@ import '../../../shared/widgets/greencrew_empty_state.dart';
 import '../../../shared/widgets/greencrew_fab.dart';
 import '../../../shared/widgets/greencrew_search_bar.dart';
 import '../../../shared/widgets/greencrew_section_header.dart';
+import '../../gdtf_import/presentation/gdtf_import_entry.dart';
 import '../../power_presets/presentation/power_presets_panel.dart';
 import '../data/catalog_repository.dart';
 import '../data/drift_catalog_repository.dart';
@@ -136,7 +137,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const GreenCrewSectionHeader(title: 'Katalog'),
+          GreenCrewSectionHeader(
+            title: 'Katalog',
+            action: _view == _CatalogView.devices
+                ? GdtfImportButton(onImported: _loadDevices)
+                : null,
+          ),
           const SizedBox(height: 12),
           SegmentedButton<_CatalogView>(
             segments: const [

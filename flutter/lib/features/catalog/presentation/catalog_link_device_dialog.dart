@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../../catalog/domain/entities/catalog_device.dart';
+import '../domain/entities/catalog_device.dart';
 
-/// Lightweight search dialog for the "Połącz z istniejącym" action in the
-/// Gremium import review panel (ADR-034) - lets the user pick a device
-/// already in their catalog instead of letting the import create a
+/// Lightweight search dialog for a "Połącz z istniejącym" action in a
+/// catalog-import review panel (originally added for the Gremium import,
+/// ADR-034; reused as-is by the GDTF import, ADR-035) - lets the user pick a
+/// device already in their catalog instead of letting the import create a
 /// duplicate. Deliberately a separate, smaller dialog rather than reusing
 /// `_CatalogSelectionDialog` (which is private to the project editor and
 /// also collects a quantity, which this flow does not need).
-class GremiumLinkDeviceDialog extends StatefulWidget {
-  const GremiumLinkDeviceDialog({required this.devices, super.key});
+class CatalogLinkDeviceDialog extends StatefulWidget {
+  const CatalogLinkDeviceDialog({required this.devices, super.key});
 
   final List<CatalogDevice> devices;
 
   @override
-  State<GremiumLinkDeviceDialog> createState() =>
-      _GremiumLinkDeviceDialogState();
+  State<CatalogLinkDeviceDialog> createState() =>
+      _CatalogLinkDeviceDialogState();
 }
 
-class _GremiumLinkDeviceDialogState extends State<GremiumLinkDeviceDialog> {
+class _CatalogLinkDeviceDialogState extends State<CatalogLinkDeviceDialog> {
   final _searchController = TextEditingController();
 
   List<CatalogDevice> get _filteredDevices {

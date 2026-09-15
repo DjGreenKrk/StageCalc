@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:drift/native.dart';
 import 'package:file_picker/file_picker.dart';
@@ -166,6 +167,91 @@ void main() {
       devices.any((device) => device.gremiumInventoryItemId == 'inv-1'),
       isTrue,
     );
+  });
+
+  testWidgets('imports a GDTF fixture file into the catalog', (tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final gdtfFile = File(
+      '${Directory.systemTemp.path}/stagecalc_gdtf_test_'
+      '${DateTime.now().microsecondsSinceEpoch}.gdtf',
+    );
+    final xml =
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<GDTF DataVersion="1.2">'
+        '<FixtureType Name="Test Fixture" FixtureTypeID="guid-test-1" '
+        'Manufacturer="Test Manufacturer">'
+        '<PhysicalDescriptions><Properties>'
+        '<Weight Value="12.5"/>'
+        '</Properties></PhysicalDescriptions>'
+        '<Geometries><Geometry Name="Base">'
+        '<WiringObject ComponentType="Consumer" ConnectorType="PowerconTRUE1" '
+        'ElectricalPayLoad="300"/>'
+        '</Geometry></Geometries>'
+        '</FixtureType></GDTF>';
+    final archive = Archive();
+    final xmlBytes = utf8.encode(xml);
+    archive.addFile(ArchiveFile('description.xml', xmlBytes.length, xmlBytes));
+    gdtfFile.writeAsBytesSync(ZipEncoder().encodeBytes(archive));
+    addTearDown(() {
+      if (gdtfFile.existsSync()) {
+        gdtfFile.deleteSync();
+      }
+    });
+
+    final originalPlatform = FilePickerPlatform.instance;
+    FilePickerPlatform.instance = _FakeFilePickerPlatform(
+      pickedPath: gdtfFile.path,
+    );
+    addTearDown(() => FilePickerPlatform.instance = originalPlatform);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Importuj z GDTF'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Import GDTF').evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    expect(find.text('Import GDTF'), findsOneWidget);
+    expect(find.text('Test Fixture'), findsOneWidget);
+    expect(find.text('Nowe urządzenie'), findsOneWidget);
+
+    await tester.tap(find.text('Importuj'));
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump();
+      if (find.text('Import GDTF').evaluate().isEmpty) {
+        break;
+      }
+    }
+    await tester.pumpAndSettle();
+
+    final devices = await DriftCatalogRepository(database).getDevices();
+    final imported = devices.singleWhere(
+      (device) => device.gdtfFixtureTypeId == 'guid-test-1',
+    );
+    expect(imported.name, 'Test Fixture');
+    expect(imported.manufacturer, 'Test Manufacturer');
+    expect(imported.weightKg, 12.5);
+    expect(imported.powerW, 300);
   });
 
   testWidgets('adds and edits manual item in project editor', (tester) async {
@@ -1071,9 +1157,15 @@ void main() {
 }
 
 class _FakeFilePickerPlatform extends FilePickerPlatform {
-  _FakeFilePickerPlatform({required this.pickedPath});
+  _FakeFilePickerPlatform({required this.pickedPath, List<String>? pickedPaths})
+    : pickedPaths = pickedPaths ?? [pickedPath];
 
   final String pickedPath;
+
+  /// Paths returned by [pickFiles] (multi-select) - defaults to a single
+  /// item wrapping [pickedPath] so existing single-file tests need no
+  /// changes.
+  final List<String> pickedPaths;
 
   @override
   Future<PlatformFile?> pickFile({
@@ -1090,6 +1182,24 @@ class _FakeFilePickerPlatform extends FilePickerPlatform {
     WebOptions webOptions = const WebOptions(),
   }) async {
     return _FakePlatformFile(pickedPath);
+  }
+
+  @override
+  Future<List<PlatformFile>> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    void Function(FilePickerStatus)? onFileLoading,
+    int compressionQuality = 0,
+    bool allowMultiple = false,
+    AndroidOptions androidOptions = const AndroidOptions(),
+    DarwinOptions darwinOptions = const DarwinOptions(),
+    WindowsOptions windowsOptions = const WindowsOptions(),
+    LinuxOptions linuxOptions = const LinuxOptions(),
+    WebOptions webOptions = const WebOptions(),
+  }) async {
+    return pickedPaths.map(_FakePlatformFile.new).toList();
   }
 }
 

@@ -6,6 +6,13 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.3.7+1 - 2026-09-15
+
+### Dodano
+
+- Dodano import plików GDTF do katalogu urządzeń (ADR-035): przycisk "Importuj z GDTF" na ekranie Katalog pozwala wybrać jeden lub wiele plików `.gdtf` naraz (zwykle rozpowszechnianych jako cała biblioteka), rozpakowuje każdy z nich, wyciąga nazwę/producenta/wagę/moc/złącza, dopasowuje do istniejącego katalogu po zapamiętanym id GDTF (nigdy po nazwie) i przed jakimkolwiek zapisem pokazuje panel przeglądu: każdy plik można odznaczyć, wybrać kategorię katalogową dla nowych urządzeń albo ręcznie połączyć z urządzeniem już istniejącym w katalogu zamiast tworzyć duplikat. Plik, którego nie da się wczytać, trafia do osobnej listy błędów zamiast przerywać cały import. Jedyny ślad pochodzenia to nowa kolumna `CatalogDevice.gdtfFixtureTypeId`, ten sam wzorzec co `gremiumInventoryItemId`/`remoteId`. Schemat lokalny podniesiony do wersji `18`.
+- Skonfigurowano podpisywanie release APK własnym kluczem (zamiast dotychczasowego klucza debug): nowy keystore przechowywany poza repozytorium, `android/app/build.gradle.kts` wczytuje go z gitignorowanego `android/key.properties` z fallbackiem na klucz debug, gdy plik nie istnieje. Zweryfikowano `apksigner verify` na realnie zbudowanym APK-u.
+
 ## v0.3.6+1 - 2026-09-14
 
 ### Dodano

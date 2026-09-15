@@ -19,6 +19,7 @@ class CatalogDevice {
     this.loadChart = const [],
     this.syncStatus = OfflineSyncStatus.localOnly,
     this.gremiumInventoryItemId,
+    this.gdtfFixtureTypeId,
   });
 
   final String id;
@@ -59,6 +60,14 @@ class CatalogDevice {
   /// import item instead of creating a duplicate.
   final String? gremiumInventoryItemId;
 
+  /// `FixtureTypeID` (GUID) from a GDTF file this device is linked to (see
+  /// ADR-035, following the same native-column idiom as
+  /// [gremiumInventoryItemId]/ADR-034) - `null` for every device added
+  /// manually or not yet linked. Set either when a GDTF import creates a
+  /// brand-new device, or when the user manually links an already-existing
+  /// device to a GDTF file instead of creating a duplicate.
+  final String? gdtfFixtureTypeId;
+
   CatalogDevice copyWith({
     String? id,
     String? name,
@@ -75,6 +84,7 @@ class CatalogDevice {
     DateTime? updatedAt,
     OfflineSyncStatus? syncStatus,
     String? gremiumInventoryItemId,
+    String? gdtfFixtureTypeId,
   }) {
     return CatalogDevice(
       id: id ?? this.id,
@@ -93,6 +103,7 @@ class CatalogDevice {
       syncStatus: syncStatus ?? this.syncStatus,
       gremiumInventoryItemId:
           gremiumInventoryItemId ?? this.gremiumInventoryItemId,
+      gdtfFixtureTypeId: gdtfFixtureTypeId ?? this.gdtfFixtureTypeId,
     );
   }
 
@@ -115,6 +126,7 @@ class CatalogDevice {
       'updatedAt': updatedAt.toIso8601String(),
       'syncStatus': syncStatus.toJson(),
       'gremiumInventoryItemId': gremiumInventoryItemId,
+      'gdtfFixtureTypeId': gdtfFixtureTypeId,
     };
   }
 
@@ -145,6 +157,7 @@ class CatalogDevice {
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       syncStatus: OfflineSyncStatusJson.fromJson(json['syncStatus'] as String?),
       gremiumInventoryItemId: json['gremiumInventoryItemId'] as String?,
+      gdtfFixtureTypeId: json['gdtfFixtureTypeId'] as String?,
     );
   }
 }
