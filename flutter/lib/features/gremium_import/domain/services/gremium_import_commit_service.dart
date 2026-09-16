@@ -16,6 +16,7 @@ class GremiumImportDecision {
     this.existingDeviceId,
     this.linkExistingDevice = false,
     this.category,
+    this.riggingKind,
   });
 
   final GremiumItem item;
@@ -34,6 +35,11 @@ class GremiumImportDecision {
   /// existing `CatalogDeviceCategory` values, never a Gremium-specific
   /// category invented just for this import.
   final CatalogDeviceCategory? category;
+
+  /// Only meaningful for [GremiumImportAction.createNewDevice] when
+  /// [category] is `rigging` - which kind of rigging device this is
+  /// (truss/hook/other), see `RiggingDeviceKind`.
+  final RiggingDeviceKind? riggingKind;
 }
 
 class GremiumImportSummary {
@@ -112,6 +118,9 @@ class GremiumImportCommitService {
             name: decision.item.name,
             manufacturer: decision.item.manufacturer,
             category: category,
+            riggingKind: category == CatalogDeviceCategory.rigging
+                ? decision.riggingKind
+                : null,
             powerW: category.showsElectricalFields
                 ? (technical.ratedPowerW ?? 0)
                 : 0,

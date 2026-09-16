@@ -19,17 +19,8 @@ void main() {
     await database.close();
   });
 
-  test('seeds, saves, loads, and soft deletes power presets', () async {
-    await repository.ensureSeedData();
-    final seededPresets = await repository.getPresets();
-
-    expect(seededPresets, isNotEmpty);
-    expect(
-      seededPresets.any(
-        (preset) => preset.name == 'Rozdzielnia 32 A / 6x Schuko',
-      ),
-      isTrue,
-    );
+  test('saves, loads, and soft deletes power presets', () async {
+    expect(await repository.getPresets(), isEmpty);
 
     final now = DateTime(2026, 7, 5);
     const presetId = 'preset_sqlite';

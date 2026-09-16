@@ -18,50 +18,40 @@ void main() {
     await database.close();
   });
 
-  test(
-    'seeds, saves, loads, and soft deletes catalog devices from sqlite',
-    () async {
-      await repository.ensureSeedData();
-      final seededDevices = await repository.getDevices();
+  test('saves, loads, and soft deletes catalog devices from sqlite', () async {
+    expect(await repository.getDevices(), isEmpty);
 
-      expect(seededDevices, isNotEmpty);
-      expect(seededDevices.any((device) => device.name == 'BMFL Spot'), isTrue);
+    final now = DateTime(2026, 7, 5);
+    const deviceId = 'sqlite_fixture';
+    await repository.saveDevice(
+      CatalogDevice(
+        id: deviceId,
+        name: 'SQLite fixture',
+        manufacturer: 'GreenCrew',
+        quantityUnit: CatalogQuantityUnit.pcs,
+        powerW: 500,
+        currentA: 2.2,
+        weightKg: 12,
+        riggingPoints: 2,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
 
-      final now = DateTime(2026, 7, 5);
-      const deviceId = 'sqlite_fixture';
-      await repository.saveDevice(
-        CatalogDevice(
-          id: deviceId,
-          name: 'SQLite fixture',
-          manufacturer: 'GreenCrew',
-          quantityUnit: CatalogQuantityUnit.pcs,
-          powerW: 500,
-          currentA: 2.2,
-          weightKg: 12,
-          riggingPoints: 2,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+    final savedDevices = await repository.getDevices();
+    final savedDevice = savedDevices.singleWhere(
+      (device) => device.id == deviceId,
+    );
 
-      final savedDevices = await repository.getDevices();
-      final savedDevice = savedDevices.singleWhere(
-        (device) => device.id == deviceId,
-      );
+    expect(savedDevice.name, 'SQLite fixture');
+    expect(savedDevice.powerW, 500);
+    expect(savedDevice.riggingPoints, 2);
 
-      expect(savedDevice.name, 'SQLite fixture');
-      expect(savedDevice.powerW, 500);
-      expect(savedDevice.riggingPoints, 2);
+    await repository.deleteDevice(deviceId);
+    final devicesAfterDelete = await repository.getDevices();
 
-      await repository.deleteDevice(deviceId);
-      final devicesAfterDelete = await repository.getDevices();
-
-      expect(
-        devicesAfterDelete.any((device) => device.id == deviceId),
-        isFalse,
-      );
-    },
-  );
+    expect(devicesAfterDelete.any((device) => device.id == deviceId), isFalse);
+  });
 
   test(
     'saves and loads multiple connector types on one device (multi-select)',

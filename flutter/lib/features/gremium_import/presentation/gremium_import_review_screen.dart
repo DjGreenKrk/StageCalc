@@ -172,6 +172,7 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
           targetGroupName: resolvedGroupName,
           action: GremiumImportAction.createNewDevice,
           category: row.category,
+          riggingKind: row.riggingKind,
         );
     }
   }
@@ -289,12 +290,14 @@ class _GremiumImportReviewScreenState extends State<GremiumImportReviewScreen> {
 
 class _ReviewRow {
   _ReviewRow({required this.match, required this.groupNameController})
-    : category = guessGremiumCategory(match.item);
+    : category = guessGremiumCategory(match.item),
+      riggingKind = guessGremiumRiggingKind(match.item);
 
   final GremiumMatchResult match;
   final TextEditingController groupNameController;
   bool selected = true;
   CatalogDeviceCategory category;
+  RiggingDeviceKind? riggingKind;
   CatalogDevice? manualLinkDevice;
 
   GremiumItem get item => match.item;
@@ -385,6 +388,36 @@ class _RowTile extends StatelessWidget {
                             },
                           ),
                         ),
+                        if (row.category == CatalogDeviceCategory.rigging)
+                          SizedBox(
+                            width: 220,
+                            child: DropdownButtonFormField<RiggingDeviceKind>(
+                              initialValue:
+                                  row.riggingKind ?? RiggingDeviceKind.other,
+                              isDense: true,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Rodzaj sprzętu riggingowego',
+                              ),
+                              items: [
+                                for (final kind in RiggingDeviceKind.values)
+                                  DropdownMenuItem(
+                                    value: kind,
+                                    child: Text(
+                                      kind.label,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                              ],
+                              onChanged: (kind) {
+                                if (kind == null) {
+                                  return;
+                                }
+                                row.riggingKind = kind;
+                                onChanged();
+                              },
+                            ),
+                          ),
                         TextButton.icon(
                           onPressed: onPickExisting,
                           icon: const Icon(Icons.search, size: 18),

@@ -30,13 +30,18 @@ class _AboutScreenState extends State<AboutScreen> {
   final _importPathController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _oldPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _newPasswordConfirmController = TextEditingController();
   var _isCreatingBackup = false;
   var _isImportingBackup = false;
   var _syncSettings = AppSyncSettings.initial;
   var _isSyncing = false;
   var _isLoggingIn = false;
+  var _isChangingPassword = false;
   String? _lastSyncMessage;
   String? _loginError;
+  String? _changePasswordError;
 
   PocketBaseAuthService get _authService =>
       PocketBaseAuthService(PocketBaseClientProvider.instance);
@@ -52,6 +57,9 @@ class _AboutScreenState extends State<AboutScreen> {
     _importPathController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _newPasswordConfirmController.dispose();
     super.dispose();
   }
 
@@ -124,6 +132,51 @@ class _AboutScreenState extends State<AboutScreen> {
                   icon: Icons.logout,
                   secondary: true,
                   onPressed: _logout,
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
+                Text(
+                  'Zmień hasło',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _oldPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Obecne hasło'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _newPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Nowe hasło'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _newPasswordConfirmController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Powtórz nowe hasło',
+                  ),
+                  onSubmitted: (_) =>
+                      _isChangingPassword ? null : _changePassword(),
+                ),
+                if (_changePasswordError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _changePasswordError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                GreenCrewButton(
+                  label: _isChangingPassword ? 'Zmienianie...' : 'Zmień hasło',
+                  icon: Icons.password_outlined,
+                  secondary: true,
+                  onPressed: _isChangingPassword ? null : _changePassword,
                 ),
               ] else ...[
                 const Text(
@@ -322,6 +375,52 @@ class _AboutScreenState extends State<AboutScreen> {
   void _logout() {
     _authService.logout();
     setState(() {});
+  }
+
+  Future<void> _changePassword() async {
+    final newPassword = _newPasswordController.text;
+
+    if (newPassword != _newPasswordConfirmController.text) {
+      setState(() => _changePasswordError = 'Nowe hasła nie są identyczne.');
+      return;
+    }
+
+    setState(() {
+      _isChangingPassword = true;
+      _changePasswordError = null;
+    });
+
+    try {
+      await _authService.changePassword(
+        oldPassword: _oldPasswordController.text,
+        newPassword: newPassword,
+      );
+      if (!mounted) {
+        return;
+      }
+      // PocketBase invalidates the current session's token as soon as the
+      // password changes, so the old session can't keep working silently -
+      // log out here and let the user log back in with the new password.
+      _authService.logout();
+      _oldPasswordController.clear();
+      _newPasswordController.clear();
+      _newPasswordConfirmController.clear();
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hasło zmienione. Zaloguj się ponownie.')),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(
+        () => _changePasswordError = 'Nie udało się zmienić hasła: $error',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isChangingPassword = false);
+      }
+    }
   }
 
   Future<void> _loadSyncSettings() async {

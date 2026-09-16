@@ -10,9 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stagecalc/app/app.dart';
+import 'package:stagecalc/features/catalog/data/demo_catalog_factory.dart';
 import 'package:stagecalc/features/catalog/data/drift_catalog_repository.dart';
 import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
 import 'package:stagecalc/features/clients/data/drift_client_repository.dart';
+import 'package:stagecalc/features/power_presets/data/demo_power_preset_factory.dart';
+import 'package:stagecalc/features/power_presets/data/drift_power_preset_repository.dart';
+import 'package:stagecalc/features/projects/data/demo_project_factory.dart';
 import 'package:stagecalc/features/projects/data/drift_project_repository.dart';
 import 'package:stagecalc/features/settings/presentation/about_screen.dart';
 import 'package:stagecalc/shared/widgets/greencrew_button.dart';
@@ -26,7 +30,7 @@ import 'package:stagecalc/infrastructure/local_database/app_database_provider.da
 void main() {
   late db.AppDatabase database;
 
-  setUp(() {
+  setUp(() async {
     database = db.AppDatabase.forTesting(NativeDatabase.memory());
     AppDatabaseProvider.overrideForTesting(database);
 
@@ -38,6 +42,23 @@ void main() {
           const MethodChannel('plugins.flutter.io/path_provider'),
           (call) async => Directory.systemTemp.path,
         );
+
+    // Production no longer auto-seeds demo data (a fresh install now starts
+    // genuinely empty, so a real team's synced data is never shadowed by
+    // built-in examples) - the widget tests below still exercise pickers,
+    // filters, and load-chart math against a known fixture set, so seed it
+    // explicitly here instead.
+    final catalogRepository = DriftCatalogRepository(database);
+    for (final device in DemoCatalogFactory.createSeedDevices()) {
+      await catalogRepository.saveDevice(device);
+    }
+    final powerPresetRepository = DriftPowerPresetRepository(database);
+    for (final preset in DemoPowerPresetFactory.createSeedPresets()) {
+      await powerPresetRepository.savePreset(preset);
+    }
+    await DriftProjectRepository(
+      database,
+    ).saveProject(DemoProjectFactory.createDemoProject());
   });
 
   tearDown(() async {
@@ -993,6 +1014,7 @@ void main() {
           id: 'prolyte_h30v',
           name: 'Prolyte H30V',
           category: CatalogDeviceCategory.rigging,
+          riggingKind: RiggingDeviceKind.truss,
           quantityUnit: CatalogQuantityUnit.pcs,
           createdAt: now,
           updatedAt: now,

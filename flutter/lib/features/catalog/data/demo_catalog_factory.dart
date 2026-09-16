@@ -52,6 +52,7 @@ class DemoCatalogFactory {
         name: 'Zacisk hakowy',
         manufacturer: 'GreenCrew',
         category: CatalogDeviceCategory.rigging,
+        riggingKind: RiggingDeviceKind.hook,
         powerW: 0,
         currentA: 0,
         weightKg: 0.3,

@@ -45,6 +45,7 @@ class StageCalcShell extends StatefulWidget {
 class _StageCalcShellState extends State<StageCalcShell> {
   var _index = 0;
   Timer? _autoSyncTimer;
+  StreamSubscription? _authSubscription;
 
   @override
   void initState() {
@@ -54,11 +55,17 @@ class _StageCalcShellState extends State<StageCalcShell> {
       _autoSyncCheckInterval,
       (_) => _maybeAutoSync(),
     );
+    // The banner below reads authStore.isValid directly, so it needs a
+    // rebuild whenever login/logout changes that value - otherwise it stays
+    // stuck showing whatever state was true when this screen first built.
+    _authSubscription = PocketBaseClientProvider.instance.authStore.onChange
+        .listen((_) => setState(() {}));
   }
 
   @override
   void dispose() {
     _autoSyncTimer?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 
@@ -147,7 +154,8 @@ class _StageCalcShellState extends State<StageCalcShell> {
       ),
       body: Column(
         children: [
-          const GreenCrewOfflineBanner(),
+          if (!PocketBaseClientProvider.instance.authStore.isValid)
+            const GreenCrewOfflineBanner(),
           Expanded(
             child: Row(
               children: [

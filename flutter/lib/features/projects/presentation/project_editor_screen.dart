@@ -788,7 +788,11 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
   }
 
   List<CatalogDevice> get _trussDevices => _controller.catalogDevices
-      .where((device) => device.category == CatalogDeviceCategory.rigging)
+      .where(
+        (device) =>
+            device.category == CatalogDeviceCategory.rigging &&
+            device.riggingKind == RiggingDeviceKind.truss,
+      )
       .toList();
 
   Future<void> _openAddTrussDialog(List<ProjectGroup> groups) async {
@@ -882,6 +886,13 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
 
   Future<void> _openAddHookDialog(ProjectGroup group) async {
     final devices = await _controller.loadCatalogDevices();
+    final hookDevices = devices
+        .where(
+          (device) =>
+              device.category == CatalogDeviceCategory.rigging &&
+              device.riggingKind == RiggingDeviceKind.hook,
+        )
+        .toList();
 
     if (!mounted) {
       return;
@@ -889,7 +900,7 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
 
     final result = await showDialog<_CatalogSelectionResult>(
       context: context,
-      builder: (context) => _CatalogSelectionDialog(devices: devices),
+      builder: (context) => _CatalogSelectionDialog(devices: hookDevices),
     );
 
     if (result == null) {

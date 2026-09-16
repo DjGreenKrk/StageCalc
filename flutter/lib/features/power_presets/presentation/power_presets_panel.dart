@@ -39,7 +39,6 @@ class _PowerPresetsPanelState extends State<PowerPresetsPanel> {
       final repository = DriftPowerPresetRepository(
         AppDatabaseProvider.instance,
       );
-      await repository.ensureSeedData();
       final presets = await repository.getPresets();
 
       if (!mounted) {

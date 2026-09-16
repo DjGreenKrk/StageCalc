@@ -20,6 +20,7 @@ class CatalogDevice {
     this.syncStatus = OfflineSyncStatus.localOnly,
     this.gremiumInventoryItemId,
     this.gdtfFixtureTypeId,
+    this.riggingKind,
   });
 
   final String id;
@@ -68,6 +69,14 @@ class CatalogDevice {
   /// device to a GDTF file instead of creating a duplicate.
   final String? gdtfFixtureTypeId;
 
+  /// Which kind of rigging hardware this device is (truss/hook/other) -
+  /// meaningful only when [category] is [CatalogDeviceCategory.rigging],
+  /// `null` for every other category and for rigging devices not yet
+  /// classified. Lets the truss-model picker and the "add hook" picker in
+  /// the project editor each show only the rigging devices relevant to
+  /// them, instead of every device in the flat `rigging` category.
+  final RiggingDeviceKind? riggingKind;
+
   CatalogDevice copyWith({
     String? id,
     String? name,
@@ -85,6 +94,7 @@ class CatalogDevice {
     OfflineSyncStatus? syncStatus,
     String? gremiumInventoryItemId,
     String? gdtfFixtureTypeId,
+    RiggingDeviceKind? riggingKind,
   }) {
     return CatalogDevice(
       id: id ?? this.id,
@@ -104,6 +114,7 @@ class CatalogDevice {
       gremiumInventoryItemId:
           gremiumInventoryItemId ?? this.gremiumInventoryItemId,
       gdtfFixtureTypeId: gdtfFixtureTypeId ?? this.gdtfFixtureTypeId,
+      riggingKind: riggingKind ?? this.riggingKind,
     );
   }
 
@@ -127,6 +138,7 @@ class CatalogDevice {
       'syncStatus': syncStatus.toJson(),
       'gremiumInventoryItemId': gremiumInventoryItemId,
       'gdtfFixtureTypeId': gdtfFixtureTypeId,
+      'riggingKind': riggingKind?.toJson(),
     };
   }
 
@@ -158,6 +170,9 @@ class CatalogDevice {
       syncStatus: OfflineSyncStatusJson.fromJson(json['syncStatus'] as String?),
       gremiumInventoryItemId: json['gremiumInventoryItemId'] as String?,
       gdtfFixtureTypeId: json['gdtfFixtureTypeId'] as String?,
+      riggingKind: RiggingDeviceKindJson.fromJson(
+        json['riggingKind'] as String?,
+      ),
     );
   }
 }
@@ -264,6 +279,41 @@ extension CatalogDeviceCategoryJson on CatalogDeviceCategory {
       (category) => category.name == value,
       orElse: () => CatalogDeviceCategory.other,
     );
+  }
+}
+
+/// Sub-classification of a [CatalogDeviceCategory.rigging] device, since the
+/// category itself is deliberately flat (trusses, hooks/clamps, and future
+/// hoists all share it). Used to narrow the truss-model picker and the
+/// "add hook" picker in the project editor to only the rigging devices
+/// relevant to each, instead of the whole `rigging` category.
+///
+/// Deliberately just these three values for now: nothing in the app has
+/// hoist-specific behaviour yet, so a `hoist` variant would sit unused -
+/// add it the same way as `truss`/`hook` once it's actually needed.
+enum RiggingDeviceKind { truss, hook, other }
+
+extension RiggingDeviceKindFields on RiggingDeviceKind {
+  String get label => switch (this) {
+    RiggingDeviceKind.truss => 'Kratownica',
+    RiggingDeviceKind.hook => 'Hak',
+    RiggingDeviceKind.other => 'Inne',
+  };
+}
+
+extension RiggingDeviceKindJson on RiggingDeviceKind {
+  String toJson() => name;
+
+  static RiggingDeviceKind? fromJson(String? value) {
+    if (value == null) {
+      return null;
+    }
+    for (final kind in RiggingDeviceKind.values) {
+      if (kind.name == value) {
+        return kind;
+      }
+    }
+    return null;
   }
 }
 

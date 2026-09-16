@@ -59,12 +59,11 @@ Future<void> _login(PocketBase pb) async {
 
 void main() {
   test('syncs demo data against the real PocketBase server', () async {
-    final pb = PocketBase('http://192.168.0.113');
+    final pb = PocketBase('https://stagecalc.greencrew.pl');
     await _login(pb);
     final database = db.AppDatabase.forTesting(NativeDatabase.memory());
 
     final catalogRepository = DriftCatalogRepository(database);
-    await catalogRepository.ensureSeedData();
     await catalogRepository.saveDevice(
       DemoCatalogFactory.createSeedDevices().first,
     );
@@ -135,7 +134,7 @@ void main() {
   });
 
   test('pulls existing remote data into a brand new local database', () async {
-    final pb = PocketBase('http://192.168.0.113');
+    final pb = PocketBase('https://stagecalc.greencrew.pl');
     await _login(pb);
     final database = db.AppDatabase.forTesting(NativeDatabase.memory());
 

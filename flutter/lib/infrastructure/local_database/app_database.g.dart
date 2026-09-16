@@ -7838,6 +7838,17 @@ class $CatalogDevicesTable extends CatalogDevices
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _riggingKindMeta = const VerificationMeta(
+    'riggingKind',
+  );
+  @override
+  late final GeneratedColumn<String> riggingKind = GeneratedColumn<String>(
+    'rigging_kind',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -7923,6 +7934,7 @@ class $CatalogDevicesTable extends CatalogDevices
     quantityUnit,
     gremiumInventoryItemId,
     gdtfFixtureTypeId,
+    riggingKind,
     createdAt,
     updatedAt,
     deletedAt,
@@ -8057,6 +8069,15 @@ class $CatalogDevicesTable extends CatalogDevices
         ),
       );
     }
+    if (data.containsKey('rigging_kind')) {
+      context.handle(
+        _riggingKindMeta,
+        riggingKind.isAcceptableOrUnknown(
+          data['rigging_kind']!,
+          _riggingKindMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -8169,6 +8190,10 @@ class $CatalogDevicesTable extends CatalogDevices
         DriftSqlType.string,
         data['${effectivePrefix}gdtf_fixture_type_id'],
       ),
+      riggingKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rigging_kind'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -8234,6 +8259,11 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
   /// (ADR-035) - `null` for every device added manually or not yet linked to
   /// a GDTF import.
   final String? gdtfFixtureTypeId;
+
+  /// Sub-classification of a rigging-category device (truss/hook/other) -
+  /// `null` for every non-rigging device and for rigging devices not yet
+  /// classified. See `RiggingDeviceKind`.
+  final String? riggingKind;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -8256,6 +8286,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     required this.quantityUnit,
     this.gremiumInventoryItemId,
     this.gdtfFixtureTypeId,
+    this.riggingKind,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -8294,6 +8325,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     }
     if (!nullToAbsent || gdtfFixtureTypeId != null) {
       map['gdtf_fixture_type_id'] = Variable<String>(gdtfFixtureTypeId);
+    }
+    if (!nullToAbsent || riggingKind != null) {
+      map['rigging_kind'] = Variable<String>(riggingKind);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -8337,6 +8371,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gdtfFixtureTypeId: gdtfFixtureTypeId == null && nullToAbsent
           ? const Value.absent()
           : Value(gdtfFixtureTypeId),
+      riggingKind: riggingKind == null && nullToAbsent
+          ? const Value.absent()
+          : Value(riggingKind),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -8377,6 +8414,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gdtfFixtureTypeId: serializer.fromJson<String?>(
         json['gdtfFixtureTypeId'],
       ),
+      riggingKind: serializer.fromJson<String?>(json['riggingKind']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -8406,6 +8444,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
         gremiumInventoryItemId,
       ),
       'gdtfFixtureTypeId': serializer.toJson<String?>(gdtfFixtureTypeId),
+      'riggingKind': serializer.toJson<String?>(riggingKind),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -8431,6 +8470,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     String? quantityUnit,
     Value<String?> gremiumInventoryItemId = const Value.absent(),
     Value<String?> gdtfFixtureTypeId = const Value.absent(),
+    Value<String?> riggingKind = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -8461,6 +8501,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     gdtfFixtureTypeId: gdtfFixtureTypeId.present
         ? gdtfFixtureTypeId.value
         : this.gdtfFixtureTypeId,
+    riggingKind: riggingKind.present ? riggingKind.value : this.riggingKind,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -8501,6 +8542,9 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
       gdtfFixtureTypeId: data.gdtfFixtureTypeId.present
           ? data.gdtfFixtureTypeId.value
           : this.gdtfFixtureTypeId,
+      riggingKind: data.riggingKind.present
+          ? data.riggingKind.value
+          : this.riggingKind,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -8530,6 +8574,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           ..write('quantityUnit: $quantityUnit, ')
           ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
           ..write('gdtfFixtureTypeId: $gdtfFixtureTypeId, ')
+          ..write('riggingKind: $riggingKind, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8557,6 +8602,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
     quantityUnit,
     gremiumInventoryItemId,
     gdtfFixtureTypeId,
+    riggingKind,
     createdAt,
     updatedAt,
     deletedAt,
@@ -8583,6 +8629,7 @@ class CatalogDevice extends DataClass implements Insertable<CatalogDevice> {
           other.quantityUnit == this.quantityUnit &&
           other.gremiumInventoryItemId == this.gremiumInventoryItemId &&
           other.gdtfFixtureTypeId == this.gdtfFixtureTypeId &&
+          other.riggingKind == this.riggingKind &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -8607,6 +8654,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
   final Value<String> quantityUnit;
   final Value<String?> gremiumInventoryItemId;
   final Value<String?> gdtfFixtureTypeId;
+  final Value<String?> riggingKind;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -8630,6 +8678,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.quantityUnit = const Value.absent(),
     this.gremiumInventoryItemId = const Value.absent(),
     this.gdtfFixtureTypeId = const Value.absent(),
+    this.riggingKind = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -8654,6 +8703,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     this.quantityUnit = const Value.absent(),
     this.gremiumInventoryItemId = const Value.absent(),
     this.gdtfFixtureTypeId = const Value.absent(),
+    this.riggingKind = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -8681,6 +8731,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Expression<String>? quantityUnit,
     Expression<String>? gremiumInventoryItemId,
     Expression<String>? gdtfFixtureTypeId,
+    Expression<String>? riggingKind,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -8707,6 +8758,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       if (gremiumInventoryItemId != null)
         'gremium_inventory_item_id': gremiumInventoryItemId,
       if (gdtfFixtureTypeId != null) 'gdtf_fixture_type_id': gdtfFixtureTypeId,
+      if (riggingKind != null) 'rigging_kind': riggingKind,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -8733,6 +8785,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     Value<String>? quantityUnit,
     Value<String?>? gremiumInventoryItemId,
     Value<String?>? gdtfFixtureTypeId,
+    Value<String?>? riggingKind,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -8758,6 +8811,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
       gremiumInventoryItemId:
           gremiumInventoryItemId ?? this.gremiumInventoryItemId,
       gdtfFixtureTypeId: gdtfFixtureTypeId ?? this.gdtfFixtureTypeId,
+      riggingKind: riggingKind ?? this.riggingKind,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -8820,6 +8874,9 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
     if (gdtfFixtureTypeId.present) {
       map['gdtf_fixture_type_id'] = Variable<String>(gdtfFixtureTypeId.value);
     }
+    if (riggingKind.present) {
+      map['rigging_kind'] = Variable<String>(riggingKind.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -8862,6 +8919,7 @@ class CatalogDevicesCompanion extends UpdateCompanion<CatalogDevice> {
           ..write('quantityUnit: $quantityUnit, ')
           ..write('gremiumInventoryItemId: $gremiumInventoryItemId, ')
           ..write('gdtfFixtureTypeId: $gdtfFixtureTypeId, ')
+          ..write('riggingKind: $riggingKind, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -14877,6 +14935,238 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   }
 }
 
+class $DismissedDuplicatePairsTable extends DismissedDuplicatePairs
+    with TableInfo<$DismissedDuplicatePairsTable, DismissedDuplicatePair> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DismissedDuplicatePairsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _pairKeyMeta = const VerificationMeta(
+    'pairKey',
+  );
+  @override
+  late final GeneratedColumn<String> pairKey = GeneratedColumn<String>(
+    'pair_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dismissedAtMeta = const VerificationMeta(
+    'dismissedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dismissedAt = GeneratedColumn<DateTime>(
+    'dismissed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [pairKey, dismissedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'dismissed_duplicate_pairs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DismissedDuplicatePair> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('pair_key')) {
+      context.handle(
+        _pairKeyMeta,
+        pairKey.isAcceptableOrUnknown(data['pair_key']!, _pairKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pairKeyMeta);
+    }
+    if (data.containsKey('dismissed_at')) {
+      context.handle(
+        _dismissedAtMeta,
+        dismissedAt.isAcceptableOrUnknown(
+          data['dismissed_at']!,
+          _dismissedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dismissedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {pairKey};
+  @override
+  DismissedDuplicatePair map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DismissedDuplicatePair(
+      pairKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pair_key'],
+      )!,
+      dismissedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dismissed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DismissedDuplicatePairsTable createAlias(String alias) {
+    return $DismissedDuplicatePairsTable(attachedDatabase, alias);
+  }
+}
+
+class DismissedDuplicatePair extends DataClass
+    implements Insertable<DismissedDuplicatePair> {
+  /// The two device ids joined as `"$idA|$idB"`, sorted lexicographically
+  /// first so either comparison order maps to the same key.
+  final String pairKey;
+  final DateTime dismissedAt;
+  const DismissedDuplicatePair({
+    required this.pairKey,
+    required this.dismissedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['pair_key'] = Variable<String>(pairKey);
+    map['dismissed_at'] = Variable<DateTime>(dismissedAt);
+    return map;
+  }
+
+  DismissedDuplicatePairsCompanion toCompanion(bool nullToAbsent) {
+    return DismissedDuplicatePairsCompanion(
+      pairKey: Value(pairKey),
+      dismissedAt: Value(dismissedAt),
+    );
+  }
+
+  factory DismissedDuplicatePair.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DismissedDuplicatePair(
+      pairKey: serializer.fromJson<String>(json['pairKey']),
+      dismissedAt: serializer.fromJson<DateTime>(json['dismissedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'pairKey': serializer.toJson<String>(pairKey),
+      'dismissedAt': serializer.toJson<DateTime>(dismissedAt),
+    };
+  }
+
+  DismissedDuplicatePair copyWith({String? pairKey, DateTime? dismissedAt}) =>
+      DismissedDuplicatePair(
+        pairKey: pairKey ?? this.pairKey,
+        dismissedAt: dismissedAt ?? this.dismissedAt,
+      );
+  DismissedDuplicatePair copyWithCompanion(
+    DismissedDuplicatePairsCompanion data,
+  ) {
+    return DismissedDuplicatePair(
+      pairKey: data.pairKey.present ? data.pairKey.value : this.pairKey,
+      dismissedAt: data.dismissedAt.present
+          ? data.dismissedAt.value
+          : this.dismissedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DismissedDuplicatePair(')
+          ..write('pairKey: $pairKey, ')
+          ..write('dismissedAt: $dismissedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(pairKey, dismissedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DismissedDuplicatePair &&
+          other.pairKey == this.pairKey &&
+          other.dismissedAt == this.dismissedAt);
+}
+
+class DismissedDuplicatePairsCompanion
+    extends UpdateCompanion<DismissedDuplicatePair> {
+  final Value<String> pairKey;
+  final Value<DateTime> dismissedAt;
+  final Value<int> rowid;
+  const DismissedDuplicatePairsCompanion({
+    this.pairKey = const Value.absent(),
+    this.dismissedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DismissedDuplicatePairsCompanion.insert({
+    required String pairKey,
+    required DateTime dismissedAt,
+    this.rowid = const Value.absent(),
+  }) : pairKey = Value(pairKey),
+       dismissedAt = Value(dismissedAt);
+  static Insertable<DismissedDuplicatePair> custom({
+    Expression<String>? pairKey,
+    Expression<DateTime>? dismissedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (pairKey != null) 'pair_key': pairKey,
+      if (dismissedAt != null) 'dismissed_at': dismissedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DismissedDuplicatePairsCompanion copyWith({
+    Value<String>? pairKey,
+    Value<DateTime>? dismissedAt,
+    Value<int>? rowid,
+  }) {
+    return DismissedDuplicatePairsCompanion(
+      pairKey: pairKey ?? this.pairKey,
+      dismissedAt: dismissedAt ?? this.dismissedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (pairKey.present) {
+      map['pair_key'] = Variable<String>(pairKey.value);
+    }
+    if (dismissedAt.present) {
+      map['dismissed_at'] = Variable<DateTime>(dismissedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DismissedDuplicatePairsCompanion(')
+          ..write('pairKey: $pairKey, ')
+          ..write('dismissedAt: $dismissedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -14905,6 +15195,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PowerOutletTemplatesTable powerOutletTemplates =
       $PowerOutletTemplatesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
+  late final $DismissedDuplicatePairsTable dismissedDuplicatePairs =
+      $DismissedDuplicatePairsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -14927,6 +15219,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     powerPresets,
     powerOutletTemplates,
     appSettings,
+    dismissedDuplicatePairs,
   ];
 }
 
@@ -20932,6 +21225,7 @@ typedef $$CatalogDevicesTableCreateCompanionBuilder =
       Value<String> quantityUnit,
       Value<String?> gremiumInventoryItemId,
       Value<String?> gdtfFixtureTypeId,
+      Value<String?> riggingKind,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -20957,6 +21251,7 @@ typedef $$CatalogDevicesTableUpdateCompanionBuilder =
       Value<String> quantityUnit,
       Value<String?> gremiumInventoryItemId,
       Value<String?> gdtfFixtureTypeId,
+      Value<String?> riggingKind,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -21085,6 +21380,11 @@ class $$CatalogDevicesTableFilterComposer
 
   ColumnFilters<String> get gdtfFixtureTypeId => $composableBuilder(
     column: $table.gdtfFixtureTypeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get riggingKind => $composableBuilder(
+    column: $table.riggingKind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -21229,6 +21529,11 @@ class $$CatalogDevicesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get riggingKind => $composableBuilder(
+    column: $table.riggingKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -21330,6 +21635,11 @@ class $$CatalogDevicesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get riggingKind => $composableBuilder(
+    column: $table.riggingKind,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -21422,6 +21732,7 @@ class $$CatalogDevicesTableTableManager
                 Value<String> quantityUnit = const Value.absent(),
                 Value<String?> gremiumInventoryItemId = const Value.absent(),
                 Value<String?> gdtfFixtureTypeId = const Value.absent(),
+                Value<String?> riggingKind = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21445,6 +21756,7 @@ class $$CatalogDevicesTableTableManager
                 quantityUnit: quantityUnit,
                 gremiumInventoryItemId: gremiumInventoryItemId,
                 gdtfFixtureTypeId: gdtfFixtureTypeId,
+                riggingKind: riggingKind,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -21470,6 +21782,7 @@ class $$CatalogDevicesTableTableManager
                 Value<String> quantityUnit = const Value.absent(),
                 Value<String?> gremiumInventoryItemId = const Value.absent(),
                 Value<String?> gdtfFixtureTypeId = const Value.absent(),
+                Value<String?> riggingKind = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -21493,6 +21806,7 @@ class $$CatalogDevicesTableTableManager
                 quantityUnit: quantityUnit,
                 gremiumInventoryItemId: gremiumInventoryItemId,
                 gdtfFixtureTypeId: gdtfFixtureTypeId,
+                riggingKind: riggingKind,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -25255,6 +25569,182 @@ typedef $$AppSettingsTableProcessedTableManager =
       AppSetting,
       PrefetchHooks Function()
     >;
+typedef $$DismissedDuplicatePairsTableCreateCompanionBuilder =
+    DismissedDuplicatePairsCompanion Function({
+      required String pairKey,
+      required DateTime dismissedAt,
+      Value<int> rowid,
+    });
+typedef $$DismissedDuplicatePairsTableUpdateCompanionBuilder =
+    DismissedDuplicatePairsCompanion Function({
+      Value<String> pairKey,
+      Value<DateTime> dismissedAt,
+      Value<int> rowid,
+    });
+
+class $$DismissedDuplicatePairsTableFilterComposer
+    extends Composer<_$AppDatabase, $DismissedDuplicatePairsTable> {
+  $$DismissedDuplicatePairsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get pairKey => $composableBuilder(
+    column: $table.pairKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dismissedAt => $composableBuilder(
+    column: $table.dismissedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DismissedDuplicatePairsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DismissedDuplicatePairsTable> {
+  $$DismissedDuplicatePairsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get pairKey => $composableBuilder(
+    column: $table.pairKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dismissedAt => $composableBuilder(
+    column: $table.dismissedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DismissedDuplicatePairsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DismissedDuplicatePairsTable> {
+  $$DismissedDuplicatePairsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get pairKey =>
+      $composableBuilder(column: $table.pairKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dismissedAt => $composableBuilder(
+    column: $table.dismissedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$DismissedDuplicatePairsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DismissedDuplicatePairsTable,
+          DismissedDuplicatePair,
+          $$DismissedDuplicatePairsTableFilterComposer,
+          $$DismissedDuplicatePairsTableOrderingComposer,
+          $$DismissedDuplicatePairsTableAnnotationComposer,
+          $$DismissedDuplicatePairsTableCreateCompanionBuilder,
+          $$DismissedDuplicatePairsTableUpdateCompanionBuilder,
+          (
+            DismissedDuplicatePair,
+            BaseReferences<
+              _$AppDatabase,
+              $DismissedDuplicatePairsTable,
+              DismissedDuplicatePair
+            >,
+          ),
+          DismissedDuplicatePair,
+          PrefetchHooks Function()
+        > {
+  $$DismissedDuplicatePairsTableTableManager(
+    _$AppDatabase db,
+    $DismissedDuplicatePairsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DismissedDuplicatePairsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DismissedDuplicatePairsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DismissedDuplicatePairsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> pairKey = const Value.absent(),
+                Value<DateTime> dismissedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DismissedDuplicatePairsCompanion(
+                pairKey: pairKey,
+                dismissedAt: dismissedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String pairKey,
+                required DateTime dismissedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DismissedDuplicatePairsCompanion.insert(
+                pairKey: pairKey,
+                dismissedAt: dismissedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $DismissedDuplicatePairsTable,
+                    DismissedDuplicatePair
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $DismissedDuplicatePairsTable,
+                    DismissedDuplicatePair
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DismissedDuplicatePairsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DismissedDuplicatePairsTable,
+      DismissedDuplicatePair,
+      $$DismissedDuplicatePairsTableFilterComposer,
+      $$DismissedDuplicatePairsTableOrderingComposer,
+      $$DismissedDuplicatePairsTableAnnotationComposer,
+      $$DismissedDuplicatePairsTableCreateCompanionBuilder,
+      $$DismissedDuplicatePairsTableUpdateCompanionBuilder,
+      (
+        DismissedDuplicatePair,
+        BaseReferences<
+          _$AppDatabase,
+          $DismissedDuplicatePairsTable,
+          DismissedDuplicatePair
+        >,
+      ),
+      DismissedDuplicatePair,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -25300,4 +25790,9 @@ class $AppDatabaseManager {
       $$PowerOutletTemplatesTableTableManager(_db, _db.powerOutletTemplates);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
+  $$DismissedDuplicatePairsTableTableManager get dismissedDuplicatePairs =>
+      $$DismissedDuplicatePairsTableTableManager(
+        _db,
+        _db.dismissedDuplicatePairs,
+      );
 }

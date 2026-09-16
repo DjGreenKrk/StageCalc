@@ -3,8 +3,8 @@ import 'package:drift/drift.dart';
 import '../../../infrastructure/local_database/app_database.dart' as db;
 import '../../../shared/models/offline_sync_status.dart';
 import '../domain/entities/catalog_device.dart';
+import '../domain/services/catalog_duplicate_detector.dart';
 import 'catalog_repository.dart';
-import 'demo_catalog_factory.dart';
 
 class DriftCatalogRepository implements CatalogRepository {
   const DriftCatalogRepository(this._database);
@@ -38,6 +38,42 @@ class DriftCatalogRepository implements CatalogRepository {
   }
 
   @override
+  Future<List<CatalogDuplicatePair>> getPossibleDuplicates() async {
+    final devices = await getDevices();
+    final pairs = CatalogDuplicateDetector.findPairs(devices);
+    if (pairs.isEmpty) {
+      return pairs;
+    }
+
+    final dismissedKeys =
+        (await _database.select(_database.dismissedDuplicatePairs).get())
+            .map((row) => row.pairKey)
+            .toSet();
+
+    return pairs
+        .where(
+          (pair) => !dismissedKeys.contains(
+            CatalogDuplicateDetector.pairKey(pair.deviceA.id, pair.deviceB.id),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> dismissDuplicatePair(String deviceIdA, String deviceIdB) async {
+    await _database
+        .into(_database.dismissedDuplicatePairs)
+        .insertOnConflictUpdate(
+          db.DismissedDuplicatePairsCompanion(
+            pairKey: Value(
+              CatalogDuplicateDetector.pairKey(deviceIdA, deviceIdB),
+            ),
+            dismissedAt: Value(DateTime.now()),
+          ),
+        );
+  }
+
+  @override
   Future<void> saveDevice(CatalogDevice device) async {
     await _database.transaction(() async {
       await _database
@@ -60,6 +96,7 @@ class DriftCatalogRepository implements CatalogRepository {
               quantityUnit: Value(device.quantityUnit.toJson()),
               gremiumInventoryItemId: Value(device.gremiumInventoryItemId),
               gdtfFixtureTypeId: Value(device.gdtfFixtureTypeId),
+              riggingKind: Value(device.riggingKind?.toJson()),
               createdAt: Value(device.createdAt),
               updatedAt: Value(device.updatedAt),
               deletedAt: const Value(null),
@@ -128,21 +165,6 @@ class DriftCatalogRepository implements CatalogRepository {
     });
   }
 
-  @override
-  Future<void> ensureSeedData() async {
-    final devices = await getDevices();
-    if (devices.isNotEmpty) {
-      return;
-    }
-
-    await _database.batch((batch) {
-      batch.insertAllOnConflictUpdate(
-        _database.catalogDevices,
-        DemoCatalogFactory.createSeedDevices().map(_deviceToCompanion).toList(),
-      );
-    });
-  }
-
   CatalogDevice _mapDevice(
     db.CatalogDevice row,
     List<db.TrussLoadChartEntry> loadChartRows,
@@ -166,6 +188,7 @@ class DriftCatalogRepository implements CatalogRepository {
       syncStatus: OfflineSyncStatusJson.fromJson(row.syncState),
       gremiumInventoryItemId: row.gremiumInventoryItemId,
       gdtfFixtureTypeId: row.gdtfFixtureTypeId,
+      riggingKind: RiggingDeviceKindJson.fromJson(row.riggingKind),
     );
   }
 
@@ -175,28 +198,6 @@ class DriftCatalogRepository implements CatalogRepository {
       lengthM: row.lengthM,
       pointLoadKg: row.pointLoadKg,
       distributedLoadKgPerM: row.distributedLoadKgPerM,
-    );
-  }
-
-  db.CatalogDevicesCompanion _deviceToCompanion(CatalogDevice device) {
-    return db.CatalogDevicesCompanion(
-      id: Value(device.id),
-      name: Value(device.name),
-      manufacturer: Value(device.manufacturer),
-      category: Value(device.category.toJson()),
-      powerW: Value(device.powerW),
-      currentA: Value(device.currentA),
-      weightKg: Value(device.weightKg),
-      connectorTypeIdsJson: Value(
-        CatalogConnectorTypeJson.encodeStoredList(device.connectorTypeIds),
-      ),
-      riggingPoints: Value(device.riggingPoints),
-      quantityUnit: Value(device.quantityUnit.toJson()),
-      gremiumInventoryItemId: Value(device.gremiumInventoryItemId),
-      gdtfFixtureTypeId: Value(device.gdtfFixtureTypeId),
-      createdAt: Value(device.createdAt),
-      updatedAt: Value(device.updatedAt),
-      syncState: Value(device.syncStatus.toJson()),
     );
   }
 }

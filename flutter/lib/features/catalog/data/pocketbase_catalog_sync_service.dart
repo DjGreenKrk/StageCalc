@@ -81,6 +81,9 @@ class PocketBaseCatalogSyncService {
       'weight_kg': local.weightKg,
       'connector_type_id': local.connectorTypeIdsJson,
       'rigging_points': local.riggingPoints,
+      'rigging_kind': local.riggingKind,
+      'gdtf_fixture_type_id': local.gdtfFixtureTypeId,
+      'gremium_inventory_item_id': local.gremiumInventoryItemId,
       'quantity_unit': local.quantityUnit,
       'created_at': toRemoteIso(local.createdAt),
       'updated_at': toRemoteIso(local.updatedAt),
@@ -156,6 +159,13 @@ class PocketBaseCatalogSyncService {
                 remote.data['rigging_points'] == null
                     ? null
                     : remote.getIntValue('rigging_points'),
+              ),
+              riggingKind: Value(_nullable(remote, 'rigging_kind')),
+              gdtfFixtureTypeId: Value(
+                _nullable(remote, 'gdtf_fixture_type_id'),
+              ),
+              gremiumInventoryItemId: Value(
+                _nullable(remote, 'gremium_inventory_item_id'),
               ),
               quantityUnit: Value(
                 remote.getStringValue('quantity_unit', 'pcs'),

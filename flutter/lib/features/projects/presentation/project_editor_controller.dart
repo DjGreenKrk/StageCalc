@@ -106,7 +106,6 @@ class ProjectEditorController extends ChangeNotifier {
     final clients = await DriftClientRepository(database).getClients();
     final locations = await DriftLocationRepository(database).getLocations();
     final powerPresetRepository = DriftPowerPresetRepository(database);
-    await powerPresetRepository.ensureSeedData();
     final powerPresets = await powerPresetRepository.getPresets();
     final catalogDevices = await loadCatalogDevices();
 
@@ -119,7 +118,6 @@ class ProjectEditorController extends ChangeNotifier {
 
   Future<List<CatalogDevice>> loadCatalogDevices() async {
     final repository = DriftCatalogRepository(AppDatabaseProvider.instance);
-    await repository.ensureSeedData();
     return repository.getDevices();
   }
 

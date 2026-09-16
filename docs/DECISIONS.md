@@ -390,6 +390,86 @@ Uzasadnienie:
 - Obecnie PDF jest częścią dużego komponentu kalkulatora.
 - W Flutterze raport powinien używać tych samych serwisów domenowych co UI.
 
+## ADR-038: Wykrywanie i scalanie duplikatów w katalogu (dopasowanie po nazwie)
+
+Status: accepted
+
+Kontekst:
+
+- ADR-037 rozwiązał duplikaty pochodzące z importu GDTF/Gremium, ale nie chroni urządzeń dodawanych **ręcznie** - te nigdy nie mają żadnego id importu, po którym dałoby się je dopasować.
+- Realny scenariusz: dwie osoby na różnych, niezsynchronizowanych ze sobą urządzeniach ręcznie dodają ten sam sprzęt (np. "Robe Pointe"). `PocketBaseCatalogSyncService` dopasowuje rekordy wyłącznie po `local_id` każdego urządzenia - skoro obie osoby wygenerowały różne lokalne id, po synchronizacji obu stron w współdzielonym katalogu (`workspace_id: 'local'` dla wszystkich) powstają na trwałe dwa osobne rekordy tego samego sprzętu.
+- Cztery pola w drzewie projektu trzymają odniesienie do urządzenia katalogowego: `ProjectItem.catalogDeviceId`, `ProjectDistro.catalogDeviceId`, `ProjectGroupHookAssignment.hookCatalogDeviceId` (wszystkie trzy to czysty ślad pochodzenia - nic ich nie odczytuje ponownie, bo te encje trzymają własny snapshot nazwy/mocy/wagi) oraz `ProjectTruss.trussCatalogDeviceId`, który **jest** żywym odnośnikiem używanym przez `TrussLoadService.calculateLoad` do interpolacji tabeli nośności.
+
+Decyzja:
+
+- Nowy, czysty serwis domenowy `CatalogDuplicateDetector` porównuje urządzenia w tej samej kategorii, znormalizowaną nazwą (lowercase + usunięcie znaków niealfanumerycznych, jak `CatalogConnectorTypeJson._normalize`), przez znormalizowany dystans Levenshteina - próg domyślny 90%. Nigdy nic nie scala ani nie usuwa sam - tylko zwraca pary do przeglądu.
+- Nowa, lokalna, **niesynchronizowana** tabela `DismissedDuplicatePairs` (jak `AppSettings`) pamięta pary, które użytkownik już sprawdził i uznał za nie-duplikat, żeby nie wracały przy każdym wejściu na ekran. Schemat lokalny podniesiony do wersji `20`.
+- Ekran Katalogu pokazuje baner z liczbą możliwych duplikatów i otwiera `CatalogDuplicateReviewDialog` do przeglądu każdej pary: "To nie duplikat" albo "Scal" (z wyborem, które urządzenie zachować, domyślnie starsze wg daty dodania).
+- Nowy serwis `CatalogDuplicateMergeService` dostaje bezpośrednio `AppDatabase` (jak repozytoria) i w jednej transakcji: przepina `ProjectItem`/`ProjectDistro`/`ProjectGroupHookAssignment`/`ProjectTruss` z odrzucanego urządzenia na zachowywane (z podbiciem `updatedAt`, żeby przepięte wiersze naturalnie wypchnęły się na serwer przy najbliższej synchronizacji - `decideSyncDirection` porównuje tylko znaczniki czasu), kopiuje na zachowywane urządzenie ewentualny `gdtfFixtureTypeId`/`gremiumInventoryItemId` odrzucanego urządzenia (jeśli zachowywane go jeszcze nie ma - inaczej przyszły reimport tego samego pliku GDTF/Gremium przestałby rozpoznawać zachowane urządzenie i wygenerowałby duplikat od nowa), po czym usuwa odrzucane urządzenie przez już istniejące `deleteDevice()` (soft-deletuje przy okazji jego własną tabelę nośności).
+
+Uzasadnienie:
+
+- Wysokie podobieństwo nazwy nigdy nie jest samo w sobie dowodem duplikacji (dwa różne produkty różnych producentów mogą nazywać się niemal identycznie) - stąd wyłącznie tryb "zaproponuj do przeglądu", nigdy automatyczne scalanie czy usuwanie.
+- Świadomy wyjątek od podziału na warstwy per-funkcja dla `CatalogDuplicateMergeService` (dostaje `AppDatabase`, nie `CatalogRepository`) - scalanie musi w jednej transakcji dotknąć tabel z dwóch funkcji (`catalog` i `projects`), dokładnie tak jak serwisy synchronizacji w `infrastructure/sync/` już dziś przekraczają granice funkcji, gdy operacja tego wymaga.
+
+Konsekwencje:
+
+- Znane, zaakceptowane ograniczenie: jeśli odrzucany duplikat miał własną tabelę nośności producenta, a zachowywane urządzenie jej nie ma, tabela nośności nie jest scalana - usuwa się razem z odrzuconym urządzeniem. Użytkownik powinien wybrać jako "zachowywane" urządzenie z poprawnymi danymi technicznymi.
+- Lista odrzuconych par jest lokalna per-osoba, nie zespołowa - każdy członek zespołu, który zobaczy tę samą parę, musi ją odznaczyć u siebie raz. Zaakceptowane ograniczenie zakresu v1.
+- Nowa kolumna/tabela to jednorazowy, addytywny koszt schematu (wersja 19 → 20).
+
+## ADR-037: Synchronizacja gdtfFixtureTypeId/gremiumInventoryItemId z PocketBase
+
+Status: accepted
+
+Kontekst:
+
+- `GdtfCatalogMatcher`/`GremiumCatalogMatcher` dopasowują (re)import wyłącznie po zapamiętanym id (ADR-034/ADR-035), nigdy po nazwie - ale dotąd działało to tylko względem **lokalnego** katalogu w momencie importu, bo `gdtfFixtureTypeId`/`gremiumInventoryItemId` były kolumnami czysto lokalnymi, nigdy nie wysyłanymi ani nie odbieranymi przez `PocketBaseCatalogSyncService`.
+- Dwie osoby na różnych urządzeniach, żadna jeszcze nie zsynchronizowana z drugą, importujące ten sam plik GDTF/Gremium, tworzyły więc niezależnie dwa lokalne urządzenia z tym samym id GDTF/Gremium, ale różnym `id` lokalnym. Ponieważ `PocketBaseCatalogSyncService` dopasowuje rekordy po `local_id`, a nie po id GDTF/Gremium, oba urządzenia trafiały do zdalnej bazy jako dwa osobne rekordy - realny duplikat we wspólnym katalogu, którego żaden z lokalnych matcherów nie mógł wykryć.
+
+Decyzja:
+
+- `gdtfFixtureTypeId`/`gremiumInventoryItemId` są teraz synchronizowane z PocketBase tak samo jak reszta pól `CatalogDevice` - nowe kolumny `gdtf_fixture_type_id`/`gremium_inventory_item_id` (tekstowe) na kolekcji `catalog_devices`, migracja `pocketbase/pb_migrations/1789400000_updated_catalog_devices.js` (połączona z wciąż niewdrożoną kolumną `rigging_kind` z ADR-036 - jedna wizyta na serwerze zamiast dwóch). `PocketBaseCatalogSyncService._push`/`_pull` przenoszą teraz oba pola.
+- Żadna zmiana w `GdtfCatalogMatcher`/`GremiumCatalogMatcher` nie była potrzebna - obie już operują na tym, co zwróci `getDevices()`, więc gdy tylko sync ściągnie urządzenie kolegi z zespołu z tym samym id GDTF/Gremium, kolejny import na tym urządzeniu zobaczy je lokalnie i połączy zamiast duplikować.
+
+Uzasadnienie:
+
+- Synchronizacja tuż przed importem (ręczne „Synchronizuj teraz” albo cykliczny auto-sync co 15 minut) wystarczy teraz, żeby dopasowanie działało w skali całego zespołu, a nie pojedynczego urządzenia - zamyka najczęstszą przyczynę duplikatów w katalogu, bez żadnej nowej logiki dopasowania ani UI.
+
+Konsekwencje:
+
+- Pozostaje wąska luka: naprawdę równoczesny import tego samego pliku przez dwie osoby, z których żadna nie zdążyła się zsynchronizować odkąd druga dodała swoje urządzenie, wciąż może wygenerować duplikat - to rozwiązanie opiera się na tym, że między dwoma importami w ogóle nastąpiła jakaś synchronizacja, nie na twardej gwarancji.
+- Urządzenia dodane ręcznie (nigdy nie mające id GDTF/Gremium) nie są tym objęte - to osobny problem, prawdopodobnie wymagający rozmytego dopasowania po nazwie, świadomie pozostawiony poza zakresem tej decyzji.
+- Wymaga wdrożenia nowej migracji PocketBase na LXC 113, zanim realnie zadziała dla całego zespołu.
+
+## ADR-036: Rodzaj sprzętu riggingowego (RiggingDeviceKind)
+
+Status: accepted
+
+Kontekst:
+
+- Kategoria katalogowa `rigging` jest celowo płaska (ADR-031) - kratownice, haki/zaciski i w przyszłości wciągarki dzielą jedną kategorię. Użytkownik zauważył, że to już dziś powoduje realny problem: selektor „Model kratownicy” w dialogu dodawania kratownicy (`project_editor_screen.dart`, `_trussDevices`) pokazywał każde urządzenie z kategorii `rigging`, nie tylko faktyczne modele kratownic, a „Dodaj hak” otwierał ogólny selektor katalogu bez żadnego filtra - technicznie można było przypiąć jako "hak" dowolne urządzenie z całego katalogu.
+- Formularz katalogu pokazywał edytor tabeli nośności producenta (load chart) dla każdego urządzenia `rigging`, sensowny tylko dla kratownic.
+
+Decyzja:
+
+- Nowe pole `CatalogDevice.riggingKind` (`RiggingDeviceKind?`: `truss`/`hook`/`other`), znaczące tylko gdy `category == rigging`, ten sam idiom co `riggingPoints`/`loadChart` (nullable, opcjonalne pole klasyfikujące) - nie idiom `gremiumInventoryItemId`/`gdtfFixtureTypeId` (metadane importu), bo to prawdziwa klasyfikacja katalogowa. Synchronizowane z PocketBase jak `riggingPoints`.
+- Nazewnictwo **Kratownica/Hak/Inne** - nie "Zacisk": w katalogu demo już istnieje realne urządzenie *nazwane* "Zacisk hakowy" (`half_coupler`), które dostało `riggingKind: hook` - "hak" jako nazwa rodzaju nie koliduje z nazwami konkretnych produktów.
+- Celowo bez wariantu "wciągarka" na razie - nic w aplikacji nie ma dziś zachowania specyficznego dla wciągarek (żadnego obliczenia, żadnego dedykowanego pickera), więc byłby to nieużywany wariant enuma. Wciągarki i inny sprzęt riggingowy trafiają do `other`, co już poprawnie wyklucza je z selektorów kratownic/haków - nowy wariant dojdzie tym samym mechanizmem, gdy faktycznie pojawi się potrzeba.
+- `_trussDevices` (selektor „Model kratownicy”) i nowy filtr w `_openAddHookDialog` („Dodaj hak”) zawężone do `category == rigging && riggingKind == truss`/`hook` odpowiednio. Edytor tabeli nośności w formularzu katalogu pokazuje się tylko dla `riggingKind == truss`.
+- Import z Gremium (`guessGremiumRiggingKind`) zgaduje rodzaj z tych samych sygnałów tekstowych, które już zgadują kategorię `rigging` (`nameHas('hak')`, `nameHas('kratownic')`/`'trawers'`) - panel przeglądu dostał analogiczny dropdown obok kategorii.
+- Przy okazji naprawiono `_openDeviceDialog` w `catalog_screen.dart`: edycja istniejącego urządzenia budowała zapisywany `CatalogDevice` od zera, bez przeniesienia `gremiumInventoryItemId`/`gdtfFixtureTypeId` z edytowanego urządzenia - każda edycja (nawet samej nazwy) cicho zrywała powiązanie z importem Gremium/GDTF. Naprawione przy okazji dodawania `riggingKind` do tej samej konstrukcji.
+
+Uzasadnienie:
+
+- Zawężenie selektorów po realnym podtypie, nie po samej (celowo płaskiej) kategorii, jest jedynym sposobem, żeby "Dodaj hak" i "Model kratownicy" faktycznie pokazywały to, co ich nazwa obiecuje - bez tego oba tylko przypadkiem działały poprawnie, dopóki katalog demo miał dokładnie jedno urządzenie riggingowe każdego typu.
+- Reużycie idiomu `riggingPoints` (nullable pole klasyfikujące, synchronizowane) zamiast `gremiumInventoryItemId` (lokalne metadane importu) odzwierciedla różnicę natury tych pól - rodzaj sprzętu to katalogowa prawda, nie ślad pochodzenia rekordu.
+
+Konsekwencje:
+
+- Nowa kolumna `riggingKind` to jednorazowy, addytywny koszt schematu (wersja 18 → 19) - `null` dla każdego pre-istniejącego urządzenia riggingowego, dopóki ktoś go nie edytuje i nie ustawi rodzaju.
+- Wymaga nowej migracji PocketBase (`rigging_kind`, pole tekstowe na kolekcji `catalog_devices`) wgranej na serwer LXC 113, żeby sync działał dla całej ekipy.
+
 ## ADR-035: Import plików GDTF do katalogu urządzeń
 
 Status: accepted

@@ -4,7 +4,6 @@ import '../../../infrastructure/local_database/app_database.dart' as db;
 import '../../../shared/models/offline_sync_status.dart';
 import '../../projects/domain/entities/power_models.dart';
 import '../domain/entities/power_preset.dart';
-import 'demo_power_preset_factory.dart';
 import 'power_preset_repository.dart';
 
 class DriftPowerPresetRepository implements PowerPresetRepository {
@@ -112,18 +111,6 @@ class DriftPowerPresetRepository implements PowerPresetRepository {
         ),
       );
     });
-  }
-
-  @override
-  Future<void> ensureSeedData() async {
-    final presets = await getPresets();
-    if (presets.isNotEmpty) {
-      return;
-    }
-
-    for (final preset in DemoPowerPresetFactory.createSeedPresets()) {
-      await savePreset(preset);
-    }
   }
 
   PowerPreset _mapPreset(

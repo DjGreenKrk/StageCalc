@@ -68,4 +68,31 @@ void main() {
     );
     expect(guessGremiumCategory(item), CatalogDeviceCategory.other);
   });
+
+  test('guesses truss for kratownica/trawers items', () {
+    const items = [
+      GremiumItem(name: 'Kratownica 3m', quantity: 1, category: 'Rigging'),
+      GremiumItem(name: 'Trawers boczny', quantity: 1, category: 'Rigging'),
+    ];
+    for (final item in items) {
+      expect(guessGremiumRiggingKind(item), RiggingDeviceKind.truss);
+    }
+  });
+
+  test('guesses hook for hak items', () {
+    const item = GremiumItem(name: 'Hak M10', quantity: 1, category: 'Rigging');
+    expect(guessGremiumRiggingKind(item), RiggingDeviceKind.hook);
+  });
+
+  test(
+    'returns null (no guess) for rigging items without a truss/hook signal',
+    () {
+      const item = GremiumItem(
+        name: 'Szekla 3.25t',
+        quantity: 1,
+        category: 'Rigging',
+      );
+      expect(guessGremiumRiggingKind(item), isNull);
+    },
+  );
 }

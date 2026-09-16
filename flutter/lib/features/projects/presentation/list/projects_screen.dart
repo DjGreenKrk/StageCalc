@@ -11,7 +11,6 @@ import '../../../clients/domain/entities/client.dart';
 import '../../../locations/data/drift_location_repository.dart';
 import '../../../locations/domain/entities/location.dart';
 import '../../../gremium_import/presentation/gremium_import_entry.dart';
-import '../../data/demo_project_factory.dart';
 import '../../data/drift_project_repository.dart';
 import '../../data/project_repository.dart';
 import '../../domain/entities/project_models.dart';
@@ -53,13 +52,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       final locations = await DriftLocationRepository(
         AppDatabaseProvider.instance,
       ).getLocations();
-      var projects = await repository.getProjects();
-
-      if (projects.isEmpty) {
-        final demo = DemoProjectFactory.createDemoProject();
-        await repository.saveProject(demo);
-        projects = [demo];
-      }
+      final projects = await repository.getProjects();
 
       if (!mounted) {
         return;

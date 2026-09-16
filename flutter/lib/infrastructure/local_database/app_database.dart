@@ -236,6 +236,11 @@ class CatalogDevices extends Table {
   /// (ADR-035) - `null` for every device added manually or not yet linked to
   /// a GDTF import.
   TextColumn get gdtfFixtureTypeId => text().nullable()();
+
+  /// Sub-classification of a rigging-category device (truss/hook/other) -
+  /// `null` for every non-rigging device and for rigging devices not yet
+  /// classified. See `RiggingDeviceKind`.
+  TextColumn get riggingKind => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -422,6 +427,20 @@ class AppSettings extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// One row per catalog-device pair the user has explicitly reviewed and
+/// decided is not a duplicate (`CatalogDuplicateDetector`) - deliberately
+/// local-only like `AppSettings`, never synced: this is a per-person "I
+/// already checked this" preference, not shared catalog data.
+class DismissedDuplicatePairs extends Table {
+  /// The two device ids joined as `"$idA|$idB"`, sorted lexicographically
+  /// first so either comparison order maps to the same key.
+  TextColumn get pairKey => text()();
+  DateTimeColumn get dismissedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {pairKey};
+}
+
 @DriftDatabase(
   tables: [
     Projects,
@@ -441,6 +460,7 @@ class AppSettings extends Table {
     PowerPresets,
     PowerOutletTemplates,
     AppSettings,
+    DismissedDuplicatePairs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -449,7 +469,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -612,6 +632,19 @@ class AppDatabase extends _$AppDatabase {
           catalogDevices,
           catalogDevices.gdtfFixtureTypeId,
         );
+      }
+      if (from < 19) {
+        // Nullable column classifying a rigging-category CatalogDevice as a
+        // truss/hook/other - no backfill needed, every pre-existing rigging
+        // row simply stays unclassified until edited.
+        await _addColumnIfMissing(
+          migrator,
+          catalogDevices,
+          catalogDevices.riggingKind,
+        );
+      }
+      if (from < 20) {
+        await _createTableIfMissing(migrator, dismissedDuplicatePairs);
       }
     },
   );

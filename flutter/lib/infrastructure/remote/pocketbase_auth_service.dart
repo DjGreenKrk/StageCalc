@@ -23,4 +23,28 @@ class PocketBaseAuthService {
   void logout() {
     _pb.authStore.clear();
   }
+
+  /// Changes the logged-in user's password. PocketBase invalidates every
+  /// previously issued auth token for the record once its password changes
+  /// (including the one this very request used), so the caller must treat
+  /// the current session as ended and prompt a fresh login afterwards.
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) {
+    final id = currentUserId;
+    if (id == null) {
+      throw StateError('Nie można zmienić hasła bez zalogowania.');
+    }
+    return _pb
+        .collection('users')
+        .update(
+          id,
+          body: {
+            'oldPassword': oldPassword,
+            'password': newPassword,
+            'passwordConfirm': newPassword,
+          },
+        );
+  }
 }

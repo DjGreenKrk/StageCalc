@@ -1,5 +1,6 @@
 import 'package:stagecalc/features/catalog/data/catalog_repository.dart';
 import 'package:stagecalc/features/catalog/domain/entities/catalog_device.dart';
+import 'package:stagecalc/features/catalog/domain/services/catalog_duplicate_detector.dart';
 import 'package:stagecalc/features/clients/data/client_repository.dart';
 import 'package:stagecalc/features/clients/domain/entities/client.dart';
 import 'package:stagecalc/features/locations/data/location_repository.dart';
@@ -86,7 +87,10 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 
   @override
-  Future<void> ensureSeedData() async {}
+  Future<List<CatalogDuplicatePair>> getPossibleDuplicates() async => [];
+
+  @override
+  Future<void> dismissDuplicatePair(String deviceIdA, String deviceIdB) async {}
 }
 
 class FakePowerPresetRepository implements PowerPresetRepository {
@@ -108,7 +112,4 @@ class FakePowerPresetRepository implements PowerPresetRepository {
   Future<void> deletePreset(String id) async {
     presets.removeWhere((candidate) => candidate.id == id);
   }
-
-  @override
-  Future<void> ensureSeedData() async {}
 }

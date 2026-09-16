@@ -47,3 +47,25 @@ CatalogDeviceCategory guessGremiumCategory(GremiumItem item) {
   }
   return CatalogDeviceCategory.other;
 }
+
+/// Best-effort guess of a [RiggingDeviceKind] from the same free-text
+/// signals [guessGremiumCategory] already inspects to detect the `rigging`
+/// category - reused here rather than re-implemented, since a "kratownica"
+/// or "hak" in the name/category text means the same thing for both guesses.
+/// Returns `null` (never a wrong guess) when neither signal matches; the
+/// user picks in the review panel instead.
+RiggingDeviceKind? guessGremiumRiggingKind(GremiumItem item) {
+  final category = (item.category ?? '').toLowerCase();
+  final name = '${item.name} ${item.projectLabel ?? ''}'.toLowerCase();
+
+  bool nameHas(String needle) => name.contains(needle);
+  bool categoryIs(String needle) => category.contains(needle);
+
+  if (categoryIs('kratownic') || nameHas('kratownic') || nameHas('trawers')) {
+    return RiggingDeviceKind.truss;
+  }
+  if (categoryIs('hak') || nameHas('hak')) {
+    return RiggingDeviceKind.hook;
+  }
+  return null;
+}

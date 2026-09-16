@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/greencrew_colors.dart';
 import '../../../infrastructure/local_database/app_database_provider.dart';
 import '../../../shared/models/offline_sync_status.dart';
+import '../../../shared/widgets/greencrew_button.dart';
 import '../../../shared/widgets/greencrew_card.dart';
 import '../../../shared/widgets/greencrew_empty_state.dart';
 import '../../../shared/widgets/greencrew_fab.dart';
@@ -12,6 +14,9 @@ import '../../power_presets/presentation/power_presets_panel.dart';
 import '../data/catalog_repository.dart';
 import '../data/drift_catalog_repository.dart';
 import '../domain/entities/catalog_device.dart';
+import '../domain/services/catalog_duplicate_detector.dart';
+import '../domain/services/catalog_duplicate_merge_service.dart';
+import 'catalog_duplicate_review_dialog.dart';
 
 String _categoryLabel(CatalogDeviceCategory category) {
   return switch (category) {
@@ -35,6 +40,7 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   CatalogRepository? _repository;
   List<CatalogDevice> _devices = const [];
+  List<CatalogDuplicatePair> _possibleDuplicates = const [];
   var _view = _CatalogView.devices;
   var _query = '';
   CatalogDeviceCategory? _categoryFilter;
@@ -72,8 +78,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
     try {
       final repository = DriftCatalogRepository(AppDatabaseProvider.instance);
-      await repository.ensureSeedData();
       final devices = await repository.getDevices();
+      final possibleDuplicates = await repository.getPossibleDuplicates();
 
       if (!mounted) {
         return;
@@ -82,6 +88,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       setState(() {
         _repository = repository;
         _devices = devices;
+        _possibleDuplicates = possibleDuplicates;
         _isLoading = false;
       });
     } catch (error) {
@@ -164,6 +171,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
           ),
           const SizedBox(height: 16),
           if (_view == _CatalogView.devices) ...[
+            if (_possibleDuplicates.isNotEmpty) ...[
+              _DuplicatesBanner(
+                count: _possibleDuplicates.length,
+                onReview: _openDuplicateReviewDialog,
+              ),
+              const SizedBox(height: 12),
+            ],
             GreenCrewSearchBar(
               hintText: 'Szukaj urządzenia',
               onChanged: (value) => setState(() => _query = value),
@@ -258,6 +272,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       name: result.name,
       manufacturer: result.manufacturer,
       category: result.category,
+      riggingKind: result.riggingKind,
       powerW: result.powerW,
       currentA: result.currentA,
       weightKg: result.weightKg,
@@ -268,6 +283,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
       createdAt: device?.createdAt ?? now,
       updatedAt: now,
       syncStatus: device?.syncStatus ?? OfflineSyncStatus.localOnly,
+      // Editing a device must not silently drop its link to whatever
+      // external source it came from (ADR-034/ADR-035) - this dialog never
+      // exposes these fields for editing, so they can only ever come from
+      // the device being edited, never from the form result.
+      gremiumInventoryItemId: device?.gremiumInventoryItemId,
+      gdtfFixtureTypeId: device?.gdtfFixtureTypeId,
     );
 
     await repository.saveDevice(savedDevice);
@@ -323,6 +344,63 @@ class _CatalogScreenState extends State<CatalogScreen> {
     setState(() => _devices = devices);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Urządzenie usunięte lokalnie')),
+    );
+  }
+
+  Future<void> _openDuplicateReviewDialog() async {
+    final repository = _repository;
+    if (repository == null) {
+      return;
+    }
+
+    final changed = await showDialog<bool>(
+      context: context,
+      builder: (context) => CatalogDuplicateReviewDialog(
+        pairs: _possibleDuplicates,
+        repository: repository,
+        mergeService: CatalogDuplicateMergeService(
+          AppDatabaseProvider.instance,
+        ),
+      ),
+    );
+
+    if (changed == true) {
+      await _loadDevices();
+    }
+  }
+}
+
+class _DuplicatesBanner extends StatelessWidget {
+  const _DuplicatesBanner({required this.count, required this.onReview});
+
+  final int count;
+  final VoidCallback onReview;
+
+  @override
+  Widget build(BuildContext context) {
+    return GreenCrewCard(
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: GreenCrewColors.warning,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              count == 1
+                  ? 'Znaleziono 1 możliwy duplikat w katalogu.'
+                  : 'Znaleziono $count możliwych duplikatów w katalogu.',
+            ),
+          ),
+          const SizedBox(width: 12),
+          GreenCrewButton(
+            label: 'Przejrzyj',
+            secondary: true,
+            onPressed: onReview,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -423,6 +501,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
   late final TextEditingController _riggingPointsController;
   late List<_LoadChartRowControllers> _loadChartRows;
   late CatalogDeviceCategory _category;
+  late RiggingDeviceKind _kind;
   late CatalogQuantityUnit _quantityUnit;
   var _isUpdatingElectricalFields = false;
 
@@ -475,6 +554,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
     _powerController.addListener(_syncCurrentFromPower);
     _currentController.addListener(_syncPowerFromCurrent);
     _category = device?.category ?? CatalogDeviceCategory.lighting;
+    _kind = device?.riggingKind ?? RiggingDeviceKind.other;
     _quantityUnit = device?.quantityUnit ?? CatalogQuantityUnit.pcs;
   }
 
@@ -532,6 +612,28 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 }
               },
             ),
+            if (_category == CatalogDeviceCategory.rigging) ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<RiggingDeviceKind>(
+                initialValue: _kind,
+                decoration: const InputDecoration(
+                  labelText: 'Rodzaj sprzętu riggingowego',
+                ),
+                items: RiggingDeviceKind.values
+                    .map(
+                      (kind) => DropdownMenuItem(
+                        value: kind,
+                        child: Text(kind.label),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _kind = value);
+                  }
+                },
+              ),
+            ],
             if (_showElectrical) ...[
               const SizedBox(height: 12),
               TextField(
@@ -606,7 +708,8 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
                 ),
               ),
             ],
-            if (_category == CatalogDeviceCategory.rigging) ...[
+            if (_category == CatalogDeviceCategory.rigging &&
+                _kind == RiggingDeviceKind.truss) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -732,6 +835,7 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
             ? _emptyToNull(_manufacturerController.text)
             : null,
         category: _category,
+        riggingKind: _category == CatalogDeviceCategory.rigging ? _kind : null,
         powerW: _showElectrical ? _parseNumber(_powerController.text) : 0,
         currentA: _showElectrical ? _parseNumber(_currentController.text) : 0,
         weightKg: _parseNumber(_weightController.text),
@@ -739,7 +843,9 @@ class _CatalogDeviceDialogState extends State<_CatalogDeviceDialog> {
         riggingPoints: _showRiggingPoints
             ? int.tryParse(_riggingPointsController.text.trim())
             : null,
-        loadChart: _category == CatalogDeviceCategory.rigging
+        loadChart:
+            _category == CatalogDeviceCategory.rigging &&
+                _kind == RiggingDeviceKind.truss
             ? _loadChartRows
                   .map((row) => row.toEntry(_parseNumber))
                   .whereType<TrussLoadChartEntry>()
@@ -826,11 +932,13 @@ class _CatalogDeviceFormResult {
     this.connectorTypeIds = const [],
     this.riggingPoints,
     this.loadChart = const [],
+    this.riggingKind,
   });
 
   final String name;
   final String? manufacturer;
   final CatalogDeviceCategory category;
+  final RiggingDeviceKind? riggingKind;
   final double powerW;
   final double currentA;
   final double weightKg;

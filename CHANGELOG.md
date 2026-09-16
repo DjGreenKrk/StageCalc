@@ -6,6 +6,27 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.5.0+1 - 2026-09-16
+
+### Dodano
+
+- Dodano rozróżnienie rodzaju sprzętu riggingowego w katalogu (`RiggingDeviceKind`: Kratownica/Hak/Inne) - kategoria `Rigging` sama w sobie nie mówiła, które urządzenie jest faktycznym modelem kratownicy, a które hakiem/zaciskiem, przez co selektor „Model kratownicy” pokazywał każde urządzenie riggingowe, a „Dodaj hak” w ogóle nie filtrował katalogu. Teraz oba selektory pokazują tylko urządzenia z odpowiednim rodzajem, a edytor tabeli nośności producenta w formularzu katalogu pojawia się tylko dla kratownic. Import z Gremium zgaduje rodzaj z tych samych sygnałów tekstowych, które już zgadywały kategorię `Rigging`. Pole synchronizuje się z PocketBase jak `riggingPoints`/tabela nośności. Schemat lokalny podniesiony do wersji `19`. Przy okazji naprawiono edycję istniejącego urządzenia w katalogu, która dotąd cicho gubiła jego powiązanie z importem Gremium/GDTF (`gremiumInventoryItemId`/`gdtfFixtureTypeId`).
+- Dodano możliwość zmiany hasła konta z poziomu ekranu „Info” (sekcja „Konto”, widoczna po zalogowaniu). Ponieważ PocketBase unieważnia bieżący token sesji zaraz po zmianie hasła, aplikacja od razu wylogowuje i prosi o ponowne zalogowanie nowym hasłem.
+- Zsynchronizowano `gdtfFixtureTypeId`/`gremiumInventoryItemId` z PocketBase (ADR-037) - dotąd były czysto lokalne, więc dopasowanie przy (re)imporcie GDTF/Gremium działało tylko względem katalogu na tym samym urządzeniu. Dwie osoby importujące ten sam plik na niezsynchronizowanych ze sobą urządzeniach mogły więc wygenerować duplikat we wspólnym katalogu. Po synchronizacji obu pól wystarczy sync przed importem, żeby dopasowanie działało w skali całego zespołu.
+- Dodano wykrywanie możliwych duplikatów w katalogu na podstawie podobieństwa nazw (ADR-038) - urządzenia dodane ręcznie (nie przez import GDTF/Gremium) nie miały żadnego id, po którym dałoby się je dopasować, więc dwie osoby na niezsynchronizowanych urządzeniach mogły ręcznie dodać ten sam sprzęt (np. "Robe Pointe") i po synchronizacji trwale zduplikować go we wspólnym katalogu. Ekran Katalogu pokazuje teraz baner z liczbą możliwych duplikatów (te same kategorie, podobieństwo nazwy ≥90%) i pozwala każdą parę oznaczyć jako "to nie duplikat" albo scalić - scalanie przepina wszystkie odniesienia z projektów (w tym te, które faktycznie wpływają na obliczenia nośności) na zachowywane urządzenie, zanim usunie duplikat, i przenosi na zachowywane urządzenie ewentualne powiązanie z importem GDTF/Gremium. Nigdy nic nie scala automatycznie. Schemat lokalny podniesiony do wersji `20` (nowa, lokalna, niesynchronizowana tabela odrzuconych par).
+
+### Naprawiono
+
+- Naprawiono plakietkę „Tryb offline”, która była widoczna zawsze, niezależnie od faktycznego stanu połączenia z serwerem - teraz pokazuje się tylko wtedy, gdy nikt nie jest zalogowany, i reaguje na żywo na logowanie/wylogowanie.
+
+### Zmieniono
+
+- Aplikacja łączy się teraz z publicznym adresem PocketBase `https://stagecalc.greencrew.pl` (TLS, reverse proxy) zamiast dotychczasowego adresu LAN `http://192.168.0.113` - synchronizacja działa więc też spoza sieci domowej. Usunięto powiązany z tym wcześniejszym adresem wyjątek na ruch `cleartext` w konfiguracji sieciowej Androida (`network_security_config.xml`), bo połączenie jest teraz zawsze szyfrowane.
+
+### Usunięto
+
+- Usunięto automatyczne dane demonstracyjne tworzone dotąd przy pierwszym otwarciu poszczególnych ekranów na pustej lokalnej bazie (przykładowe urządzenia katalogowe, presety mocy, projekt „Demo techniczne”) - nowa instalacja startuje teraz całkowicie pusto zamiast pokazywać przykładowe pozycje, które i tak trzeba było ręcznie usuwać.
+
 ## v0.4.0+1 - 2026-09-15
 
 ### Zmieniono

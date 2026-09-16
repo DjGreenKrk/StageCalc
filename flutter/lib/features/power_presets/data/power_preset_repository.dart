@@ -6,6 +6,4 @@ abstract interface class PowerPresetRepository {
   Future<void> savePreset(PowerPreset preset);
 
   Future<void> deletePreset(String id);
-
-  Future<void> ensureSeedData();
 }
