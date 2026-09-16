@@ -2,7 +2,7 @@
 
 StageCalc to techniczny kalkulator wydarzeń dla ekipy GreenCrew Tools — pomaga zaplanować zasilanie, masę i infrastrukturę techniczną (oświetlenie, nagłośnienie, multimedia, rigging) dla konkretnego wydarzenia, zanim sprzęt trafi na plac budowy.
 
-Działa **offline-first**: wszystkie dane są zapisywane lokalnie na urządzeniu, więc aplikacja działa bez internetu w hali, w terenie czy w trasie. Dostępna na **Androida** i **Windows**.
+Działa **offline-first**: wszystkie dane są zapisywane lokalnie na urządzeniu, więc aplikacja działa bez internetu w hali, w terenie czy w trasie. Dostępna na **Androida**, **Windows** i jako **aplikacja webowa**.
 
 ## Co potrafi
 
@@ -25,6 +25,7 @@ Najnowsza wersja jest zawsze dostępna na stronie [Releases](https://github.com/
 
 - **Android** — pobierz `StageCalc-vX_Y_Z-android.apk`, otwórz plik na telefonie/tablecie i zainstaluj (może być potrzebne włączenie instalacji z nieznanych źródeł dla przeglądarki/menedżera plików, z którego pobierasz).
 - **Windows** — pobierz `StageCalc-vX_Y_Z-windows.zip`, rozpakuj do dowolnego folderu i uruchom `stagecalc.exe`. Nie wymaga instalacji.
+- **Web** — dostępna od ręki pod adresem [stagecalc.greencrew.pl](https://stagecalc.greencrew.pl), bez instalacji i bez pobierania. Wersja webowa jest zawsze aktualna do najnowszego wydania i działa tak samo offline-first jak apki natywne (dane trzyma lokalnie w przeglądarce), ale do synchronizacji z resztą ekipy wymaga logowania tak samo jak Android/Windows.
 
 ## Pierwsze kroki
 
