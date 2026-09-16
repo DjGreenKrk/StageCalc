@@ -549,6 +549,200 @@ void main() {
     expect(find.text('Zacisk hakowy'), findsOneWidget);
   });
 
+  testWidgets('hides power/current chips on the catalog card for rigging '
+      'devices, but keeps the weight chip', (tester) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    final hookCard = find.ancestor(
+      of: find.text('Zacisk hakowy'),
+      matching: find.byType(GreenCrewCard),
+    );
+    expect(
+      find.descendant(of: hookCard, matching: find.byIcon(Icons.bolt)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: hookCard,
+        matching: find.byIcon(Icons.electrical_services),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: hookCard, matching: find.byIcon(Icons.scale)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'opens a read-only detail view with the spec sheet when tapping a '
+    'catalog card',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Katalog'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('BMFL Spot'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Podstawowe dane'), findsOneWidget);
+      expect(find.text('Dane elektryczne'), findsOneWidget);
+      expect(find.text('Robe'), findsOneWidget);
+      expect(find.text('Krzywa nośności'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'catalog detail view hides electrical/rigging fields for a hook device '
+    'and shows no chart section',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Katalog'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Zacisk hakowy'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Dane elektryczne'), findsNothing);
+      expect(find.text('Hak'), findsOneWidget);
+      expect(find.text('Krzywa nośności'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'catalog detail view shows the load-chart curve with a legend for a '
+    'truss with chart data',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime(2026, 7, 5);
+      await DriftCatalogRepository(database).saveDevice(
+        CatalogDevice(
+          id: 'prolyte_h30v',
+          name: 'Prolyte H30V',
+          category: CatalogDeviceCategory.rigging,
+          riggingKind: RiggingDeviceKind.truss,
+          quantityUnit: CatalogQuantityUnit.pcs,
+          createdAt: now,
+          updatedAt: now,
+          loadChart: const [
+            TrussLoadChartEntry(
+              id: 'c1',
+              lengthM: 4,
+              pointLoadKg: 800,
+              distributedLoadKgPerM: 200,
+            ),
+            TrussLoadChartEntry(
+              id: 'c2',
+              lengthM: 8,
+              pointLoadKg: 400,
+              distributedLoadKgPerM: 100,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Katalog'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Prolyte H30V'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Krzywa nośności'), findsOneWidget);
+      expect(find.text('Obciążenie punktowe (kg)'), findsOneWidget);
+      expect(find.text('Obciążenie rozłożone (kg/m)'), findsOneWidget);
+      expect(find.text('Brak tabeli nośności'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'catalog detail view shows an empty state for a truss with no load '
+    'chart entries',
+    (tester) async {
+      tester.view.physicalSize = const Size(1000, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime(2026, 7, 5);
+      await DriftCatalogRepository(database).saveDevice(
+        CatalogDevice(
+          id: 'empty_truss',
+          name: 'Kratownica bez tabeli',
+          category: CatalogDeviceCategory.rigging,
+          riggingKind: RiggingDeviceKind.truss,
+          quantityUnit: CatalogQuantityUnit.pcs,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      await tester.pumpWidget(const StageCalcApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Katalog'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Kratownica bez tabeli'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Brak tabeli nośności'), findsOneWidget);
+      expect(find.text('Krzywa nośności'), findsNothing);
+    },
+  );
+
+  testWidgets('"Edytuj" in the catalog detail view opens the edit dialog', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1000, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Katalog'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('BMFL Spot'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.edit_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edytuj urządzenie'), findsOneWidget);
+  });
+
   testWidgets(
     'adds a location connector group mixing several connector types',
     (tester) async {

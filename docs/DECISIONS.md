@@ -390,6 +390,27 @@ Uzasadnienie:
 - Obecnie PDF jest częścią dużego komponentu kalkulatora.
 - W Flutterze raport powinien używać tych samych serwisów domenowych co UI.
 
+## ADR-039: Widok szczegółowy urządzenia katalogowego z wykresem nośności
+
+Status: accepted
+
+Kontekst:
+
+- Karta urządzenia w Katalogu (`_CatalogDeviceCard`) nie miała żadnej akcji na dotknięcie samej karty - tylko ikony „Edytuj”/„Usuń”. Tabela nośności producenta kratownicy (`TrussLoadChartEntry`: długość/obciążenie punktowe/obciążenie rozłożone) była wpisywana i pokazywana wyłącznie jako płaska lista wierszy z polami liczbowymi w edytorze, mimo że te same dane są już używane do interpolacji nośności w `TrussLoadService` przy przypisywaniu kratownicy do projektu.
+- Interpolacja liniowa w `TrussLoadService` jest prywatna dla tej klasy - nowy widok jej nie importuje. Narysowanie linii łączącej posortowane po długości punkty tabeli nośności w bibliotece wykresów jest wizualnie tą samą interpolacją liniową, więc wykres pozostaje czysto katalogową funkcją, bez sprzężenia z `projects/domain/services`.
+
+Decyzja:
+
+- Nowy ekran `CatalogDeviceDetailScreen`, pushowany (`Navigator.push`/`MaterialPageRoute`) po dotknięciu karty w Katalogu - ten sam wzorzec nawigacji co `ProjectsScreen` → `ProjectEditorScreen`, nowy dla samego Katalogu (dotąd w 100% dialogowego), ale nie nowy dla aplikacji.
+- Ekran jest tylko do odczytu: przycisk „Edytuj” w AppBarze po prostu zamyka ekran z wynikiem `true`, co z powrotem na liście otwiera już istniejący dialog edycji - bez duplikowania logiki zapisu.
+- Dla kratownic z niepustą tabelą nośności - jeden wykres liniowy (`fl_chart`, nowa zależność) z obiema seriami (obciążenie punktowe i rozłożone) naniesionymi razem i ręcznie zbudowaną legendą pod wykresem, wzorem katalogów producentów typu Duratruss, zamiast dwóch osobnych wykresów czy dodatkowej osi Y.
+- Przy tej samej pracy naprawiony bug: chipy mocy/prądu na karcie katalogowej pokazywały się bezwarunkowo dla każdej kategorii (mylące „0.0 kW”/„0.0 A” dla riggingu) - teraz stosują tę samą regułę `showsElectricalFields` (ADR-031), której już wcześniej używał edytor.
+
+Konsekwencje:
+
+- Jedna nowa zależność (`fl_chart`) w `pubspec.yaml`.
+- Brak zmian schematu bazy - to czysto prezentacyjna funkcja nad istniejącymi danymi.
+
 ## ADR-038: Wykrywanie i scalanie duplikatów w katalogu (dopasowanie po nazwie)
 
 Status: accepted

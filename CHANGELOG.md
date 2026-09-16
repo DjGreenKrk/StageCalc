@@ -6,6 +6,16 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+## v0.6.0+1 - 2026-09-16
+
+### Dodano
+
+- Dodano widok szczegółowy urządzenia katalogowego, otwierany po dotknięciu karty w Katalogu (dotąd karta nie miała żadnej akcji poza ikonami Edytuj/Usuń): spec sheet z pełnymi danymi urządzenia, a dla kratownic (`riggingKind == truss`) - czytelny wykres krzywej nośności zamiast surowej tabeli liczb z edytora. Obie serie (obciążenie punktowe i rozłożone) naniesione na jeden wykres z legendą, wzorem katalogów producentów (np. Duratruss). Przycisk „Edytuj” w widoku szczegółowym otwiera istniejący dialog edycji bez duplikowania logiki zapisu. Nowa zależność: `fl_chart`.
+
+### Naprawiono
+
+- Naprawiono chipy mocy/prądu na karcie katalogowej, które pokazywały się bezwarunkowo dla każdej kategorii - urządzenie riggingowe (moc/prąd zawsze `0`) i tak pokazywało mylące „0.0 kW”/„0.0 A”, mimo że edytor już wcześniej ukrywał te pola dla tej kategorii (ADR-031). Teraz karta stosuje tę samą regułę widoczności.
+
 ## v0.5.0+1 - 2026-09-16
 
 ### Dodano

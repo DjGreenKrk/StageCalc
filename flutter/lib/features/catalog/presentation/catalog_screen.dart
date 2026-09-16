@@ -16,6 +16,7 @@ import '../data/drift_catalog_repository.dart';
 import '../domain/entities/catalog_device.dart';
 import '../domain/services/catalog_duplicate_detector.dart';
 import '../domain/services/catalog_duplicate_merge_service.dart';
+import 'catalog_device_detail_screen.dart';
 import 'catalog_duplicate_review_dialog.dart';
 
 String _categoryLabel(CatalogDeviceCategory category) {
@@ -239,6 +240,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               for (final device in filteredDevices) ...[
                 _CatalogDeviceCard(
                   device: device,
+                  onViewDetails: () => _openDeviceDetail(device),
                   onEdit: () => _openDeviceDialog(device: device),
                   onDelete: () => _deleteDevice(device),
                 ),
@@ -249,6 +251,18 @@ class _CatalogScreenState extends State<CatalogScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openDeviceDetail(CatalogDevice device) async {
+    final wantsEdit = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => CatalogDeviceDetailScreen(device: device),
+      ),
+    );
+
+    if (wantsEdit == true) {
+      await _openDeviceDialog(device: device);
+    }
   }
 
   Future<void> _openDeviceDialog({CatalogDevice? device}) async {
@@ -410,11 +424,13 @@ enum _CatalogView { devices, presets }
 class _CatalogDeviceCard extends StatelessWidget {
   const _CatalogDeviceCard({
     required this.device,
+    required this.onViewDetails,
     required this.onEdit,
     required this.onDelete,
   });
 
   final CatalogDevice device;
+  final VoidCallback onViewDetails;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -423,6 +439,7 @@ class _CatalogDeviceCard extends StatelessWidget {
     final manufacturer = device.manufacturer;
 
     return GreenCrewCard(
+      onTap: onViewDetails,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -455,14 +472,16 @@ class _CatalogDeviceCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MetricChip(
-                icon: Icons.bolt,
-                label: '${(device.powerW / 1000).toStringAsFixed(1)} kW',
-              ),
-              _MetricChip(
-                icon: Icons.electrical_services,
-                label: '${device.currentA.toStringAsFixed(1)} A',
-              ),
+              if (device.category.showsElectricalFields) ...[
+                _MetricChip(
+                  icon: Icons.bolt,
+                  label: '${(device.powerW / 1000).toStringAsFixed(1)} kW',
+                ),
+                _MetricChip(
+                  icon: Icons.electrical_services,
+                  label: '${device.currentA.toStringAsFixed(1)} A',
+                ),
+              ],
               _MetricChip(
                 icon: Icons.scale,
                 label: '${device.weightKg.toStringAsFixed(1)} kg',
