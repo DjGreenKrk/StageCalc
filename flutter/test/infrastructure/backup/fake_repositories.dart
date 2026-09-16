@@ -23,6 +23,11 @@ class FakeProjectRepository implements ProjectRepository {
       ..removeWhere((candidate) => candidate.id == project.id)
       ..add(project);
   }
+
+  @override
+  Future<void> deleteProject(String id) async {
+    projects.removeWhere((candidate) => candidate.id == id);
+  }
 }
 
 class FakeClientRepository implements ClientRepository {

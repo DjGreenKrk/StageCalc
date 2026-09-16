@@ -94,6 +94,43 @@ void main() {
     expect(find.text('Projekt zapisany lokalnie'), findsOneWidget);
   });
 
+  testWidgets('deletes a project from the project list', (tester) async {
+    await tester.pumpWidget(const StageCalcApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Dodaj projekt').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byType(EditableText).last,
+      'Projekt do usunięcia',
+    );
+    await tester.tap(find.text('Zapisz').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Projekt do usunięcia'), findsOneWidget);
+
+    final projectCard = find.ancestor(
+      of: find.text('Projekt do usunięcia'),
+      matching: find.byType(GreenCrewCard),
+    );
+    await tester.tap(
+      find.descendant(
+        of: projectCard,
+        matching: find.byIcon(Icons.delete_outline),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Usunąć projekt?'), findsOneWidget);
+    await tester.tap(find.text('Usuń').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Projekt do usunięcia'), findsNothing);
+    // The seeded demo project is untouched by deleting a different one.
+    expect(find.text('Demo techniczne'), findsOneWidget);
+  });
+
   testWidgets('imports a Gremium pack-list into a new project', (tester) async {
     tester.view.physicalSize = const Size(1000, 2400);
     tester.view.devicePixelRatio = 1;

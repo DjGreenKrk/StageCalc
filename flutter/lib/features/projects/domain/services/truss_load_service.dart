@@ -42,24 +42,37 @@ class TrussLoadService {
     final interpolated = _interpolateLimits(truss.lengthM, trussDevice);
     final hasInterpolatedLimits = interpolated.status != _ChartStatus.noData;
 
+    // A manually-entered limit of zero (or less) is never physically
+    // meaningful for a truss - treat it the same as "not set" so a stray `0`
+    // (whether typed by mistake or left over from data saved before this
+    // field required an explicit value) doesn't silently override a real
+    // chart-based limit via `??`, which only substitutes for `null`.
+    final manualTotalLoadKg = _asLimit(truss.maxTotalLoadKg);
+    final manualDistributedLoadKgPerM = _asLimit(
+      truss.maxDistributedLoadKgPerM,
+    );
+
     return TrussLoad(
       trussId: truss.id,
       groupsMassKg: groupsMassKg,
       manualLoadKg: truss.manualLoadKg,
       totalMassKg: totalMassKg,
       distributedLoadKgPerM: distributedLoadKgPerM,
-      maxTotalLoadKg: truss.maxTotalLoadKg ?? interpolated.pointLoadKg,
+      maxTotalLoadKg: manualTotalLoadKg ?? interpolated.pointLoadKg,
       maxDistributedLoadKgPerM:
-          truss.maxDistributedLoadKgPerM ?? interpolated.distributedLoadKgPerM,
+          manualDistributedLoadKgPerM ?? interpolated.distributedLoadKgPerM,
       totalLimitFromChart:
-          truss.maxTotalLoadKg == null && interpolated.pointLoadKg != null,
+          manualTotalLoadKg == null && interpolated.pointLoadKg != null,
       distributedLimitFromChart:
-          truss.maxDistributedLoadKgPerM == null &&
+          manualDistributedLoadKgPerM == null &&
           interpolated.distributedLoadKgPerM != null,
       hasInterpolatedLimits: hasInterpolatedLimits,
       isChartExtrapolated: interpolated.status == _ChartStatus.extrapolated,
     );
   }
+
+  double? _asLimit(double? value) =>
+      (value == null || value <= 0) ? null : value;
 
   /// How many hooks [group] needs (from `riggingPointsSnapshot` on its
   /// items) versus how many are actually assigned, and the resulting extra

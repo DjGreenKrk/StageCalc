@@ -346,6 +346,57 @@ void main() {
       expect(load.distributedLimitFromChart, isTrue);
     });
 
+    test(
+      'treats a stored 0 manual limit as unset, falling back to the chart',
+      () {
+        const truss = ProjectTruss(
+          id: 'truss',
+          name: 'Truss',
+          lengthM: 4,
+          trussCatalogDeviceId: 'prolyte_h30v',
+          maxTotalLoadKg: 0,
+          maxDistributedLoadKgPerM: 0,
+        );
+
+        final load = service.calculateLoad(
+          truss,
+          buildProjectWithDevice(truss),
+          catalogDevices: [trussDevice],
+        );
+
+        // A real manufacturer limit of 0 makes no physical sense - a stored
+        // 0 (whatever put it there) must not silently win over the chart via
+        // `??`, which only ever substitutes for `null`.
+        expect(load.maxTotalLoadKg, 800);
+        expect(load.totalLimitFromChart, isTrue);
+        expect(load.maxDistributedLoadKgPerM, 200);
+        expect(load.distributedLimitFromChart, isTrue);
+      },
+    );
+
+    test(
+      'treats a stored 0 manual limit as unknown when no device is linked',
+      () {
+        const truss = ProjectTruss(
+          id: 'truss',
+          name: 'Truss',
+          lengthM: 4,
+          maxTotalLoadKg: 0,
+          maxDistributedLoadKgPerM: 0,
+        );
+
+        final load = service.calculateLoad(
+          truss,
+          buildProjectWithDevice(truss),
+          catalogDevices: [trussDevice],
+        );
+
+        expect(load.hasKnownLimits, isFalse);
+        expect(load.maxTotalLoadKg, isNull);
+        expect(load.maxDistributedLoadKgPerM, isNull);
+      },
+    );
+
     test('reports no interpolated limits without a linked device', () {
       const truss = ProjectTruss(id: 'truss', name: 'Truss', lengthM: 4);
 

@@ -286,4 +286,57 @@ void main() {
 
     expect(projects.single.groups, isEmpty);
   });
+
+  test('deleteProject removes the project and soft-deletes its groups, items '
+      'and trusses', () async {
+    final now = DateTime(2026, 7, 5);
+    final project = Project(
+      id: 'project_to_delete',
+      name: 'Projekt do usunięcia',
+      createdAt: now,
+      updatedAt: now,
+      groups: const [
+        ProjectGroup(
+          id: 'group_to_delete',
+          name: 'Front',
+          items: [
+            ProjectItem(
+              id: 'item_to_delete',
+              nameSnapshot: 'LED Bar',
+              quantity: 4,
+            ),
+          ],
+        ),
+      ],
+      trusses: const [
+        ProjectTruss(
+          id: 'truss_to_delete',
+          name: 'Front 8 m',
+          lengthM: 8,
+          assignedGroupIds: ['group_to_delete'],
+        ),
+      ],
+    );
+
+    await repository.saveProject(project);
+    await repository.deleteProject('project_to_delete');
+
+    final projects = await repository.getProjects();
+    expect(projects, isEmpty);
+
+    final groupRow = await (database.select(
+      database.projectGroups,
+    )..where((row) => row.id.equals('group_to_delete'))).getSingle();
+    expect(groupRow.deletedAt, isNotNull);
+
+    final itemRow = await (database.select(
+      database.projectItems,
+    )..where((row) => row.id.equals('item_to_delete'))).getSingle();
+    expect(itemRow.deletedAt, isNotNull);
+
+    final trussRow = await (database.select(
+      database.projectTrusses,
+    )..where((row) => row.id.equals('truss_to_delete'))).getSingle();
+    expect(trussRow.deletedAt, isNotNull);
+  });
 }

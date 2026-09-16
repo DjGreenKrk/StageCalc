@@ -14,6 +14,68 @@ class DriftProjectRepository implements ProjectRepository {
   final db.AppDatabase _database;
 
   @override
+  Future<void> deleteProject(String id) async {
+    final now = DateTime.now();
+    await _database.transaction(() async {
+      await (_database.update(
+        _database.projects,
+      )..where((row) => row.id.equals(id))).write(
+        db.ProjectsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
+      await (_database.update(
+        _database.projectGroups,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectGroupsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
+      await (_database.update(
+        _database.projectItems,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectItemsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
+      await (_database.update(
+        _database.projectGroupHookAssignments,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectGroupHookAssignmentsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (_database.update(
+        _database.projectDistros,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectDistrosCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (_database.update(
+        _database.projectOutlets,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectOutletsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (_database.update(
+        _database.powerConnections,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.PowerConnectionsCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      await (_database.update(
+        _database.projectTrusses,
+      )..where((row) => row.projectId.equals(id))).write(
+        db.ProjectTrussesCompanion(
+          deletedAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+  }
+
+  @override
   Future<List<Project>> getProjects() async {
     final projectRows =
         await (_database.select(_database.projects)

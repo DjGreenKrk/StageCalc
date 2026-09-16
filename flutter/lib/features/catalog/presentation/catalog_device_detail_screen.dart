@@ -48,7 +48,10 @@ class CatalogDeviceDetailScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 _SpecRow(label: 'Producent', value: device.manufacturer ?? '-'),
                 _SpecRow(label: 'Kategoria', value: category.label),
-                _SpecRow(label: 'Jednostka', value: _unitLabel(device.quantityUnit)),
+                _SpecRow(
+                  label: 'Jednostka',
+                  value: _unitLabel(device.quantityUnit),
+                ),
               ],
             ),
           ),
@@ -96,7 +99,10 @@ class CatalogDeviceDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Rigging', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    'Rigging',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   _SpecRow(
                     label: 'Rodzaj',
@@ -151,7 +157,10 @@ class _SpecRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 140,
-            child: Text(label, style: const TextStyle(color: GreenCrewColors.textSecondary)),
+            child: Text(
+              label,
+              style: const TextStyle(color: GreenCrewColors.textSecondary),
+            ),
           ),
           Expanded(child: Text(value)),
         ],
@@ -177,7 +186,8 @@ class _LoadChartCard extends StatelessWidget {
       ..sort((a, b) => a.lengthM.compareTo(b.lengthM));
 
     final pointLoadSpots = [
-      for (final entry in sortedEntries) FlSpot(entry.lengthM, entry.pointLoadKg),
+      for (final entry in sortedEntries)
+        FlSpot(entry.lengthM, entry.pointLoadKg),
     ];
     final distributedLoadSpots = [
       for (final entry in sortedEntries)
@@ -188,7 +198,10 @@ class _LoadChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Krzywa nośności', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Krzywa nośności',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 16),
           SizedBox(
             height: 240,
@@ -196,10 +209,14 @@ class _LoadChartCard extends StatelessWidget {
               LineChartData(
                 backgroundColor: GreenCrewColors.surfaceVariant,
                 gridData: FlGridData(
-                  getDrawingHorizontalLine: (value) =>
-                      const FlLine(color: GreenCrewColors.border, strokeWidth: 1),
-                  getDrawingVerticalLine: (value) =>
-                      const FlLine(color: GreenCrewColors.border, strokeWidth: 1),
+                  getDrawingHorizontalLine: (value) => const FlLine(
+                    color: GreenCrewColors.border,
+                    strokeWidth: 1,
+                  ),
+                  getDrawingVerticalLine: (value) => const FlLine(
+                    color: GreenCrewColors.border,
+                    strokeWidth: 1,
+                  ),
                 ),
                 titlesData: FlTitlesData(
                   topTitles: const AxisTitles(
@@ -255,7 +272,10 @@ class _LoadChartCard extends StatelessWidget {
             spacing: 16,
             runSpacing: 8,
             children: const [
-              _LegendEntry(color: _pointLoadColor, label: 'Obciążenie punktowe (kg)'),
+              _LegendEntry(
+                color: _pointLoadColor,
+                label: 'Obciążenie punktowe (kg)',
+              ),
               _LegendEntry(
                 color: _distributedLoadColor,
                 label: 'Obciążenie rozłożone (kg/m)',

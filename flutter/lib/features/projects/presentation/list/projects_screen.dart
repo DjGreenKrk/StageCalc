@@ -155,6 +155,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 clients: _clients,
                 locations: _locations,
                 onTap: () => _openProject(project),
+                onDelete: () => _deleteProject(project),
               ),
               const SizedBox(height: 12),
             ],
@@ -238,6 +239,50 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     if (changed == true) {
       await _loadProjects();
     }
+  }
+
+  Future<void> _deleteProject(Project project) async {
+    final repository = _repository;
+    if (repository == null) {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usunąć projekt?'),
+        content: Text(
+          '"${project.name}" zostanie usunięty razem ze wszystkimi grupami, '
+          'rozdzielniami i kratownicami.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    await repository.deleteProject(project.id);
+    final projects = await repository.getProjects();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _projects = projects);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Projekt usunięty lokalnie')));
   }
 }
 
@@ -353,12 +398,14 @@ class _ProjectCard extends StatelessWidget {
     required this.clients,
     required this.locations,
     required this.onTap,
+    required this.onDelete,
   });
 
   final Project project;
   final List<Client> clients;
   final List<Location> locations;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -382,6 +429,11 @@ class _ProjectCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(project.name, style: textTheme.titleMedium)),
+              IconButton(
+                tooltip: 'Usuń projekt',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+              ),
               const Icon(Icons.chevron_right),
             ],
           ),
