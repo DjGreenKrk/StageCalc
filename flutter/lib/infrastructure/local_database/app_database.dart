@@ -423,6 +423,12 @@ class AppSettings extends Table {
   /// is the source of truth for "who is logged in" while the app is running.
   TextColumn get authSessionData => text().nullable()();
 
+  /// The version string of the last "new version available" banner the user
+  /// dismissed (`UpdateCheckService`) - `null` if nothing has been dismissed
+  /// yet. Prevents re-nagging about a version the user already said no to,
+  /// while a genuinely newer release still shows the banner again.
+  TextColumn get dismissedUpdateVersion => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -469,7 +475,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -645,6 +651,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 20) {
         await _createTableIfMissing(migrator, dismissedDuplicatePairs);
+      }
+      if (from < 21) {
+        await _addColumnIfMissing(
+          migrator,
+          appSettings,
+          appSettings.dismissedUpdateVersion,
+        );
       }
     },
   );

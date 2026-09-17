@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/constants/app_metadata.dart';
 import '../features/catalog/presentation/catalog_screen.dart';
@@ -12,7 +14,10 @@ import '../infrastructure/local_database/app_database_provider.dart';
 import '../infrastructure/remote/pocketbase_client_provider.dart';
 import '../infrastructure/sync/drift_app_sync_settings_repository.dart';
 import '../infrastructure/sync/sync_coordinator.dart';
+import '../infrastructure/update/update_check_service.dart';
+import '../infrastructure/update/update_check_service_provider.dart';
 import '../shared/widgets/greencrew_offline_banner.dart';
+import '../shared/widgets/greencrew_update_banner.dart';
 import '../shared/widgets/stagecalc_mark.dart';
 import 'theme/stagecalc_theme.dart';
 
@@ -46,11 +51,13 @@ class _StageCalcShellState extends State<StageCalcShell> {
   var _index = 0;
   Timer? _autoSyncTimer;
   StreamSubscription? _authSubscription;
+  AvailableUpdate? _availableUpdate;
 
   @override
   void initState() {
     super.initState();
     unawaited(_maybeAutoSync());
+    unawaited(_maybeCheckForUpdate());
     _autoSyncTimer = Timer.periodic(
       _autoSyncCheckInterval,
       (_) => _maybeAutoSync(),
@@ -91,6 +98,56 @@ class _StageCalcShellState extends State<StageCalcShell> {
       // failed sync is a normal, expected state, not an error to interrupt
       // the user with). The "O aplikacji" screen shows the last successful
       // sync time for anyone who wants to check.
+    }
+  }
+
+  /// Runs once per app start, not on the auto-sync timer - a version check
+  /// doesn't need to repeat every 15 minutes. Skipped on web entirely: a web
+  /// build is always whatever was last deployed to that URL, there is
+  /// nothing for the user to "download" from inside the running page.
+  Future<void> _maybeCheckForUpdate() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    final database = AppDatabaseProvider.instance;
+    final settingsRepository = DriftAppSyncSettingsRepository(database);
+    final update = await UpdateCheckServiceProvider.instance.checkForUpdate();
+    if (update == null || !mounted) {
+      return;
+    }
+
+    final settings = await settingsRepository.getSettings();
+    if (settings.dismissedUpdateVersion == update.version) {
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _availableUpdate = update);
+    }
+  }
+
+  Future<void> _dismissUpdate() async {
+    final update = _availableUpdate;
+    if (update == null) {
+      return;
+    }
+    setState(() => _availableUpdate = null);
+    await DriftAppSyncSettingsRepository(
+      AppDatabaseProvider.instance,
+    ).setDismissedUpdateVersion(update.version);
+  }
+
+  Future<void> _openReleasePage(String url) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final launched = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.platformDefault,
+    );
+    if (!launched) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Nie udało się otworzyć linku.')),
+      );
     }
   }
 
@@ -156,6 +213,12 @@ class _StageCalcShellState extends State<StageCalcShell> {
         children: [
           if (!PocketBaseClientProvider.instance.authStore.isValid)
             const GreenCrewOfflineBanner(),
+          if (_availableUpdate != null)
+            GreenCrewUpdateBanner(
+              update: _availableUpdate!,
+              onDownload: () => _openReleasePage(_availableUpdate!.releaseUrl),
+              onDismiss: _dismissUpdate,
+            ),
           Expanded(
             child: Row(
               children: [

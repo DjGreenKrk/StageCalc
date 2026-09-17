@@ -9,6 +9,8 @@ import 'package:file_picker_platform_interface/file_picker_platform_interface.da
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:stagecalc/app/app.dart';
 import 'package:stagecalc/features/catalog/data/demo_catalog_factory.dart';
 import 'package:stagecalc/features/catalog/data/drift_catalog_repository.dart';
@@ -26,6 +28,8 @@ import 'package:stagecalc/features/projects/domain/entities/project_models.dart'
 import 'package:stagecalc/infrastructure/local_database/app_database.dart'
     as db;
 import 'package:stagecalc/infrastructure/local_database/app_database_provider.dart';
+import 'package:stagecalc/infrastructure/update/update_check_service.dart';
+import 'package:stagecalc/infrastructure/update/update_check_service_provider.dart';
 
 void main() {
   late db.AppDatabase database;
@@ -33,6 +37,17 @@ void main() {
   setUp(() async {
     database = db.AppDatabase.forTesting(NativeDatabase.memory());
     AppDatabaseProvider.overrideForTesting(database);
+
+    // Never let the update-check banner's background call reach the real
+    // network during tests - offline-first has to hold for how the app is
+    // verified too, not just for what a real user without a connection
+    // sees. This fake client never resolves to "there's an update", so no
+    // test needs to account for the banner appearing unpredictably either.
+    UpdateCheckServiceProvider.overrideForTesting(
+      UpdateCheckService(
+        MockClient((request) async => http.Response('not found', 404)),
+      ),
+    );
 
     // path_provider has no real platform plugin registered under
     // `flutter test`; stub its channel so code that calls

@@ -14644,12 +14644,24 @@ class $AppSettingsTable extends AppSettings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dismissedUpdateVersionMeta =
+      const VerificationMeta('dismissedUpdateVersion');
+  @override
+  late final GeneratedColumn<String> dismissedUpdateVersion =
+      GeneratedColumn<String>(
+        'dismissed_update_version',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     autoSyncEnabled,
     lastSyncedAt,
     authSessionData,
+    dismissedUpdateVersion,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -14695,6 +14707,15 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('dismissed_update_version')) {
+      context.handle(
+        _dismissedUpdateVersionMeta,
+        dismissedUpdateVersion.isAcceptableOrUnknown(
+          data['dismissed_update_version']!,
+          _dismissedUpdateVersionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14720,6 +14741,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}auth_session_data'],
       ),
+      dismissedUpdateVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dismissed_update_version'],
+      ),
     );
   }
 
@@ -14741,11 +14766,18 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
   /// already owns the encoding, and the live `authStore` (not this column)
   /// is the source of truth for "who is logged in" while the app is running.
   final String? authSessionData;
+
+  /// The version string of the last "new version available" banner the user
+  /// dismissed (`UpdateCheckService`) - `null` if nothing has been dismissed
+  /// yet. Prevents re-nagging about a version the user already said no to,
+  /// while a genuinely newer release still shows the banner again.
+  final String? dismissedUpdateVersion;
   const AppSetting({
     required this.id,
     required this.autoSyncEnabled,
     this.lastSyncedAt,
     this.authSessionData,
+    this.dismissedUpdateVersion,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14757,6 +14789,11 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     }
     if (!nullToAbsent || authSessionData != null) {
       map['auth_session_data'] = Variable<String>(authSessionData);
+    }
+    if (!nullToAbsent || dismissedUpdateVersion != null) {
+      map['dismissed_update_version'] = Variable<String>(
+        dismissedUpdateVersion,
+      );
     }
     return map;
   }
@@ -14771,6 +14808,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       authSessionData: authSessionData == null && nullToAbsent
           ? const Value.absent()
           : Value(authSessionData),
+      dismissedUpdateVersion: dismissedUpdateVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dismissedUpdateVersion),
     );
   }
 
@@ -14784,6 +14824,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       autoSyncEnabled: serializer.fromJson<bool>(json['autoSyncEnabled']),
       lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
       authSessionData: serializer.fromJson<String?>(json['authSessionData']),
+      dismissedUpdateVersion: serializer.fromJson<String?>(
+        json['dismissedUpdateVersion'],
+      ),
     );
   }
   @override
@@ -14794,6 +14837,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       'autoSyncEnabled': serializer.toJson<bool>(autoSyncEnabled),
       'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
       'authSessionData': serializer.toJson<String?>(authSessionData),
+      'dismissedUpdateVersion': serializer.toJson<String?>(
+        dismissedUpdateVersion,
+      ),
     };
   }
 
@@ -14802,6 +14848,7 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     bool? autoSyncEnabled,
     Value<DateTime?> lastSyncedAt = const Value.absent(),
     Value<String?> authSessionData = const Value.absent(),
+    Value<String?> dismissedUpdateVersion = const Value.absent(),
   }) => AppSetting(
     id: id ?? this.id,
     autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
@@ -14809,6 +14856,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
     authSessionData: authSessionData.present
         ? authSessionData.value
         : this.authSessionData,
+    dismissedUpdateVersion: dismissedUpdateVersion.present
+        ? dismissedUpdateVersion.value
+        : this.dismissedUpdateVersion,
   );
   AppSetting copyWithCompanion(AppSettingsCompanion data) {
     return AppSetting(
@@ -14822,6 +14872,9 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
       authSessionData: data.authSessionData.present
           ? data.authSessionData.value
           : this.authSessionData,
+      dismissedUpdateVersion: data.dismissedUpdateVersion.present
+          ? data.dismissedUpdateVersion.value
+          : this.dismissedUpdateVersion,
     );
   }
 
@@ -14831,14 +14884,20 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           ..write('id: $id, ')
           ..write('autoSyncEnabled: $autoSyncEnabled, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
-          ..write('authSessionData: $authSessionData')
+          ..write('authSessionData: $authSessionData, ')
+          ..write('dismissedUpdateVersion: $dismissedUpdateVersion')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, autoSyncEnabled, lastSyncedAt, authSessionData);
+  int get hashCode => Object.hash(
+    id,
+    autoSyncEnabled,
+    lastSyncedAt,
+    authSessionData,
+    dismissedUpdateVersion,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -14846,7 +14905,8 @@ class AppSetting extends DataClass implements Insertable<AppSetting> {
           other.id == this.id &&
           other.autoSyncEnabled == this.autoSyncEnabled &&
           other.lastSyncedAt == this.lastSyncedAt &&
-          other.authSessionData == this.authSessionData);
+          other.authSessionData == this.authSessionData &&
+          other.dismissedUpdateVersion == this.dismissedUpdateVersion);
 }
 
 class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
@@ -14854,12 +14914,14 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   final Value<bool> autoSyncEnabled;
   final Value<DateTime?> lastSyncedAt;
   final Value<String?> authSessionData;
+  final Value<String?> dismissedUpdateVersion;
   final Value<int> rowid;
   const AppSettingsCompanion({
     this.id = const Value.absent(),
     this.autoSyncEnabled = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.authSessionData = const Value.absent(),
+    this.dismissedUpdateVersion = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AppSettingsCompanion.insert({
@@ -14867,6 +14929,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     this.autoSyncEnabled = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.authSessionData = const Value.absent(),
+    this.dismissedUpdateVersion = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id);
   static Insertable<AppSetting> custom({
@@ -14874,6 +14937,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Expression<bool>? autoSyncEnabled,
     Expression<DateTime>? lastSyncedAt,
     Expression<String>? authSessionData,
+    Expression<String>? dismissedUpdateVersion,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -14881,6 +14945,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       if (autoSyncEnabled != null) 'auto_sync_enabled': autoSyncEnabled,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (authSessionData != null) 'auth_session_data': authSessionData,
+      if (dismissedUpdateVersion != null)
+        'dismissed_update_version': dismissedUpdateVersion,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -14890,6 +14956,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     Value<bool>? autoSyncEnabled,
     Value<DateTime?>? lastSyncedAt,
     Value<String?>? authSessionData,
+    Value<String?>? dismissedUpdateVersion,
     Value<int>? rowid,
   }) {
     return AppSettingsCompanion(
@@ -14897,6 +14964,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
       autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       authSessionData: authSessionData ?? this.authSessionData,
+      dismissedUpdateVersion:
+          dismissedUpdateVersion ?? this.dismissedUpdateVersion,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -14916,6 +14985,11 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
     if (authSessionData.present) {
       map['auth_session_data'] = Variable<String>(authSessionData.value);
     }
+    if (dismissedUpdateVersion.present) {
+      map['dismissed_update_version'] = Variable<String>(
+        dismissedUpdateVersion.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -14929,6 +15003,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
           ..write('autoSyncEnabled: $autoSyncEnabled, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('authSessionData: $authSessionData, ')
+          ..write('dismissedUpdateVersion: $dismissedUpdateVersion, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -25379,6 +25454,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<bool> autoSyncEnabled,
       Value<DateTime?> lastSyncedAt,
       Value<String?> authSessionData,
+      Value<String?> dismissedUpdateVersion,
       Value<int> rowid,
     });
 typedef $$AppSettingsTableUpdateCompanionBuilder =
@@ -25387,6 +25463,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<bool> autoSyncEnabled,
       Value<DateTime?> lastSyncedAt,
       Value<String?> authSessionData,
+      Value<String?> dismissedUpdateVersion,
       Value<int> rowid,
     });
 
@@ -25416,6 +25493,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get authSessionData => $composableBuilder(
     column: $table.authSessionData,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dismissedUpdateVersion => $composableBuilder(
+    column: $table.dismissedUpdateVersion,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -25448,6 +25530,11 @@ class $$AppSettingsTableOrderingComposer
     column: $table.authSessionData,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get dismissedUpdateVersion => $composableBuilder(
+    column: $table.dismissedUpdateVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AppSettingsTableAnnotationComposer
@@ -25474,6 +25561,11 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get authSessionData => $composableBuilder(
     column: $table.authSessionData,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dismissedUpdateVersion => $composableBuilder(
+    column: $table.dismissedUpdateVersion,
     builder: (column) => column,
   );
 }
@@ -25513,12 +25605,14 @@ class $$AppSettingsTableTableManager
                 Value<bool> autoSyncEnabled = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
                 Value<String?> authSessionData = const Value.absent(),
+                Value<String?> dismissedUpdateVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppSettingsCompanion(
                 id: id,
                 autoSyncEnabled: autoSyncEnabled,
                 lastSyncedAt: lastSyncedAt,
                 authSessionData: authSessionData,
+                dismissedUpdateVersion: dismissedUpdateVersion,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -25527,12 +25621,14 @@ class $$AppSettingsTableTableManager
                 Value<bool> autoSyncEnabled = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
                 Value<String?> authSessionData = const Value.absent(),
+                Value<String?> dismissedUpdateVersion = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppSettingsCompanion.insert(
                 id: id,
                 autoSyncEnabled: autoSyncEnabled,
                 lastSyncedAt: lastSyncedAt,
                 authSessionData: authSessionData,
+                dismissedUpdateVersion: dismissedUpdateVersion,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

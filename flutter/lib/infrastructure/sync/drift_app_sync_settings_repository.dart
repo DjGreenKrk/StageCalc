@@ -36,6 +36,7 @@ class DriftAppSyncSettingsRepository {
       autoSyncEnabled: row.autoSyncEnabled,
       lastSyncedAt: row.lastSyncedAt,
       authSessionData: row.authSessionData,
+      dismissedUpdateVersion: row.dismissedUpdateVersion,
     );
   }
 
@@ -54,6 +55,11 @@ class DriftAppSyncSettingsRepository {
     await _writeRow(current.withAuthSessionData(data));
   }
 
+  Future<void> setDismissedUpdateVersion(String? version) async {
+    final current = await getSettings();
+    await _writeRow(current.withDismissedUpdateVersion(version));
+  }
+
   Future<void> _writeRow(AppSyncSettings settings) {
     return _database
         .into(_database.appSettings)
@@ -63,6 +69,7 @@ class DriftAppSyncSettingsRepository {
             autoSyncEnabled: Value(settings.autoSyncEnabled),
             lastSyncedAt: Value(settings.lastSyncedAt),
             authSessionData: Value(settings.authSessionData),
+            dismissedUpdateVersion: Value(settings.dismissedUpdateVersion),
           ),
         );
   }

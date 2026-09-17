@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_metadata.dart';
 import '../../../infrastructure/backup/app_backup_import_service.dart';
@@ -10,6 +11,7 @@ import '../../../infrastructure/remote/pocketbase_client_provider.dart';
 import '../../../infrastructure/sync/app_sync_settings.dart';
 import '../../../infrastructure/sync/drift_app_sync_settings_repository.dart';
 import '../../../infrastructure/sync/sync_coordinator.dart';
+import '../../../infrastructure/update/update_check_service_provider.dart';
 import '../../../shared/widgets/greencrew_button.dart';
 import '../../../shared/widgets/greencrew_card.dart';
 import '../../../shared/widgets/stagecalc_mark.dart';
@@ -39,6 +41,7 @@ class _AboutScreenState extends State<AboutScreen> {
   var _isSyncing = false;
   var _isLoggingIn = false;
   var _isChangingPassword = false;
+  var _isCheckingForUpdate = false;
   String? _lastSyncMessage;
   String? _loginError;
   String? _changePasswordError;
@@ -113,6 +116,15 @@ class _AboutScreenState extends State<AboutScreen> {
                   applicationName: AppMetadata.name,
                   applicationVersion: AppMetadata.version,
                 ),
+              ),
+              const SizedBox(height: 8),
+              GreenCrewButton(
+                label: _isCheckingForUpdate
+                    ? 'Sprawdzanie...'
+                    : 'Sprawdź aktualizacje',
+                icon: Icons.system_update_alt,
+                secondary: true,
+                onPressed: _isCheckingForUpdate ? null : _checkForUpdate,
               ),
             ],
           ),
@@ -375,6 +387,37 @@ class _AboutScreenState extends State<AboutScreen> {
   void _logout() {
     _authService.logout();
     setState(() {});
+  }
+
+  Future<void> _checkForUpdate() async {
+    setState(() => _isCheckingForUpdate = true);
+
+    final update = await UpdateCheckServiceProvider.instance.checkForUpdate();
+
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isCheckingForUpdate = false);
+
+    if (update == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Masz najnowszą wersję.')));
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Dostępna nowa wersja: ${update.version}'),
+        action: SnackBarAction(
+          label: 'Pobierz',
+          onPressed: () => launchUrl(
+            Uri.parse(update.releaseUrl),
+            mode: LaunchMode.platformDefault,
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _changePassword() async {

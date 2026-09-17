@@ -9,6 +9,7 @@ class AppSyncSettings {
     required this.autoSyncEnabled,
     this.lastSyncedAt,
     this.authSessionData,
+    this.dismissedUpdateVersion,
   });
 
   final bool autoSyncEnabled;
@@ -19,6 +20,11 @@ class AppSyncSettings {
   /// nobody has ever logged in on this device.
   final String? authSessionData;
 
+  /// The version string (e.g. `"0.7.0"`) of the last "new version available"
+  /// banner the user dismissed - see `UpdateCheckService`. `null` means
+  /// nothing has been dismissed yet.
+  final String? dismissedUpdateVersion;
+
   static const AppSyncSettings initial = AppSyncSettings(
     autoSyncEnabled: false,
   );
@@ -28,6 +34,7 @@ class AppSyncSettings {
       autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       authSessionData: authSessionData,
+      dismissedUpdateVersion: dismissedUpdateVersion,
     );
   }
 
@@ -39,6 +46,18 @@ class AppSyncSettings {
       autoSyncEnabled: autoSyncEnabled,
       lastSyncedAt: lastSyncedAt,
       authSessionData: authSessionData,
+      dismissedUpdateVersion: dismissedUpdateVersion,
+    );
+  }
+
+  /// Returns a copy with the dismissed-update-version replaced - same
+  /// null-clearing reasoning as [withAuthSessionData].
+  AppSyncSettings withDismissedUpdateVersion(String? dismissedUpdateVersion) {
+    return AppSyncSettings(
+      autoSyncEnabled: autoSyncEnabled,
+      lastSyncedAt: lastSyncedAt,
+      authSessionData: authSessionData,
+      dismissedUpdateVersion: dismissedUpdateVersion,
     );
   }
 }
