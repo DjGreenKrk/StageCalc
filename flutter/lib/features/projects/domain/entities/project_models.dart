@@ -16,6 +16,9 @@ class Project {
     this.trusses = const [],
     this.syncStatus = OfflineSyncStatus.localOnly,
     this.gremiumProjectId,
+    this.remoteId,
+    this.ownerId,
+    this.myShareRole,
   });
 
   final String id;
@@ -36,6 +39,22 @@ class Project {
   /// project not linked to Gremium. Re-importing the same Gremium project
   /// (same id) updates this project instead of creating a duplicate.
   final String? gremiumProjectId;
+
+  /// PocketBase record id of this project, `null` until the first sync
+  /// (ADR-026). Sharing (ADR-040) needs this - a project can only be
+  /// shared once it exists remotely.
+  final String? remoteId;
+
+  /// PocketBase `users` record id of the owner (ADR-028), `null` for a
+  /// project never synced yet. `ownerId == null || ownerId == <my id>`
+  /// means "I own this project"; anything else means it was shared with me.
+  final String? ownerId;
+
+  /// `'editor'` / `'viewer'` when this project was pulled because someone
+  /// else shared it with the logged-in user, `null` when owned or not yet
+  /// synced (ADR-040). Never set through [copyWith] by UI code - it is
+  /// recomputed by `PocketBaseProjectSyncService` on every pull.
+  final String? myShareRole;
 
   Project copyWith({
     String? id,
@@ -68,8 +87,24 @@ class Project {
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
       gremiumProjectId: gremiumProjectId ?? this.gremiumProjectId,
+      remoteId: remoteId,
+      ownerId: ownerId,
+      myShareRole: myShareRole,
     );
   }
+
+  /// Whether [currentUserId] is this project's owner - true for a project
+  /// never synced yet (`ownerId == null`, ADR-028), since it is then
+  /// necessarily local-only and not yet claimed by anyone (see
+  /// `PocketBaseProjectSyncService._push`).
+  bool isOwnedBy(String? currentUserId) =>
+      ownerId == null || ownerId == currentUserId;
+
+  /// Whether [currentUserId] may edit this project's content - the owner,
+  /// or a share recipient with the `editor` role (ADR-040). A `viewer`
+  /// share, like anyone not the owner and not an editor, cannot.
+  bool canBeEditedBy(String? currentUserId) =>
+      isOwnedBy(currentUserId) || myShareRole == 'editor';
 
   Map<String, Object?> toJson() {
     return {

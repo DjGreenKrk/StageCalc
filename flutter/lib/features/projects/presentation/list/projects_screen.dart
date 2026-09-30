@@ -6,6 +6,7 @@ import '../../../../shared/widgets/greencrew_fab.dart';
 import '../../../../shared/widgets/greencrew_search_bar.dart';
 import '../../../../shared/widgets/greencrew_section_header.dart';
 import '../../../../infrastructure/local_database/app_database_provider.dart';
+import '../../../../infrastructure/remote/pocketbase_client_provider.dart';
 import '../../../clients/data/drift_client_repository.dart';
 import '../../../clients/domain/entities/client.dart';
 import '../../../locations/data/drift_location_repository.dart';
@@ -16,6 +17,7 @@ import '../../data/project_repository.dart';
 import '../../domain/entities/project_models.dart';
 import '../../domain/services/project_totals_service.dart';
 import '../project_editor_screen.dart';
+import 'share_project_dialog.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});
@@ -154,8 +156,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                 project: project,
                 clients: _clients,
                 locations: _locations,
+                currentUserId:
+                    PocketBaseClientProvider.instance.authStore.record?.id,
                 onTap: () => _openProject(project),
                 onDelete: () => _deleteProject(project),
+                onShare: () => _openShareDialog(project),
               ),
               const SizedBox(height: 12),
             ],
@@ -239,6 +244,36 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     if (changed == true) {
       await _loadProjects();
     }
+  }
+
+  Future<void> _openShareDialog(Project project) async {
+    if (!PocketBaseClientProvider.instance.authStore.isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Zaloguj się, aby udostępniać projekty.'),
+        ),
+      );
+      return;
+    }
+    final remoteId = project.remoteId;
+    if (remoteId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Zsynchronizuj projekt najpierw (Synchronizuj teraz w Info), zanim go udostępnisz.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => ShareProjectDialog(
+        projectName: project.name,
+        remoteProjectId: remoteId,
+      ),
+    );
   }
 
   Future<void> _deleteProject(Project project) async {
@@ -397,15 +432,19 @@ class _ProjectCard extends StatelessWidget {
     required this.project,
     required this.clients,
     required this.locations,
+    required this.currentUserId,
     required this.onTap,
     required this.onDelete,
+    required this.onShare,
   });
 
   final Project project;
   final List<Client> clients;
   final List<Location> locations;
+  final String? currentUserId;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -420,6 +459,7 @@ class _ProjectCard extends StatelessWidget {
         .where((location) => location.id == project.locationId)
         .firstOrNull
         ?.name;
+    final isOwner = project.isOwnedBy(currentUserId);
 
     return GreenCrewCard(
       onTap: onTap,
@@ -429,14 +469,32 @@ class _ProjectCard extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(project.name, style: textTheme.titleMedium)),
-              IconButton(
-                tooltip: 'Usuń projekt',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
-              ),
+              if (isOwner)
+                IconButton(
+                  tooltip: 'Udostępnij projekt',
+                  onPressed: onShare,
+                  icon: const Icon(Icons.person_add_alt_outlined),
+                ),
+              if (isOwner)
+                IconButton(
+                  tooltip: 'Usuń projekt',
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline),
+                ),
               const Icon(Icons.chevron_right),
             ],
           ),
+          if (project.myShareRole != null) ...[
+            const SizedBox(height: 4),
+            Chip(
+              avatar: const Icon(Icons.group_outlined, size: 16),
+              label: Text(
+                project.myShareRole == 'editor'
+                    ? 'Udostępniony mi - Edytor'
+                    : 'Udostępniony mi - Widz',
+              ),
+            ),
+          ],
           if (clientName != null || locationName != null) ...[
             const SizedBox(height: 8),
             Wrap(

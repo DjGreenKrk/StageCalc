@@ -8,6 +8,7 @@ import '../core/constants/app_metadata.dart';
 import '../features/catalog/presentation/catalog_screen.dart';
 import '../features/clients/presentation/clients_screen.dart';
 import '../features/locations/presentation/locations_screen.dart';
+import '../features/projects/presentation/guest_project_view_screen.dart';
 import '../features/projects/presentation/list/projects_screen.dart';
 import '../features/settings/presentation/about_screen.dart';
 import '../infrastructure/local_database/app_database_provider.dart';
@@ -29,13 +30,33 @@ const _autoSyncCheckInterval = Duration(minutes: 15);
 class StageCalcApp extends StatelessWidget {
   const StageCalcApp({super.key});
 
+  /// `/shared/<token>` opened directly in a browser (a guest sharing link,
+  /// ADR-040) skips the normal shell entirely - there is no real routing in
+  /// this app yet (single `home:`, no named routes), so this is read once
+  /// from the page's own URL at startup rather than adding general
+  /// deep-link infrastructure for this one case. Not meaningful on
+  /// non-web platforms - `Uri.base` there is just the working directory,
+  /// which never matches this pattern, so it harmlessly falls through to
+  /// the normal shell.
+  static String? _guestShareTokenFromUrl() {
+    final segments = Uri.base.pathSegments;
+    final sharedIndex = segments.indexOf('shared');
+    if (sharedIndex == -1 || sharedIndex + 1 >= segments.length) {
+      return null;
+    }
+    return segments[sharedIndex + 1];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final guestShareToken = _guestShareTokenFromUrl();
     return MaterialApp(
       title: AppMetadata.name,
       debugShowCheckedModeBanner: false,
       theme: StageCalcTheme.dark(),
-      home: const StageCalcShell(),
+      home: guestShareToken != null
+          ? GuestProjectViewScreen(token: guestShareToken)
+          : const StageCalcShell(),
     );
   }
 }

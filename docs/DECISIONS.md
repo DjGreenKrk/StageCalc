@@ -390,6 +390,52 @@ Uzasadnienie:
 - Obecnie PDF jest częścią dużego komponentu kalkulatora.
 - W Flutterze raport powinien używać tych samych serwisów domenowych co UI.
 
+## ADR-040: Współdzielenie projektów (widz/edytor, linki gościnne)
+
+Status: accepted
+
+Kontekst:
+
+- ADR-028 określiła `clients`/`projects` jako ściśle prywatne dla właściciela (`ownerRule`), a `docs/FEATURE_SCOPE.md` wprost wymieniał "Współdzielenie projektów" jako poza zakresem MVP. Użytkownik poprosił o zaadresowanie tego teraz.
+- Zapytany o model, użytkownik wybrał: dwie odrębne role (Widz/Edytor) dla kont zespołu, wybór odbiorcy z listy istniejących kont (zamknięty zespół, konta zakłada tylko superuser - ADR-028), **plus** świadomie zaakceptowaną lukę: link gościnny tylko-do-podglądu dla osób bez konta, identyfikowany sekretnym tokenem, nie e-mailem ("wiem że to będzie pewnie luka bezpieczeństwa (...) dla tych co nie chcą konta jeszcze zakładać"). Udostępnienie projektu ma też ujawnić odbiorcy przypisanego klienta (klienci są prywatni per ADR-028, ale karta projektu pokazuje dane klienta - bez tego odbiorca widziałby błąd/pustkę).
+- Zweryfikowano na serwerze LXC 113 (przez sesję `proxmox-home`) przed projektowaniem: PocketBase `0.40.4`, usługa `systemd` `pocketbase.service` bez `--dev`, katalog `pb_hooks/` jeszcze nie istnieje. Migracje i hooki są podejmowane automatycznie przy starcie procesu - `systemctl restart pocketbase` wystarcza po dodaniu nowych plików, bez ręcznej migracji.
+
+Decyzja:
+
+### Współdzielenie z kontem (Widz/Edytor)
+
+- Dwa nowe pola relacyjne (multi-select, -> `users`) na `projects`: `sharedViewers`, `sharedEditors`. Żadna nowa kolekcja - odzwierciedla wzorcowo już istniejące pole `owner` (ADR-028), tylko jako listy zamiast jednej relacji.
+- Reguły dostępu:
+  - `projects`: `listRule`/`viewRule` dodają `sharedViewers ?= @request.auth.id || sharedEditors ?= @request.auth.id` do istniejącego `owner = @request.auth.id`; `updateRule` dodaje tylko `sharedEditors ?= @request.auth.id` (widz nie edytuje samego rekordu projektu). `createRule`/`deleteRule` zostają nietknięte - projekt tworzy i usuwa tylko właściciel.
+  - Siedem kolekcji zagnieżdżonych pod projektem (`project_groups`, `project_items`, `project_group_hook_assignments`, `project_distros`, `project_outlets`, `power_connections`, `project_trusses`): `listRule`/`viewRule` rozszerzone o `project.sharedViewers ?= @request.auth.id || project.sharedEditors ?= @request.auth.id`; `createRule`/`updateRule`/`deleteRule` rozszerzone tylko o `project.sharedEditors ?= @request.auth.id` - edytor może zmieniać sprzęt/patcher/kratownice, widz tylko czyta.
+  - `clients`: `listRule`/`viewRule` (tylko te dwa - nie `update`/`create`/`delete`) rozszerzone o `projects_via_client.sharedViewers ?= @request.auth.id || projects_via_client.sharedEditors ?= @request.auth.id` (back-relation przez `projects.client`) - realizuje decyzję użytkownika o ujawnieniu klienta. Klient zostaje edytowalny wyłącznie przez swojego właściciela.
+  - `users`: `listRule`/`viewRule` zmienione z `id = @request.auth.id` (ADR-028, self-only) na `@request.auth.id != ''` (każdy zalogowany widzi listę kont) - potrzebne, żeby dialog udostępniania mógł pokazać listę osób do wyboru. `update`/`create`/`delete` bez zmian. **Świadomy, zakresowy trade-off prywatności**, analogiczny do tego, który ADR-028 już zaakceptowała dla sieci LAN: każdy zalogowany członek małego, zamkniętego zespołu widzi teraz e-maile i nazwy wszystkich innych kont.
+  - Każde `?=` powyżej sprawdza dokładnie jedno pole relacji, nigdy dwa złączone warunkiem `&&` na tej samej relacji wielowartościowej - PocketBase dopasowuje `?=` niezależnie per warunek, więc `a ?= X && b ?= Y` na polu z wieloma powiązanymi rekordami może dopasować **różne** rekordy do `X` i `Y` (błędne uprawnienie). Stąd dwa osobne pola (`sharedViewers`/`sharedEditors`) zamiast jednej relacji z polem `role` - unika tej pułapki z założenia, bez polegania na dyscyplinie przy pisaniu reguł.
+- Lokalny schemat: nowa nullable kolumna `Projects.myShareRole` (`'editor'` / `'viewer'` / `null` = właściciel albo nieudostępniony). `PocketBaseProjectSyncService._pull` liczy ją przy każdym pociągnięciu rekordu, sprawdzając `authStore.record?.id` względem `sharedEditors`/`sharedViewers` z odpowiedzi - czysto lokalna, wyliczana wartość, nigdy nie wypychana z powrotem. Podniesiono schemat bazy do wersji `22`.
+- Ponieważ sync po prostu listuje to, co reguły dostępu pozwalają zobaczyć (`getFullList()` bez dodatkowego filtra), rozszerzenie reguł `projects`/zagnieżdżonych kolekcji **samo z siebie** zaczyna ściągać udostępnione projekty do lokalnej bazy odbiorcy przy najbliższym sync - bez żadnej zmiany w mechanice samego `PocketBaseProjectSyncService` poza liczeniem `myShareRole`.
+
+### Linki gościnne (bez konta, tylko podgląd)
+
+- Nowa kolekcja `project_guest_links`: `project` (relacja, wymagana), `label` (tekst, opcjonalny - własna notatka właściciela, np. e-mail osoby), `token` (tekst, wymagany, unikalny indeks). Reguły dostępu: `list`/`view`/`create`/`update`/`delete` = `project.owner = @request.auth.id` (tylko właściciel zarządza linkami swojego projektu przez normalne API PocketBase) - **bez** publicznej reguły na tej kolekcji.
+- Token generowany w Flutterze (`Random.secure()`, 32 bajty, base64url) - nigdy na serwerze, nigdy jako pochodna e-maila.
+- Rzeczywisty dostęp gościa **nie** idzie przez reguły API kolekcji (uznane za zbyt ryzykowne do poprawnego wyrażenia samymi filtrami reguł - publiczny odczyt musiałby przejść przez wiele kolekcji naraz, tokenem w `@request.query`, bez możliwości przetestowania tego wprost w tej sesji), tylko przez nowy, dedykowany endpoint `pb_hooks/guest_project_share.pb.js`: `GET /api/stagecalc/shared/{token}`, publiczny (brak middleware auth), uruchamiany z uprawnieniami `$app` (poza regułami API). Odnajduje `project_guest_links` po tokenie, i jeśli istnieje, zwraca jednym JSON-em: projekt, klienta, grupy, pozycje, haki, rozdzielnice, gniazda, połączenia, kratownice - `publicExport()` każdego rekordu. Nieznany/odwołany token -> `404`.
+- Świadomie pojedynczy, audytowalny punkt wejścia zamiast rozszerzania reguł `projects`/zagnieżdżonych kolekcji o publiczny wariant z tokenem - błąd w jednym miejscu (ten plik) jest do ogarnięcia, błąd w regule rozproszonej po dziewięciu kolekcjach nie.
+- Flutter: dialog udostępniania ma sekcję "Linki dla gości" - tworzenie (opcjonalna etykieta), kopiowanie URL, usuwanie. Odbiorca otwiera uproszczony, tylko-do-odczytu ekran (nowy `GuestProjectViewScreen`), pobierający JSON prostym GET (bez SDK/logowania) i renderujący grupy/sumy/rozdzielnice/kratownice z surowego JSON-a, bez przechodzenia przez pełny model domenowy (format z `publicExport()` jest snake_case, inny niż lokalny `toJson()`) - świadomie prostszy niż pełny edytor, bo to tylko podgląd.
+
+Uzasadnienie:
+
+- Dwa pola relacyjne (`sharedViewers`/`sharedEditors`) zamiast osobnej kolekcji `project_shares` z polem `role` była zmianą względem pierwszego szkicu tej decyzji - uniknięcie wieloznaczności dopasowania `?=` (patrz wyżej) było ważniejsze niż elegancja jednej tabeli powiązań, i jest prostsze do zweryfikowania: jedno pole, jedno dopasowanie, żadnej kombinacji warunków na tej samej relacji.
+- Dedykowany hook zamiast reguły publicznej z tokenem w query string był wybrany zamiast bardziej "czystego" rozwiązania w samym silniku reguł PocketBase, bo tej sesji zależało na czymś, co da się jednoznacznie zweryfikować (jeden plik, jedna ścieżka) bez dostępu do realnego serwera do iteracyjnego testowania samej reguły.
+- Ujawnienie klienta tylko przez `list`/`view` (nie `update`) jest zgodne z tym, o co użytkownik prosił - podgląd, nie przejęcie zarządzania klientem przez osobę, której udostępniono tylko projekt.
+
+Konsekwencje:
+
+- **Zweryfikowano end-to-end na izolowanym serwerze beta (CT123, `beta.stagecalc.greencrew.pl`), nie na produkcji (CT113)** - migracje zastosowały się bez błędu po `systemctl restart pocketbase`, kolekcja `project_guest_links` i pola `sharedViewers`/`sharedEditors` istnieją, hook poprawnie zwraca `404` dla nieznanego/usuniętego tokenu i `200` z pełnym JSON-em dla prawdziwego testowego rekordu (utworzonego i usuniętego wyłącznie na czas weryfikacji, przez sesję `proxmox-home`). Nie przetestowano jeszcze scenariusza "widz/edytor z drugiego konta" na żywym kliencie Flutter - tylko warstwa PocketBase. Produkcja wymaga własnego, osobnego wdrożenia tych samych migracji/hooka i restartu przed zaufaniem temu tam.
+- Reguła `users.listRule = authRule` jest nowym, trwałym ustępstwem prywatności w zespole - do rewizji, jeśli zespół przestanie być mały/zamknięty.
+- Link gościnny to token-jako-hasło bez żadnego powiązania z konkretnym e-mailem ani wygasania - każdy, kto go przechwyci, ma podgląd projektu do ręcznego usunięcia linku przez właściciela. Świadomie zaakceptowane przez użytkownika.
+- UI edytora projektu **nie** blokuje jeszcze każdego pojedynczego przycisku edycji dla roli Widza z osobna (dialogi grup/rozdzielnic/patchera/kratownic) - właściwą granicą bezpieczeństwa są reguły API (widz fizycznie nie może zapisać), ale brak lokalnego UX-owego zablokowania każdego przycisku osobno zostaje jako kolejny krok (patrz `docs/IMPLEMENTATION_STATUS.md`).
+- `GuestProjectViewScreen` jest uproszczonym podglądem (bez pełnej parytetowości z interaktywnym edytorem) - wystarczający do przeczytania stanu projektu, nie do pracy na nim.
+
 ## ADR-039: Widok szczegółowy urządzenia katalogowego z wykresem nośności
 
 Status: accepted

@@ -47,6 +47,15 @@ To jest funkcjonalność obecnej aplikacji legacy, nie wymaganie MVP Flutter.
 
 W Flutter MVP podstawowa praca lokalna nie wymaga logowania. Konto, role i synchronizacja mogą zostać dodane później jako osobna warstwa.
 
+### Współdzielenie projektów
+
+Zrealizowane w wersji Flutter (ADR-040), nie jest funkcją odziedziczoną z legacy.
+
+- Właściciel projektu może udostępnić go innemu kontu zespołu jako Widz (tylko podgląd) albo Edytor (pełna edycja sprzętu/patchera/kratownic).
+- Udostępnienie projektu ujawnia odbiorcy też przypisanego klienta (klienci są normalnie prywatni per konto).
+- Właściciel może dodatkowo wygenerować link gościnny tylko-do-podglądu dla osoby bez konta - dostęp przez sekretny token w adresie, bez logowania.
+- Usunięcie udostępnienia/linku odbiera dostęp natychmiast po następnej synchronizacji (dla kont) albo natychmiast (dla linków gościnnych, obsługiwanych bez cache'u).
+
 ### Kalkulacje zasilania
 
 - Tworzenie nowej kalkulacji i edycja zapisanej kalkulacji.
@@ -171,7 +180,6 @@ Pierwsza wersja Flutter powinna objąć:
 
 - Synchronizacja między urządzeniami.
 - Pełny system kont i uprawnień online.
-- Współdzielenie projektów.
 - Zaawansowane konflikty sync.
 - Import historycznej bazy PocketBase jako automatyczny migrator produkcyjny.
 - Pełny model `Gniazdo -> konkretne pozycje z grupy`, jeśli nie jest wymagany od razu.

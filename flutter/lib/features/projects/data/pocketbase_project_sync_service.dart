@@ -456,6 +456,7 @@ class PocketBaseProjectSyncService {
                 remote.getStringValue('workspace_id', 'local'),
               ),
               ownerId: Value(_nullable(remote, 'owner')),
+              myShareRole: Value(_computeMyShareRole(remote)),
               name: Value(remote.getStringValue('name')),
               phaseId: Value(remote.getStringValue('phase_id', 'default')),
               clientId: Value(clientLocalId),
@@ -871,6 +872,27 @@ class PocketBaseProjectSyncService {
   String? _nullable(RecordModel record, String field) {
     final value = record.getStringValue(field);
     return value.isEmpty ? null : value;
+  }
+
+  /// `'editor'` / `'viewer'` when the logged-in user's id appears in the
+  /// pulled record's `sharedEditors`/`sharedEditors` relation, `null` when
+  /// they own it, are not logged in, or it is not shared with them
+  /// (ADR-040). Editor checked first - an id can only sensibly appear in
+  /// one of the two lists, but editor is the more permissive role.
+  String? _computeMyShareRole(RecordModel remote) {
+    final myId = _pb.authStore.record?.id;
+    if (myId == null) {
+      return null;
+    }
+    final editors = (remote.data['sharedEditors'] as List?)?.cast<String>() ?? const [];
+    if (editors.contains(myId)) {
+      return 'editor';
+    }
+    final viewers = (remote.data['sharedViewers'] as List?)?.cast<String>() ?? const [];
+    if (viewers.contains(myId)) {
+      return 'viewer';
+    }
+    return null;
   }
 
   String _jsonEncodeOrDefault(Object? value) {

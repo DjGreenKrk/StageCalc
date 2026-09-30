@@ -6,6 +6,10 @@ Format jest oparty o Keep a Changelog, a wersjonowanie docelowo powinno używać
 
 ## [Unreleased]
 
+### Dodano
+
+- Dodano współdzielenie projektów (ADR-040): właściciel może udostępnić projekt innemu kontu zespołu jako Widz (tylko podgląd) albo Edytor (pełna edycja), co też ujawnia odbiorcy przypisanego klienta. Dla osób bez konta - link gościnny tylko-do-podglądu, obsłużony przez dedykowany publiczny endpoint PocketBase, bez logowania. Nowy dialog udostępniania na ekranie Projekty (tylko dla właściciela zsynchronizowanego projektu), banner "Tylko podgląd" w edytorze dla roli Widza, uproszczony ekran podglądu dla linków gościnnych. Schemat lokalny podniesiony do wersji `22`.
+
 ## v0.6.0+1 - 2026-09-16
 
 ### Dodano

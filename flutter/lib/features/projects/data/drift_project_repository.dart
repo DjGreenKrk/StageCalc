@@ -536,6 +536,9 @@ class DriftProjectRepository implements ProjectRepository {
       updatedAt: row.updatedAt,
       syncStatus: OfflineSyncStatusJson.fromJson(row.syncState),
       gremiumProjectId: row.gremiumProjectId,
+      remoteId: row.remoteId,
+      ownerId: row.ownerId,
+      myShareRole: row.myShareRole,
     );
   }
 

@@ -51,6 +51,17 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _myShareRoleMeta = const VerificationMeta(
+    'myShareRole',
+  );
+  @override
+  late final GeneratedColumn<String> myShareRole = GeneratedColumn<String>(
+    'my_share_role',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -179,6 +190,7 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
     workspaceId,
     remoteId,
     ownerId,
+    myShareRole,
     name,
     phaseId,
     clientId,
@@ -227,6 +239,15 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
       context.handle(
         _ownerIdMeta,
         ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    }
+    if (data.containsKey('my_share_role')) {
+      context.handle(
+        _myShareRoleMeta,
+        myShareRole.isAcceptableOrUnknown(
+          data['my_share_role']!,
+          _myShareRoleMeta,
+        ),
       );
     }
     if (data.containsKey('name')) {
@@ -332,6 +353,10 @@ class $ProjectsTable extends Projects with TableInfo<$ProjectsTable, Project> {
         DriftSqlType.string,
         data['${effectivePrefix}owner_id'],
       ),
+      myShareRole: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}my_share_role'],
+      ),
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
@@ -393,6 +418,14 @@ class Project extends DataClass implements Insertable<Project> {
   /// PocketBase `users` record id of whoever owns this project (ADR-028) -
   /// see `Clients.ownerId` for why this is not a "local id".
   final String? ownerId;
+
+  /// `'editor'` / `'viewer'` when this project was pulled because it is
+  /// shared with the logged-in user rather than owned by them, `null` when
+  /// owned or not yet synced (ADR-040). Purely a locally-computed read of
+  /// the remote `sharedViewers`/`sharedEditors` relations against the
+  /// current session's user id - never pushed back, recomputed on every
+  /// pull.
+  final String? myShareRole;
   final String name;
   final String phaseId;
   final String? clientId;
@@ -413,6 +446,7 @@ class Project extends DataClass implements Insertable<Project> {
     required this.workspaceId,
     this.remoteId,
     this.ownerId,
+    this.myShareRole,
     required this.name,
     required this.phaseId,
     this.clientId,
@@ -435,6 +469,9 @@ class Project extends DataClass implements Insertable<Project> {
     }
     if (!nullToAbsent || ownerId != null) {
       map['owner_id'] = Variable<String>(ownerId);
+    }
+    if (!nullToAbsent || myShareRole != null) {
+      map['my_share_role'] = Variable<String>(myShareRole);
     }
     map['name'] = Variable<String>(name);
     map['phase_id'] = Variable<String>(phaseId);
@@ -470,6 +507,9 @@ class Project extends DataClass implements Insertable<Project> {
       ownerId: ownerId == null && nullToAbsent
           ? const Value.absent()
           : Value(ownerId),
+      myShareRole: myShareRole == null && nullToAbsent
+          ? const Value.absent()
+          : Value(myShareRole),
       name: Value(name),
       phaseId: Value(phaseId),
       clientId: clientId == null && nullToAbsent
@@ -504,6 +544,7 @@ class Project extends DataClass implements Insertable<Project> {
       workspaceId: serializer.fromJson<String>(json['workspaceId']),
       remoteId: serializer.fromJson<String?>(json['remoteId']),
       ownerId: serializer.fromJson<String?>(json['ownerId']),
+      myShareRole: serializer.fromJson<String?>(json['myShareRole']),
       name: serializer.fromJson<String>(json['name']),
       phaseId: serializer.fromJson<String>(json['phaseId']),
       clientId: serializer.fromJson<String?>(json['clientId']),
@@ -525,6 +566,7 @@ class Project extends DataClass implements Insertable<Project> {
       'workspaceId': serializer.toJson<String>(workspaceId),
       'remoteId': serializer.toJson<String?>(remoteId),
       'ownerId': serializer.toJson<String?>(ownerId),
+      'myShareRole': serializer.toJson<String?>(myShareRole),
       'name': serializer.toJson<String>(name),
       'phaseId': serializer.toJson<String>(phaseId),
       'clientId': serializer.toJson<String?>(clientId),
@@ -544,6 +586,7 @@ class Project extends DataClass implements Insertable<Project> {
     String? workspaceId,
     Value<String?> remoteId = const Value.absent(),
     Value<String?> ownerId = const Value.absent(),
+    Value<String?> myShareRole = const Value.absent(),
     String? name,
     String? phaseId,
     Value<String?> clientId = const Value.absent(),
@@ -560,6 +603,7 @@ class Project extends DataClass implements Insertable<Project> {
     workspaceId: workspaceId ?? this.workspaceId,
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
     ownerId: ownerId.present ? ownerId.value : this.ownerId,
+    myShareRole: myShareRole.present ? myShareRole.value : this.myShareRole,
     name: name ?? this.name,
     phaseId: phaseId ?? this.phaseId,
     clientId: clientId.present ? clientId.value : this.clientId,
@@ -582,6 +626,9 @@ class Project extends DataClass implements Insertable<Project> {
           : this.workspaceId,
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      myShareRole: data.myShareRole.present
+          ? data.myShareRole.value
+          : this.myShareRole,
       name: data.name.present ? data.name.value : this.name,
       phaseId: data.phaseId.present ? data.phaseId.value : this.phaseId,
       clientId: data.clientId.present ? data.clientId.value : this.clientId,
@@ -609,6 +656,7 @@ class Project extends DataClass implements Insertable<Project> {
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
           ..write('ownerId: $ownerId, ')
+          ..write('myShareRole: $myShareRole, ')
           ..write('name: $name, ')
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
@@ -630,6 +678,7 @@ class Project extends DataClass implements Insertable<Project> {
     workspaceId,
     remoteId,
     ownerId,
+    myShareRole,
     name,
     phaseId,
     clientId,
@@ -650,6 +699,7 @@ class Project extends DataClass implements Insertable<Project> {
           other.workspaceId == this.workspaceId &&
           other.remoteId == this.remoteId &&
           other.ownerId == this.ownerId &&
+          other.myShareRole == this.myShareRole &&
           other.name == this.name &&
           other.phaseId == this.phaseId &&
           other.clientId == this.clientId &&
@@ -668,6 +718,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   final Value<String> workspaceId;
   final Value<String?> remoteId;
   final Value<String?> ownerId;
+  final Value<String?> myShareRole;
   final Value<String> name;
   final Value<String> phaseId;
   final Value<String?> clientId;
@@ -685,6 +736,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
     this.ownerId = const Value.absent(),
+    this.myShareRole = const Value.absent(),
     this.name = const Value.absent(),
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
@@ -703,6 +755,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     this.workspaceId = const Value.absent(),
     this.remoteId = const Value.absent(),
     this.ownerId = const Value.absent(),
+    this.myShareRole = const Value.absent(),
     required String name,
     this.phaseId = const Value.absent(),
     this.clientId = const Value.absent(),
@@ -724,6 +777,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Expression<String>? workspaceId,
     Expression<String>? remoteId,
     Expression<String>? ownerId,
+    Expression<String>? myShareRole,
     Expression<String>? name,
     Expression<String>? phaseId,
     Expression<String>? clientId,
@@ -742,6 +796,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       if (workspaceId != null) 'workspace_id': workspaceId,
       if (remoteId != null) 'remote_id': remoteId,
       if (ownerId != null) 'owner_id': ownerId,
+      if (myShareRole != null) 'my_share_role': myShareRole,
       if (name != null) 'name': name,
       if (phaseId != null) 'phase_id': phaseId,
       if (clientId != null) 'client_id': clientId,
@@ -762,6 +817,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     Value<String>? workspaceId,
     Value<String?>? remoteId,
     Value<String?>? ownerId,
+    Value<String?>? myShareRole,
     Value<String>? name,
     Value<String>? phaseId,
     Value<String?>? clientId,
@@ -780,6 +836,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
       workspaceId: workspaceId ?? this.workspaceId,
       remoteId: remoteId ?? this.remoteId,
       ownerId: ownerId ?? this.ownerId,
+      myShareRole: myShareRole ?? this.myShareRole,
       name: name ?? this.name,
       phaseId: phaseId ?? this.phaseId,
       clientId: clientId ?? this.clientId,
@@ -809,6 +866,9 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
     }
     if (ownerId.present) {
       map['owner_id'] = Variable<String>(ownerId.value);
+    }
+    if (myShareRole.present) {
+      map['my_share_role'] = Variable<String>(myShareRole.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -856,6 +916,7 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
           ..write('workspaceId: $workspaceId, ')
           ..write('remoteId: $remoteId, ')
           ..write('ownerId: $ownerId, ')
+          ..write('myShareRole: $myShareRole, ')
           ..write('name: $name, ')
           ..write('phaseId: $phaseId, ')
           ..write('clientId: $clientId, ')
@@ -15304,6 +15365,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
       Value<String> workspaceId,
       Value<String?> remoteId,
       Value<String?> ownerId,
+      Value<String?> myShareRole,
       required String name,
       Value<String> phaseId,
       Value<String?> clientId,
@@ -15323,6 +15385,7 @@ typedef $$ProjectsTableUpdateCompanionBuilder =
       Value<String> workspaceId,
       Value<String?> remoteId,
       Value<String?> ownerId,
+      Value<String?> myShareRole,
       Value<String> name,
       Value<String> phaseId,
       Value<String?> clientId,
@@ -15503,6 +15566,11 @@ class $$ProjectsTableFilterComposer
 
   ColumnFilters<String> get ownerId => $composableBuilder(
     column: $table.ownerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get myShareRole => $composableBuilder(
+    column: $table.myShareRole,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15770,6 +15838,11 @@ class $$ProjectsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get myShareRole => $composableBuilder(
+    column: $table.myShareRole,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
     builder: (column) => ColumnOrderings(column),
@@ -15848,6 +15921,11 @@ class $$ProjectsTableAnnotationComposer
 
   GeneratedColumn<String> get ownerId =>
       $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
+  GeneratedColumn<String> get myShareRole => $composableBuilder(
+    column: $table.myShareRole,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -16108,6 +16186,7 @@ class $$ProjectsTableTableManager
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
                 Value<String?> ownerId = const Value.absent(),
+                Value<String?> myShareRole = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
@@ -16125,6 +16204,7 @@ class $$ProjectsTableTableManager
                 workspaceId: workspaceId,
                 remoteId: remoteId,
                 ownerId: ownerId,
+                myShareRole: myShareRole,
                 name: name,
                 phaseId: phaseId,
                 clientId: clientId,
@@ -16144,6 +16224,7 @@ class $$ProjectsTableTableManager
                 Value<String> workspaceId = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
                 Value<String?> ownerId = const Value.absent(),
+                Value<String?> myShareRole = const Value.absent(),
                 required String name,
                 Value<String> phaseId = const Value.absent(),
                 Value<String?> clientId = const Value.absent(),
@@ -16161,6 +16242,7 @@ class $$ProjectsTableTableManager
                 workspaceId: workspaceId,
                 remoteId: remoteId,
                 ownerId: ownerId,
+                myShareRole: myShareRole,
                 name: name,
                 phaseId: phaseId,
                 clientId: clientId,

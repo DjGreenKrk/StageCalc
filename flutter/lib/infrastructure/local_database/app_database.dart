@@ -15,6 +15,14 @@ class Projects extends Table {
   /// PocketBase `users` record id of whoever owns this project (ADR-028) -
   /// see `Clients.ownerId` for why this is not a "local id".
   TextColumn get ownerId => text().nullable()();
+
+  /// `'editor'` / `'viewer'` when this project was pulled because it is
+  /// shared with the logged-in user rather than owned by them, `null` when
+  /// owned or not yet synced (ADR-040). Purely a locally-computed read of
+  /// the remote `sharedViewers`/`sharedEditors` relations against the
+  /// current session's user id - never pushed back, recomputed on every
+  /// pull.
+  TextColumn get myShareRole => text().nullable()();
   TextColumn get name => text()();
   TextColumn get phaseId => text().withDefault(const Constant('default'))();
   TextColumn get clientId => text().nullable()();
@@ -475,7 +483,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -658,6 +666,11 @@ class AppDatabase extends _$AppDatabase {
           appSettings,
           appSettings.dismissedUpdateVersion,
         );
+      }
+      if (from < 22) {
+        // ADR-040: locally-computed share role, recomputed on every pull -
+        // no backfill needed for existing rows.
+        await _addColumnIfMissing(migrator, projects, projects.myShareRole);
       }
     },
   );

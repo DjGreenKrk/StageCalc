@@ -111,6 +111,32 @@ class _ProjectEditorScreenState extends State<ProjectEditorScreen> {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (project.myShareRole == 'viewer') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.visibility_outlined, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Tylko podgląd - ten projekt został Ci udostępniony '
+                        'do przeglądania, bez możliwości edycji.',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _ProjectMetadataCard(
               project: project,
               clients: _controller.clients,
