@@ -90,13 +90,23 @@ class ProjectPdfReportService {
               project.name,
               style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
             ),
-            pw.Text(
-              'StageCalc',
-              style: pw.TextStyle(
-                fontSize: 14,
-                fontWeight: pw.FontWeight.bold,
-                color: _greenCrewGreen,
-              ),
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                pw.CustomPaint(
+                  size: const PdfPoint(18, 18),
+                  painter: _paintStageCalcMark,
+                ),
+                pw.SizedBox(width: 6),
+                pw.Text(
+                  'StageCalc',
+                  style: pw.TextStyle(
+                    fontSize: 14,
+                    fontWeight: pw.FontWeight.bold,
+                    color: _greenCrewGreen,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -107,6 +117,41 @@ class ProjectPdfReportService {
         pw.Divider(color: _greenCrewGreen, thickness: 2, height: 12),
       ],
     );
+  }
+
+  /// Redraws `shared/widgets/stagecalc_mark.dart`'s hexagon-and-bolt mark
+  /// with `PdfGraphics` instead of a Flutter `Canvas` - the two APIs are
+  /// close enough (`moveTo`/`lineTo`/fill vs. stroke) to port point-for-
+  /// point, but PDF space has its origin at the bottom-left with y
+  /// increasing upward, the opposite of Flutter's canvas - every fractional
+  /// y coordinate here is `1 - y` relative to the Flutter version so the
+  /// mark comes out right-side up instead of vertically mirrored.
+  static void _paintStageCalcMark(PdfGraphics canvas, PdfPoint size) {
+    final w = size.x;
+    final h = size.y;
+
+    canvas
+      ..setStrokeColor(_greenCrewGreen)
+      ..setLineWidth(w * 0.075)
+      ..moveTo(w * 0.50, h * 0.94)
+      ..lineTo(w * 0.86, h * 0.73)
+      ..lineTo(w * 0.86, h * 0.27)
+      ..lineTo(w * 0.50, h * 0.06)
+      ..lineTo(w * 0.14, h * 0.27)
+      ..lineTo(w * 0.14, h * 0.73)
+      ..closePath()
+      ..strokePath();
+
+    canvas
+      ..setFillColor(_greenCrewGreen)
+      ..moveTo(w * 0.56, h * 0.82)
+      ..lineTo(w * 0.34, h * 0.46)
+      ..lineTo(w * 0.49, h * 0.46)
+      ..lineTo(w * 0.42, h * 0.18)
+      ..lineTo(w * 0.68, h * 0.57)
+      ..lineTo(w * 0.53, h * 0.57)
+      ..closePath()
+      ..fillPath();
   }
 
   pw.Widget _buildPageFooter(pw.Context context) {

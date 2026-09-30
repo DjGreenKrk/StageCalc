@@ -630,7 +630,7 @@ Uzasadnienie:
 Konsekwencje:
 
 - Rozmiar assetów aplikacji rośnie o dwa pliki fontu TTF (Roboto Regular + Bold) - akceptowalny koszt wobec poprawnego renderowania polskiego tekstu w eksporcie PDF.
-- Pełny branding PDF (logo StageCalc w nagłówku raportu) pozostaje osobnym, kolejnym krokiem - font jest już częścią tej decyzji, brakuje tylko logo.
+- ~~Pełny branding PDF (logo StageCalc w nagłówku raportu) pozostaje osobnym, kolejnym krokiem~~ - dodane później: nagłówek raportu odtwarza wektorowo ten sam heksagon-i-błyskawica co `shared/widgets/stagecalc_mark.dart`, przez `pw.CustomPaint`/`PdfGraphics` (ten sam zestaw punktów, tylko z odwróconą osią Y - PDF ma początek układu w lewym dolnym rogu, Flutter w lewym górnym).
 - Komentarze w kodzie i opisy/dane testów świadomie pozostają bez zmian (poza zdjęciem znaków tam, gdzie test dosłownie sprawdzał treść UI) - to był jawny wybór zakresu, nie przeoczenie.
 
 ## ADR-032: Wiele typów złącz w jednej grupie złączy lokacji
